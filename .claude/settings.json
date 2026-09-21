@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev*)",
+      "Bash(npm run build*)",
+      "Bash(npm run lint*)",
+      "Bash(npm run type-check*)",
+      "Bash(npm install*)",
+      "Bash(npx prettier*)",
+      "Bash(docker compose*)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Read(./**)",
+      "Edit(./partner-portal/**)",
+      "Edit(./employer-portal/**)",
+      "Edit(./admin-console/**)",
+      "Edit(./employee-embed/**)",
+      "Write(./partner-portal/**)",
+      "Write(./employer-portal/**)",
+      "Write(./admin-console/**)",
+      "Write(./employee-embed/**)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(rm -rf*)",
+      "Read(./.env*)",
+      "Read(**/.env.production)",
+      "Read(**/*.pem)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/format-on-save.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
