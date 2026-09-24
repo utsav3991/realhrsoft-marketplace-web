@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 /**
  * Employer and Partner portals (ADR-014) against a small stateful fake of /api/v1. Checks that
- * portal calls carry X-Organization-ID for the selected organization, that applications and
+ * portal calls carry X-Organization-ID for the selected organization, that registration and
  * administration never do, and that the UI never sends ownership or audience fields.
  */
 
@@ -11,7 +11,7 @@ const ACME = "00000000-0000-4000-8000-0000000000a1";
 const BENEFIT_ID = "00000000-0000-4000-8000-0000000000b1";
 const OPTION_ID = "00000000-0000-4000-8000-0000000000b2";
 const OFFER_ID = "00000000-0000-4000-8000-0000000000c1";
-const APPLICATION_ID = "00000000-0000-4000-8000-0000000000d1";
+const PARTNER_ID = "00000000-0000-4000-8000-0000000000d1";
 const NOW = "2026-09-24T10:00:00Z";
 
 const EMPLOYER_CODES = [
@@ -22,6 +22,15 @@ const EMPLOYER_CODES = [
   "employer_benefits.benefit.publish",
   "employer_benefits.benefit.pause",
   "employer_benefits.benefit.retire",
+];
+const APPLICANT_CODES = [
+  "organizations.partner.create",
+  "organizations.partner.read_own",
+  "organizations.partner.update_own",
+  "organizations.partner_contact.manage_own",
+  "organizations.partner_location.manage_own",
+  "organizations.partner_document.manage_own",
+  "organizations.partner_verification.submit",
 ];
 const PARTNER_CODES = [
   "organizations.partner_profile.view",
@@ -48,7 +57,10 @@ async function fakeBackend(page: Page, capacity: Capacity): Promise<Call[]> {
   let signedIn = false;
   let benefit: Record<string, unknown> | null = null;
   let offer: Record<string, unknown> | null = null;
-  let application: Record<string, unknown> | null = null;
+  let registration: {
+    profile: Record<string, unknown>;
+    verification: Record<string, unknown>;
+  } | null = null;
 
   const codes = capacity === "employer" ? EMPLOYER_CODES : PARTNER_CODES;
   const memberships =
@@ -71,7 +83,8 @@ async function fakeBackend(page: Page, capacity: Capacity): Promise<Call[]> {
       actor_type: "partner",
       organization_id: organization,
       roles: [],
-      permissions: [],
+      // An account without a Partner organization holds the applicant grants (global).
+      permissions: capacity === "none" ? APPLICANT_CODES : [],
       organization_permissions: organization ? codes : [],
       authentication_source: "local",
       memberships,
@@ -192,29 +205,64 @@ async function fakeBackend(page: Page, capacity: Capacity): Promise<Call[]> {
           return version(benefit);
         },
       ],
+      ["GET /partner/registration", /^\/partner\/registration$/, () => registration ?? 404],
       [
-        "GET /partner/applications/mine",
-        /^\/partner\/applications\/mine$/,
-        () => application ?? 404,
+        "POST /partner/registration",
+        /^\/partner\/registration$/,
+        (body) => {
+          registration = {
+            profile: {
+              partner_id: PARTNER_ID,
+              organization_id: null,
+              legal_business_name: body.legal_name,
+              display_name: body.display_name,
+              registration_number: body.registration_number,
+              tax_identifier: null,
+              website: null,
+              description: null,
+              verification_status: "draft",
+              operational_status: "active",
+              marketplace_eligible: false,
+              created_at: NOW,
+              updated_at: NOW,
+              version: 1,
+              contacts: [],
+              locations: [],
+            },
+            verification: {
+              partner_id: PARTNER_ID,
+              verification_status: "draft",
+              submitted_at: null,
+              review_started_at: null,
+              decision_applied_at: null,
+              decision_reference: null,
+              review_note: null,
+              requirements: [],
+              documents: [],
+            },
+          };
+          return [201, { id: PARTNER_ID }];
+        },
       ],
       [
-        "POST /partner/applications",
-        /^\/partner\/applications$/,
-        (body) => {
-          application = {
-            id: APPLICATION_ID,
-            applicant_user_id: USER_ID,
-            details: body,
-            status: "submitted",
-            intake: "self_service",
-            version: 1,
-            submitted_at: NOW,
-            updated_at: NOW,
-            review_note: null,
-            reviewed_at: null,
-            organization_id: null,
-          };
-          return [201, { id: APPLICATION_ID }];
+        "POST /partner/registration/{partner_id}/contacts",
+        /^\/partner\/registration\/[^/]+\/contacts$/,
+        ({ version: _version, primary: _primary, ...contact }) => {
+          if (!registration) return 404;
+          const profile = registration.profile;
+          profile.contacts = [{ id: OPTION_ID, is_primary: true, ...contact }];
+          return [201, { id: OPTION_ID, ...version(profile) }];
+        },
+      ],
+      [
+        "POST /partner/registration/{partner_id}/submit",
+        /^\/partner\/registration\/[^/]+\/submit$/,
+        () => {
+          if (!registration) return 404;
+          registration.profile.verification_status = "submitted";
+          registration.verification.verification_status = "submitted";
+          registration.verification.submitted_at = NOW;
+          return version(registration.profile);
         },
       ],
       [
@@ -384,7 +432,7 @@ test("an Employer member manages benefits for the selected organization", async 
   expect(errors).toEqual([]);
 });
 
-test("an account without a Partner organization can apply without any organization scope", async ({
+test("an applicant registers a Partner and submits it without any organization scope", async ({
   page,
 }) => {
   const errors = watchForErrors(page);
@@ -392,14 +440,41 @@ test("an account without a Partner organization can apply without any organizati
   await signIn(page, "/partner");
 
   await expect(page.getByText("Become a marketplace Partner")).toBeVisible();
-  await page.getByRole("link", { name: "Apply or check your application" }).click();
-  await page.getByLabel("Legal name").fill("Acme Travel Pvt Ltd");
+  await page.getByRole("link", { name: "Register or check your registration" }).click();
+  await page.getByLabel("Legal business name").fill("Acme Travel Pvt Ltd");
   await page.getByLabel("Display name").fill("Acme Travel");
-  await page.getByLabel("Contact email").fill("partners@acme.example");
-  await page.getByRole("button", { name: "Submit application" }).click();
-  await expect(page.getByText("Aayulogic is reviewing your application.")).toBeVisible();
+  await page.getByLabel("Registration number").fill("REG-1");
+  await page.getByRole("button", { name: "Save and continue" }).click();
+  await expect(page.getByRole("button", { name: /Business details/ })).toHaveAttribute(
+    "aria-current",
+    "step",
+  );
 
-  for (const call of calls.filter((c) => c.operation.includes("/partner/applications"))) {
+  await page.getByRole("button", { name: /Contacts/ }).click();
+  await page.getByRole("button", { name: "Add contact" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Name").fill("Sita Sharma");
+  await dialog.getByLabel("Email").fill("sita@acme.example");
+  await dialog.getByRole("button", { name: "Add contact" }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(page.getByRole("cell", { name: "sita@acme.example" })).toBeVisible();
+  const added = calls.findLast((c) => c.operation.endsWith("/contacts"));
+  expect(added?.body).toEqual({
+    name: "Sita Sharma",
+    title: null,
+    email: "sita@acme.example",
+    phone: null,
+    primary: false,
+    version: 1,
+  });
+
+  await page.getByRole("button", { name: /Review and submit/ }).click();
+  await page.getByRole("button", { name: "Submit for verification" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Submit" }).click();
+  await expect(page.getByText("Submitted. Aayulogic will review your registration.")).toBeVisible();
+  expect(calls.findLast((c) => c.operation.endsWith("/submit"))?.body).toEqual({ version: 2 });
+
+  for (const call of calls.filter((c) => c.operation.includes("/partner/registration"))) {
     expect(call.organization, call.operation).toBeNull();
   }
   expect(errors).toEqual([]);

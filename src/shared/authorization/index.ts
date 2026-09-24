@@ -4,6 +4,7 @@ export {
   GLOBAL_PERMISSIONS,
   IdentityPermission,
   OrganizationAdminPermission,
+  PartnerApplicantPermission,
   PartnerPermission,
   type GlobalPermissionCode,
   type IdentityPermissionCode,

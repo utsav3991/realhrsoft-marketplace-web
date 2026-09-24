@@ -20,17 +20,37 @@ export const IdentityPermission = {
   ORGANIZATION_ROLE_MANAGE: "identity.organization_role.manage",
 } as const;
 
-/** Global: Aayulogic administration of organizations, membership and Partner onboarding. */
+/** Global: Aayulogic administration of organizations, membership and Partners. */
 export const OrganizationAdminPermission = {
   ORGANIZATION_VIEW: "organizations.organization.view",
   ORGANIZATION_MANAGE: "organizations.organization.manage",
   MEMBERSHIP_MANAGE: "organizations.membership.manage",
-  APPLICATION_VIEW: "organizations.partner_application.view",
+  /** Assisted Partner registration on behalf of an existing account. */
   APPLICATION_CREATE: "organizations.partner_application.create",
-  APPLICATION_REVIEW: "organizations.partner_application.review",
-  PARTNER_MANAGE: "organizations.partner_profile.manage",
+  /** Partner Management (ADR-017). */
+  PARTNER_VIEW: "organizations.partner.view",
+  PARTNER_SEARCH: "organizations.partner.search",
+  PARTNER_VERIFICATION_REVIEW: "organizations.partner_verification.review",
+  PARTNER_SUSPEND: "organizations.partner.suspend",
+  PARTNER_REINSTATE: "organizations.partner.reinstate",
+  PARTNER_CLOSE: "organizations.partner.close",
   ENTITLEMENT_MANAGE: "commercial.entitlement.manage",
   OFFER_REVIEW: "offers.offer.review",
+} as const;
+
+/**
+ * Global, but held through the protected `partner_applicant` role: an applicant acts on its own
+ * Partner until verification attaches it to an organization. Not an administrative grant, so it
+ * does not open the admin console (see GLOBAL_PERMISSIONS).
+ */
+export const PartnerApplicantPermission = {
+  CREATE: "organizations.partner.create",
+  READ_OWN: "organizations.partner.read_own",
+  UPDATE_OWN: "organizations.partner.update_own",
+  CONTACT_MANAGE_OWN: "organizations.partner_contact.manage_own",
+  LOCATION_MANAGE_OWN: "organizations.partner_location.manage_own",
+  DOCUMENT_MANAGE_OWN: "organizations.partner_document.manage_own",
+  VERIFICATION_SUBMIT: "organizations.partner_verification.submit",
 } as const;
 
 /** Organization: the Employer portal. */
@@ -49,6 +69,8 @@ export const EmployerPermission = {
 export const PartnerPermission = {
   PROFILE_VIEW: "organizations.partner_profile.view",
   PROFILE_EDIT: "organizations.partner_profile.edit",
+  CONTACT_MANAGE: "organizations.partner_contact.manage",
+  LOCATION_MANAGE: "organizations.partner_location.manage",
   ENTITLEMENT_VIEW: "commercial.entitlement.view",
   OFFER_VIEW: "offers.offer.view",
   OFFER_CREATE: "offers.offer.create",
@@ -61,12 +83,14 @@ type ValueOf<T> = T[keyof T];
 
 export type IdentityPermissionCode = ValueOf<typeof IdentityPermission>;
 export type GlobalPermissionCode =
-  IdentityPermissionCode | ValueOf<typeof OrganizationAdminPermission>;
+  | IdentityPermissionCode
+  | ValueOf<typeof OrganizationAdminPermission>
+  | ValueOf<typeof PartnerApplicantPermission>;
 export type OrganizationPermissionCode =
   ValueOf<typeof EmployerPermission> | ValueOf<typeof PartnerPermission>;
 export type PermissionCode = GlobalPermissionCode | OrganizationPermissionCode;
 
-/** Every global code: holding any of them opens the admin console. */
+/** Every administrative global code: holding any of them opens the admin console. */
 export const GLOBAL_PERMISSIONS: readonly GlobalPermissionCode[] = [
   ...Object.values(IdentityPermission),
   ...Object.values(OrganizationAdminPermission),

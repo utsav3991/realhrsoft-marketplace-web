@@ -240,32 +240,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/partner/applications": {
+    "/partner/me": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Profile */
+        get: operations["profile_api_v1_partner_me_get"];
         put?: never;
-        /** Submit Application */
-        post: operations["submit_application_api_v1_partner_applications_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Update Own Profile */
+        patch: operations["update_own_profile_api_v1_partner_me_patch"];
         trace?: never;
     };
-    "/partner/applications/mine": {
+    "/partner/me/verification-status": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** My Application */
-        get: operations["my_application_api_v1_partner_applications_mine_get"];
+        /** Verification */
+        get: operations["verification_api_v1_partner_me_verification_status_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -274,56 +275,425 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/partner/applications/{application_id}": {
+    "/partner/me/verification-requirements": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Requirements */
+        get: operations["requirements_api_v1_partner_me_verification_requirements_get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Correct Application */
-        patch: operations["correct_application_api_v1_partner_applications__application_id__patch"];
-        trace?: never;
-    };
-    "/partner/applications/{application_id}/resubmit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Resubmit Application */
-        post: operations["resubmit_application_api_v1_partner_applications__application_id__resubmit_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/partner/profile": {
+    "/partner/me/marketplace-eligibility": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Partner Profile */
-        get: operations["partner_profile_api_v1_partner_profile_get"];
+        /** Eligibility */
+        get: operations["eligibility_api_v1_partner_me_marketplace_eligibility_get"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** Update Partner Profile */
-        patch: operations["update_partner_profile_api_v1_partner_profile_patch"];
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/me/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Own Contact */
+        post: operations["add_own_contact_api_v1_partner_me_contacts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/me/contacts/{contact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Own Contact */
+        delete: operations["remove_own_contact_api_v1_partner_me_contacts__contact_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Own Contact */
+        patch: operations["update_own_contact_api_v1_partner_me_contacts__contact_id__patch"];
+        trace?: never;
+    };
+    "/partner/me/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Own Location */
+        post: operations["add_own_location_api_v1_partner_me_locations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/me/locations/{location_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Own Location */
+        delete: operations["remove_own_location_api_v1_partner_me_locations__location_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Own Location */
+        patch: operations["update_own_location_api_v1_partner_me_locations__location_id__patch"];
+        trace?: never;
+    };
+    "/partner/registration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Registration */
+        get: operations["registration_api_v1_partner_registration_get"];
+        put?: never;
+        /** Register */
+        post: operations["register_api_v1_partner_registration_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/registration/{partner_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Registration */
+        patch: operations["update_registration_api_v1_partner_registration__partner_id__patch"];
+        trace?: never;
+    };
+    "/partner/registration/{partner_id}/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Contact */
+        post: operations["add_contact_api_v1_partner_registration__partner_id__contacts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/registration/{partner_id}/contacts/{contact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Contact */
+        delete: operations["remove_contact_api_v1_partner_registration__partner_id__contacts__contact_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Contact */
+        patch: operations["update_contact_api_v1_partner_registration__partner_id__contacts__contact_id__patch"];
+        trace?: never;
+    };
+    "/partner/registration/{partner_id}/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Location */
+        post: operations["add_location_api_v1_partner_registration__partner_id__locations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/registration/{partner_id}/locations/{location_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Location */
+        delete: operations["remove_location_api_v1_partner_registration__partner_id__locations__location_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Location */
+        patch: operations["update_location_api_v1_partner_registration__partner_id__locations__location_id__patch"];
+        trace?: never;
+    };
+    "/partner/registration/{partner_id}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Document
+         * @description Attach a completed upload. Only a server-side storage adapter records uploads, so this
+         *     answers 404 ("Completed upload not found") until one exists.
+         */
+        post: operations["add_document_api_v1_partner_registration__partner_id__documents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/registration/{partner_id}/documents/{document_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Document */
+        delete: operations["remove_document_api_v1_partner_registration__partner_id__documents__document_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/registration/{partner_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit */
+        post: operations["submit_api_v1_partner_registration__partner_id__submit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/partners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search Partners */
+        get: operations["search_partners_api_v1_admin_partners_get"];
+        put?: never;
+        /**
+         * Register Assisted
+         * @description Aayulogic-assisted intake on behalf of an existing account, with an audited reason.
+         */
+        post: operations["register_assisted_api_v1_admin_partners_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/partners/verified": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Verified Partners */
+        get: operations["verified_partners_api_v1_admin_partners_verified_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/partners/{partner_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Partner By Id */
+        get: operations["partner_by_id_api_v1_admin_partners__partner_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/partners/{partner_id}/verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Partner Verification */
+        get: operations["partner_verification_api_v1_admin_partners__partner_id__verification_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/partners/{partner_id}/start-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Review */
+        post: operations["start_review_api_v1_admin_partners__partner_id__start_review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/partners/{partner_id}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify */
+        post: operations["verify_api_v1_admin_partners__partner_id__verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/partners/{partner_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject */
+        post: operations["reject_api_v1_admin_partners__partner_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/partners/{partner_id}/request-changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Changes */
+        post: operations["request_changes_api_v1_admin_partners__partner_id__request_changes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/partners/{partner_id}/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Change Standing */
+        post: operations["change_standing_api_v1_admin_partners__partner_id___action__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/employer/profile": {
@@ -424,109 +794,6 @@ export interface paths {
         put?: never;
         /** Change Employer Profile */
         post: operations["change_employer_profile_api_v1_admin_organizations__organization_id__employer_profile__action__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/organizations/{organization_id}/partner-profile/{action}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Change Partner Profile */
-        post: operations["change_partner_profile_api_v1_admin_organizations__organization_id__partner_profile__action__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/partner-applications": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Applications */
-        get: operations["list_applications_api_v1_admin_partner_applications_get"];
-        put?: never;
-        /** Create Assisted Application */
-        post: operations["create_assisted_application_api_v1_admin_partner_applications_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/partner-applications/{application_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Application */
-        get: operations["get_application_api_v1_admin_partner_applications__application_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/partner-applications/{application_id}/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Verify Application */
-        post: operations["verify_application_api_v1_admin_partner_applications__application_id__verify_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/partner-applications/{application_id}/reject": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reject Application */
-        post: operations["reject_application_api_v1_admin_partner_applications__application_id__reject_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/partner-applications/{application_id}/request-changes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Request Application Changes */
-        post: operations["request_application_changes_api_v1_admin_partner_applications__application_id__request_changes_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -849,6 +1116,24 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AddContactRequest */
+        AddContactRequest: {
+            /** Name */
+            name: string;
+            /** Title */
+            title?: string | null;
+            /** Email */
+            email?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /** Version */
+            version: number;
+            /**
+             * Primary
+             * @default false
+             */
+            primary: boolean;
+        };
         /** AddMemberRequest */
         AddMemberRequest: {
             /**
@@ -887,16 +1172,16 @@ export interface components {
             /** Reason */
             reason: string;
         };
-        /** AssistedApplicationRequest */
-        AssistedApplicationRequest: {
+        /** AssistedRegistrationRequest */
+        AssistedRegistrationRequest: {
             /** Legal Name */
             legal_name: string;
             /** Display Name */
             display_name: string;
-            /** Contact Email */
-            contact_email: string;
-            /** Contact Phone */
-            contact_phone?: string | null;
+            /** Registration Number */
+            registration_number?: string | null;
+            /** Tax Identifier */
+            tax_identifier?: string | null;
             /** Website */
             website?: string | null;
             /** Description */
@@ -998,35 +1283,33 @@ export interface components {
             /** Retired At */
             retired_at: string | null;
         };
-        /** BusinessDetailsBody */
-        BusinessDetailsBody: {
+        /** BusinessProfileBody */
+        BusinessProfileBody: {
             /** Legal Name */
             legal_name: string;
             /** Display Name */
             display_name: string;
-            /** Contact Email */
-            contact_email: string;
-            /** Contact Phone */
-            contact_phone?: string | null;
+            /** Registration Number */
+            registration_number?: string | null;
+            /** Tax Identifier */
+            tax_identifier?: string | null;
             /** Website */
             website?: string | null;
             /** Description */
             description?: string | null;
         };
-        /** BusinessDetailsResponse */
-        BusinessDetailsResponse: {
-            /** Legal Name */
-            legal_name: string;
-            /** Display Name */
-            display_name: string;
-            /** Contact Email */
-            contact_email: string;
-            /** Contact Phone */
-            contact_phone: string | null;
-            /** Website */
-            website: string | null;
-            /** Description */
-            description: string | null;
+        /**
+         * ComponentResponse
+         * @description A contact, location or document that was added, and the Partner's new version.
+         */
+        ComponentResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Version */
+            version: number;
         };
         /** ContactBody */
         ContactBody: {
@@ -1045,23 +1328,6 @@ export interface components {
             email: string | null;
             /** Phone */
             phone: string | null;
-        };
-        /** CorrectApplicationRequest */
-        CorrectApplicationRequest: {
-            /** Legal Name */
-            legal_name: string;
-            /** Display Name */
-            display_name: string;
-            /** Contact Email */
-            contact_email: string;
-            /** Contact Phone */
-            contact_phone?: string | null;
-            /** Website */
-            website?: string | null;
-            /** Description */
-            description?: string | null;
-            /** Version */
-            version: number;
         };
         /** CreateOrganizationRequest */
         CreateOrganizationRequest: {
@@ -1135,6 +1401,26 @@ export interface components {
             version: number;
             /** Reason */
             reason: string;
+        };
+        /**
+         * DocumentRequest
+         * @description Metadata of a completed, server-attested upload; never the file itself.
+         */
+        DocumentRequest: {
+            /** Version */
+            version: number;
+            /** Document Type */
+            document_type: string;
+            /** File Name */
+            file_name: string;
+            /** Storage Key */
+            storage_key: string;
+            /** Media Type */
+            media_type: string;
+            /** Size Bytes */
+            size_bytes: number;
+            /** Sha256 */
+            sha256: string;
         };
         /** EmployerProfileResponse */
         EmployerProfileResponse: {
@@ -1210,6 +1496,25 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** LocationBody */
+        LocationBody: {
+            /** Label */
+            label: string;
+            /** Line1 */
+            line1: string;
+            /** Line2 */
+            line2?: string | null;
+            /** City */
+            city: string;
+            /** Region */
+            region?: string | null;
+            /** Postal Code */
+            postal_code?: string | null;
+            /** Country Code */
+            country_code: string;
+            /** Version */
+            version: number;
         };
         /** LoginRequest */
         LoginRequest: {
@@ -1373,64 +1678,230 @@ export interface components {
             /** Partner Status */
             partner_status: string | null;
         };
-        /** PartnerApplicationPageResponse */
-        PartnerApplicationPageResponse: {
-            /** Items */
-            items: components["schemas"]["PartnerApplicationResponse"][];
-            /** Next Cursor */
-            next_cursor: string | null;
-        };
-        /** PartnerApplicationResponse */
-        PartnerApplicationResponse: {
+        /** PartnerAdminListItem */
+        PartnerAdminListItem: {
             /**
-             * Id
+             * Partner Id
              * Format: uuid
              */
-            id: string;
+            partner_id: string;
+            /** Organization Id */
+            organization_id: string | null;
+            /** Legal Business Name */
+            legal_business_name: string;
+            /** Display Name */
+            display_name: string;
             /**
-             * Applicant User Id
-             * Format: uuid
+             * Verification Status
+             * @enum {string}
              */
-            applicant_user_id: string;
-            details: components["schemas"]["BusinessDetailsResponse"];
-            /** Status */
-            status: string;
-            /** Intake */
-            intake: string;
-            /** Version */
-            version: number;
+            verification_status: "draft" | "submitted" | "under_review" | "changes_requested" | "verified" | "rejected";
             /**
-             * Submitted At
+             * Operational Status
+             * @enum {string}
+             */
+            operational_status: "active" | "suspended" | "closed";
+            /** Marketplace Eligible */
+            marketplace_eligible: boolean;
+            /**
+             * Created At
              * Format: date-time
              */
-            submitted_at: string;
+            created_at: string;
             /**
              * Updated At
              * Format: date-time
              */
             updated_at: string;
-            /** Review Note */
-            review_note: string | null;
-            /** Reviewed At */
-            reviewed_at: string | null;
-            /** Organization Id */
-            organization_id: string | null;
         };
-        /** PartnerProfileResponse */
-        PartnerProfileResponse: {
+        /** PartnerContactView */
+        PartnerContactView: {
             /**
-             * Organization Id
+             * Id
              * Format: uuid
              */
-            organization_id: string;
-            details: components["schemas"]["BusinessDetailsResponse"];
-            /** Status */
-            status: string;
+            id: string;
+            /** Name */
+            name: string;
+            /** Title */
+            title: string | null;
+            /** Email */
+            email: string | null;
+            /** Phone */
+            phone: string | null;
+            /** Is Primary */
+            is_primary: boolean;
+        };
+        /** PartnerDecisionRequest */
+        PartnerDecisionRequest: {
+            /** Version */
+            version: number;
+            /** Reason */
+            reason: string;
+        };
+        /** PartnerDocumentView */
+        PartnerDocumentView: {
             /**
-             * Verified At
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Document Type */
+            document_type: string;
+            /** File Name */
+            file_name: string;
+            /** Media Type */
+            media_type: string;
+            /** Size Bytes */
+            size_bytes: number;
+            /**
+             * Uploaded At
              * Format: date-time
              */
-            verified_at: string;
+            uploaded_at: string;
+        };
+        /** PartnerLocationView */
+        PartnerLocationView: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string;
+            /** Line1 */
+            line1: string;
+            /** Line2 */
+            line2: string | null;
+            /** City */
+            city: string;
+            /** Region */
+            region: string | null;
+            /** Postal Code */
+            postal_code: string | null;
+            /** Country Code */
+            country_code: string;
+        };
+        /** PartnerMarketplaceEligibilityView */
+        PartnerMarketplaceEligibilityView: {
+            /**
+             * Partner Id
+             * Format: uuid
+             */
+            partner_id: string;
+            /**
+             * Verification Status
+             * @enum {string}
+             */
+            verification_status: "draft" | "submitted" | "under_review" | "changes_requested" | "verified" | "rejected";
+            /**
+             * Operational Status
+             * @enum {string}
+             */
+            operational_status: "active" | "suspended" | "closed";
+            /** Marketplace Eligible */
+            marketplace_eligible: boolean;
+        };
+        /** PartnerPage */
+        PartnerPage: {
+            /** Items */
+            items: components["schemas"]["PartnerAdminListItem"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** PartnerProfileView */
+        PartnerProfileView: {
+            /**
+             * Partner Id
+             * Format: uuid
+             */
+            partner_id: string;
+            /** Organization Id */
+            organization_id: string | null;
+            /** Legal Business Name */
+            legal_business_name: string;
+            /** Display Name */
+            display_name: string;
+            /**
+             * Verification Status
+             * @enum {string}
+             */
+            verification_status: "draft" | "submitted" | "under_review" | "changes_requested" | "verified" | "rejected";
+            /**
+             * Operational Status
+             * @enum {string}
+             */
+            operational_status: "active" | "suspended" | "closed";
+            /** Marketplace Eligible */
+            marketplace_eligible: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Registration Number */
+            registration_number: string | null;
+            /** Tax Identifier */
+            tax_identifier: string | null;
+            /** Website */
+            website: string | null;
+            /** Description */
+            description: string | null;
+            /** Version */
+            version: number;
+            /** Contacts */
+            contacts: components["schemas"]["PartnerContactView"][];
+            /** Locations */
+            locations: components["schemas"]["PartnerLocationView"][];
+        };
+        /** PartnerRegistrationView */
+        PartnerRegistrationView: {
+            profile: components["schemas"]["PartnerProfileView"];
+            verification: components["schemas"]["PartnerVerificationView"];
+        };
+        /** PartnerRequirementView */
+        PartnerRequirementView: {
+            /** Code */
+            code: string;
+            /** Description */
+            description: string;
+            /** Satisfied */
+            satisfied: boolean;
+        };
+        /** PartnerVerificationView */
+        PartnerVerificationView: {
+            /**
+             * Partner Id
+             * Format: uuid
+             */
+            partner_id: string;
+            /**
+             * Verification Status
+             * @enum {string}
+             */
+            verification_status: "draft" | "submitted" | "under_review" | "changes_requested" | "verified" | "rejected";
+            /** Submitted At */
+            submitted_at: string | null;
+            /** Review Started At */
+            review_started_at: string | null;
+            /** Decision Applied At */
+            decision_applied_at: string | null;
+            /** Decision Reference */
+            decision_reference: string | null;
+            /** Review Note */
+            review_note: string | null;
+            /** Requirements */
+            requirements: components["schemas"]["PartnerRequirementView"][];
+            /** Documents */
+            documents: components["schemas"]["PartnerDocumentView"][];
+        };
+        /** PartnerVersionRequest */
+        PartnerVersionRequest: {
             /** Version */
             version: number;
         };
@@ -1572,6 +2043,19 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** UpdateContactRequest */
+        UpdateContactRequest: {
+            /** Name */
+            name: string;
+            /** Title */
+            title?: string | null;
+            /** Email */
+            email?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /** Version */
+            version: number;
+        };
         /** UpdateOfferRequest */
         UpdateOfferRequest: {
             /** Title */
@@ -1618,20 +2102,22 @@ export interface components {
              */
             is_active: boolean;
         };
-        /** UpdatePartnerProfileRequest */
-        UpdatePartnerProfileRequest: {
-            /** Version */
-            version: number;
+        /** UpdateProfileRequest */
+        UpdateProfileRequest: {
+            /** Legal Name */
+            legal_name: string;
             /** Display Name */
             display_name: string;
-            /** Contact Email */
-            contact_email: string;
-            /** Contact Phone */
-            contact_phone?: string | null;
+            /** Registration Number */
+            registration_number?: string | null;
+            /** Tax Identifier */
+            tax_identifier?: string | null;
             /** Website */
             website?: string | null;
             /** Description */
             description?: string | null;
+            /** Version */
+            version: number;
         };
         /** UserDetailResponse */
         UserDetailResponse: {
@@ -1697,16 +2183,8 @@ export interface components {
             /** Context */
             ctx?: Record<string, never>;
         };
-        /** VerifiedResponse */
-        VerifiedResponse: {
-            /**
-             * Organization Id
-             * Format: uuid
-             */
-            organization_id: string;
-        };
-        /** VerifyApplicationRequest */
-        VerifyApplicationRequest: {
+        /** VerifyRequest */
+        VerifyRequest: {
             /** Version */
             version: number;
             /** Reason */
@@ -1723,13 +2201,6 @@ export interface components {
         VersionResponse: {
             /** Version */
             version: number;
-        };
-        /** VersionedReasonRequest */
-        VersionedReasonRequest: {
-            /** Version */
-            version: number;
-            /** Reason */
-            reason: string;
         };
     };
     responses: never;
@@ -2255,7 +2726,117 @@ export interface operations {
             };
         };
     };
-    submit_application_api_v1_partner_applications_post: {
+    profile_api_v1_partner_me_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerProfileView"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_own_profile_api_v1_partner_me_patch: {
         parameters: {
             query?: never;
             header?: {
@@ -2267,7 +2848,1550 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BusinessDetailsBody"];
+                "application/json": components["schemas"]["UpdateProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    verification_api_v1_partner_me_verification_status_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerVerificationView"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    requirements_api_v1_partner_me_verification_requirements_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerRequirementView"][];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    eligibility_api_v1_partner_me_marketplace_eligibility_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerMarketplaceEligibilityView"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_own_contact_api_v1_partner_me_contacts_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddContactRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComponentResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    remove_own_contact_api_v1_partner_me_contacts__contact_id__delete: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    update_own_contact_api_v1_partner_me_contacts__contact_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateContactRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    add_own_location_api_v1_partner_me_locations_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComponentResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    remove_own_location_api_v1_partner_me_locations__location_id__delete: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                location_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    update_own_location_api_v1_partner_me_locations__location_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                location_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    registration_api_v1_partner_registration_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerRegistrationView"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    register_api_v1_partner_registration_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BusinessProfileBody"];
             };
         };
         responses: {
@@ -2280,20 +4404,1738 @@ export interface operations {
                     "application/json": components["schemas"]["CreatedResponse"];
                 };
             };
-            /** @description Validation Error */
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };
     };
-    my_application_api_v1_partner_applications_mine_get: {
+    update_registration_api_v1_partner_registration__partner_id__patch: {
         parameters: {
             query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    add_contact_api_v1_partner_registration__partner_id__contacts_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddContactRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComponentResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    remove_contact_api_v1_partner_registration__partner_id__contacts__contact_id__delete: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                partner_id: string;
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    update_contact_api_v1_partner_registration__partner_id__contacts__contact_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                partner_id: string;
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateContactRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    add_location_api_v1_partner_registration__partner_id__locations_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComponentResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    remove_location_api_v1_partner_registration__partner_id__locations__location_id__delete: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                partner_id: string;
+                location_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    update_location_api_v1_partner_registration__partner_id__locations__location_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                partner_id: string;
+                location_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    add_document_api_v1_partner_registration__partner_id__documents_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComponentResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    remove_document_api_v1_partner_registration__partner_id__documents__document_id__delete: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                partner_id: string;
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    submit_api_v1_partner_registration__partner_id__submit_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PartnerVersionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    search_partners_api_v1_admin_partners_get: {
+        parameters: {
+            query?: {
+                search?: string | null;
+                verification_status?: ("draft" | "submitted" | "under_review" | "changes_requested" | "verified" | "rejected") | null;
+                operational_status?: ("active" | "suspended" | "closed") | null;
+                organization_id?: string | null;
+                cursor?: string | null;
+                limit?: number;
+                sort?: "created_at" | "-created_at";
+            };
             header?: {
                 authorization?: string | null;
                 "x-organization-id"?: string | null;
@@ -2309,99 +6151,256 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PartnerApplicationResponse"];
+                    "application/json": components["schemas"]["PartnerPage"];
                 };
             };
-            /** @description Validation Error */
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };
     };
-    correct_application_api_v1_partner_applications__application_id__patch: {
+    register_assisted_api_v1_admin_partners_post: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
                 "x-organization-id"?: string | null;
             };
-            path: {
-                application_id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CorrectApplicationRequest"];
+                "application/json": components["schemas"]["AssistedRegistrationRequest"];
             };
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["VersionResponse"];
+                    "application/json": components["schemas"]["CreatedResponse"];
                 };
             };
-            /** @description Validation Error */
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };
     };
-    resubmit_application_api_v1_partner_applications__application_id__resubmit_post: {
+    verified_partners_api_v1_admin_partners_verified_get: {
         parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-                "x-organization-id"?: string | null;
+            query?: {
+                search?: string | null;
+                operational_status?: ("active" | "suspended" | "closed") | null;
+                organization_id?: string | null;
+                cursor?: string | null;
+                limit?: number;
+                sort?: "created_at" | "-created_at";
             };
-            path: {
-                application_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VersionRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["VersionResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    partner_profile_api_v1_partner_profile_get: {
-        parameters: {
-            query?: never;
             header?: {
                 authorization?: string | null;
                 "x-organization-id"?: string | null;
@@ -2417,7 +6416,188 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PartnerProfileResponse"];
+                    "application/json": components["schemas"]["PartnerPage"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    partner_by_id_api_v1_admin_partners__partner_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerProfileView"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -2431,19 +6611,133 @@ export interface operations {
             };
         };
     };
-    update_partner_profile_api_v1_partner_profile_patch: {
+    partner_verification_api_v1_admin_partners__partner_id__verification_get: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
                 "x-organization-id"?: string | null;
             };
-            path?: never;
+            path: {
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerVerificationView"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_review_api_v1_admin_partners__partner_id__start_review_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                partner_id: string;
+            };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdatePartnerProfileRequest"];
+                "application/json": components["schemas"]["PartnerVersionRequest"];
             };
         };
         responses: {
@@ -2456,13 +6750,771 @@ export interface operations {
                     "application/json": components["schemas"]["VersionResponse"];
                 };
             };
-            /** @description Validation Error */
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    verify_api_v1_admin_partners__partner_id__verify_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    reject_api_v1_admin_partners__partner_id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PartnerDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    request_changes_api_v1_admin_partners__partner_id__request_changes_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PartnerDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    change_standing_api_v1_admin_partners__partner_id___action__post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                partner_id: string;
+                action: "suspend" | "reinstate" | "close";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PartnerDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description AUTHENTICATION_FAILED: Missing, expired or invalid bearer token. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description FORBIDDEN: The actor lacks the permission, or the organization scope, it needs. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description NOT_FOUND: The resource does not exist or is outside the actor's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description CONFLICT: Stale version, illegal state transition or uniqueness conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description VALIDATION_ERROR: The request or a business rule rejected the input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Type */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Code */
+                        code: string;
+                        /** Instance */
+                        instance?: string | null;
+                        /** Request Id */
+                        request_id?: string | null;
+                        /** Detail */
+                        detail?: string | null;
+                    } & {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };
@@ -2728,259 +7780,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ReasonRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    change_partner_profile_api_v1_admin_organizations__organization_id__partner_profile__action__post: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-                "x-organization-id"?: string | null;
-            };
-            path: {
-                organization_id: string;
-                action: "suspend" | "reinstate";
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReasonRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_applications_api_v1_admin_partner_applications_get: {
-        parameters: {
-            query?: {
-                status?: ("submitted" | "changes_requested" | "verified" | "rejected") | null;
-                cursor?: string | null;
-                limit?: number;
-            };
-            header?: {
-                authorization?: string | null;
-                "x-organization-id"?: string | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PartnerApplicationPageResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_assisted_application_api_v1_admin_partner_applications_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-                "x-organization-id"?: string | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AssistedApplicationRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreatedResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_application_api_v1_admin_partner_applications__application_id__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-                "x-organization-id"?: string | null;
-            };
-            path: {
-                application_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PartnerApplicationResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    verify_application_api_v1_admin_partner_applications__application_id__verify_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-                "x-organization-id"?: string | null;
-            };
-            path: {
-                application_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VerifyApplicationRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["VerifiedResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    reject_application_api_v1_admin_partner_applications__application_id__reject_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-                "x-organization-id"?: string | null;
-            };
-            path: {
-                application_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VersionedReasonRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    request_application_changes_api_v1_admin_partner_applications__application_id__request_changes_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-                "x-organization-id"?: string | null;
-            };
-            path: {
-                application_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VersionedReasonRequest"];
             };
         };
         responses: {

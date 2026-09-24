@@ -34,12 +34,7 @@ import { ListSkeleton } from "@/shared/feedback/list-skeleton";
 import { ErrorState } from "@/shared/feedback/states";
 import { formatDate, formatDateTime } from "@/shared/lib/format";
 
-import {
-  useAddMember,
-  useChangeEmployerProfile,
-  useChangePartnerProfile,
-  useRemoveMember,
-} from "../api/mutations";
+import { useAddMember, useChangeEmployerProfile, useRemoveMember } from "../api/mutations";
 import { useMembers, useOrganization } from "../api/queries";
 
 type Organization = Schemas["OrganizationResponse"];
@@ -107,9 +102,7 @@ export function OrganizationDetail({
   );
 }
 
-type PendingChange =
-  | { kind: "employer"; action: "enable" | "disable" }
-  | { kind: "partner"; action: "suspend" | "reinstate" };
+type PendingChange = { kind: "employer"; action: "enable" | "disable" };
 
 const CHANGE_COPY: Record<string, { title: string; description: string; confirm: string }> = {
   "employer:enable": {
@@ -123,25 +116,13 @@ const CHANGE_COPY: Record<string, { title: string; description: string; confirm:
     description: "The Employer portal closes for this organization. Benefits are kept.",
     confirm: "Disable",
   },
-  "partner:suspend": {
-    title: "Suspend this Partner?",
-    description:
-      "Every Offer from this organization goes offline immediately and new Offers cannot be created. Offers are kept.",
-    confirm: "Suspend partner",
-  },
-  "partner:reinstate": {
-    title: "Reinstate this Partner?",
-    description: "Approved, commercially eligible Offers go live again.",
-    confirm: "Reinstate",
-  },
 };
 
 function CapacitiesCard({ organization }: { organization: Organization }) {
   const [pending, setPending] = useState<PendingChange | null>(null);
   const employer = useChangeEmployerProfile(organization.id);
-  const partner = useChangePartnerProfile(organization.id);
   const canManage = useCan(OrganizationAdminPermission.ORGANIZATION_MANAGE);
-  const canManagePartner = useCan(OrganizationAdminPermission.PARTNER_MANAGE);
+  const canSearchPartners = useCan(OrganizationAdminPermission.PARTNER_SEARCH);
   const copy = pending ? CHANGE_COPY[`${pending.kind}:${pending.action}`] : undefined;
 
   return (
@@ -182,29 +163,18 @@ function CapacitiesCard({ organization }: { organization: Organization }) {
               ) : null}
             </div>
           </Detail>
-          <Detail label="Partner profile">
+          <Detail label="Partner">
             <div className="flex flex-wrap items-center gap-2">
               {organization.partner_status ? (
                 <StatusBadge domain="partnerProfile" status={organization.partner_status} />
               ) : (
-                <span className="text-muted-foreground">Created by verifying an application</span>
+                <span className="text-muted-foreground">Attached by verifying a Partner</span>
               )}
-              {canManagePartner && organization.partner_status === "verified" ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setPending({ kind: "partner", action: "suspend" })}
-                >
-                  Suspend
-                </Button>
-              ) : null}
-              {canManagePartner && organization.partner_status === "suspended" ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPending({ kind: "partner", action: "reinstate" })}
-                >
-                  Reinstate
+              {organization.partner_status && canSearchPartners ? (
+                <Button asChild variant="ghost" size="sm">
+                  <Link href={`/admin/partners?organization_id=${organization.id}`}>
+                    Open Partner record
+                  </Link>
                 </Button>
               ) : null}
             </div>
@@ -222,14 +192,10 @@ function CapacitiesCard({ organization }: { organization: Organization }) {
         title={copy?.title ?? ""}
         description={copy?.description ?? ""}
         confirmLabel={copy?.confirm ?? "Confirm"}
-        destructive={pending?.action === "disable" || pending?.action === "suspend"}
+        destructive={pending?.action === "disable"}
         onConfirm={async (reason) => {
           if (!pending) return;
-          if (pending.kind === "employer") {
-            await employer.mutateAsync({ action: pending.action, reason });
-          } else {
-            await partner.mutateAsync({ action: pending.action, reason });
-          }
+          await employer.mutateAsync({ action: pending.action, reason });
           toast.success(`${copy?.confirm ?? "Updated"}: ${organization.name}`);
         }}
       />

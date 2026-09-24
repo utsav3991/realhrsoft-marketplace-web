@@ -1,7 +1,6 @@
 import {
   Building2,
   ClipboardCheck,
-  ClipboardList,
   FileText,
   Gift,
   Handshake,
@@ -90,10 +89,10 @@ export const PORTALS: readonly Portal[] = [
         anyOf: [OrganizationAdminPermission.ORGANIZATION_VIEW],
       },
       {
-        href: "/admin/partner-applications",
-        label: "Partner applications",
-        icon: ClipboardList,
-        anyOf: [OrganizationAdminPermission.APPLICATION_VIEW],
+        href: "/admin/partners",
+        label: "Partners",
+        icon: Handshake,
+        anyOf: [OrganizationAdminPermission.PARTNER_SEARCH],
       },
       {
         href: "/admin/offers",
@@ -129,7 +128,7 @@ export const PORTALS: readonly Portal[] = [
         anyOf: [PartnerPermission.PROFILE_VIEW],
         inOrganization: true,
       },
-      { href: "/partner/application", label: "Application", icon: FileText },
+      { href: "/partner/application", label: "Registration", icon: FileText },
     ],
   },
   {

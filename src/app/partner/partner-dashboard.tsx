@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/design-system/primitives/card";
 import { OwnEntitlementCard } from "@/features/commercial/components/entitlement-card";
+import { OwnPartnerStanding } from "@/features/partners/components/own-partner";
 import { Can, PartnerPermission } from "@/shared/authorization";
 
 /** Shown to accounts that are not members of any Partner organization yet. */
@@ -21,12 +22,12 @@ export function PartnerOnboarding() {
     <EmptyState
       icon={Handshake}
       title="Become a marketplace Partner"
-      description="Apply with your business details. Aayulogic verifies every Partner before its offers can reach marketplace users."
+      description="Register your business with its contacts and locations. Aayulogic verifies every Partner before its offers can reach marketplace users."
       action={
         <Button asChild>
           <Link href="/partner/application">
             <FileText aria-hidden />
-            Apply or check your application
+            Register or check your registration
           </Link>
         </Button>
       }
@@ -54,6 +55,9 @@ const LINKS = [
 export function PartnerDashboard() {
   return (
     <div className="space-y-6">
+      <Can inOrganization permission={PartnerPermission.PROFILE_VIEW}>
+        <OwnPartnerStanding />
+      </Can>
       <Can inOrganization permission={PartnerPermission.ENTITLEMENT_VIEW}>
         <OwnEntitlementCard />
       </Can>

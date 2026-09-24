@@ -14,7 +14,7 @@ src/
 ├── app/                 routes only: layouts, pages, thin route-local components
 │   ├── (auth)/login/
 │   ├── marketplace/     employee experience
-│   ├── partner/         Partner portal: onboarding for any account; offers/profile per organization
+│   ├── partner/         Partner portal: registration (applicant role); offers/profile per organization
 │   ├── employer/        Employer portal: Company Benefits per organization
 │   └── admin/           Aayulogic Admin
 ├── features/<domain>/   api/ (queries + mutations), components/, schemas/, …
@@ -49,7 +49,8 @@ Only `shared/api` imports `@/generated/*`. Everyone else uses `Schemas` from `@/
   never sees the session, so Server Components render static chrome only.
 - **Call the API only through `api` + `unwrap` from `@/shared/api`.** The client adds the
   bearer token, `X-Request-ID` and, on organization-scoped paths only (`/auth/me`, `/employer/*`,
-  `/partner/*` except `/partner/applications*`; see `isOrganizationScoped`), `X-Organization-ID`.
+  `/partner/*` except `/partner/registration*`; see `isOrganizationScoped`),
+  `X-Organization-ID`.
   It renews once on a 401 and turns every failure into `ApiError` (Problem Details `code`).
   Branch on `code`/`status`, never on `detail` text.
 - **Contract changes:** `yarn api:generate --pull` (backend running) updates the snapshot and

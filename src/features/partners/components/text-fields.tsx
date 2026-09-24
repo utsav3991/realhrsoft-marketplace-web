@@ -5,54 +5,43 @@ import type { FieldPath, FieldValues, UseFormReturn } from "react-hook-form";
 import { fieldDescriptionIds, FormField } from "@/design-system/components/form-field";
 import { Input } from "@/design-system/primitives/input";
 import { Textarea } from "@/design-system/primitives/textarea";
+import { cn } from "@/shared/lib/cn";
 
-import type { ContactValues } from "../schemas/business";
-
-interface FieldSpec {
-  name: keyof ContactValues | "legalName";
+export interface TextFieldSpec<T extends FieldValues> {
+  name: FieldPath<T>;
   label: string;
   hint?: string;
   type?: "email" | "url" | "tel";
   multiline?: boolean;
+  /** Locked fields render read-only (for example verified identifiers). */
+  locked?: boolean;
+  wide?: boolean;
 }
 
-const LEGAL: FieldSpec = {
-  name: "legalName",
-  label: "Legal name",
-  hint: "As registered. It cannot be changed after verification.",
-};
-const CONTACT: readonly FieldSpec[] = [
-  { name: "displayName", label: "Display name", hint: "Shown to marketplace users." },
-  { name: "contactEmail", label: "Contact email", type: "email" },
-  { name: "contactPhone", label: "Contact phone (optional)", type: "tel" },
-  { name: "website", label: "Website (optional)", type: "url" },
-  { name: "description", label: "About the business (optional)", multiline: true },
-];
-
-/** Business and contact inputs shared by applications and the Partner profile. */
-export function BusinessFields<T extends FieldValues>({
+/** Labelled inputs for a React Hook Form, with hints and inline errors. */
+export function TextFields<T extends FieldValues>({
   form,
-  includeLegalName = true,
+  fields,
+  idPrefix,
   disabled = false,
 }: {
   form: UseFormReturn<T>;
-  includeLegalName?: boolean;
+  fields: readonly TextFieldSpec<T>[];
+  idPrefix: string;
   disabled?: boolean;
 }) {
-  const fields = includeLegalName ? [LEGAL, ...CONTACT] : CONTACT;
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {fields.map((field) => {
-        const name = field.name as FieldPath<T>;
-        const error = form.formState.errors[name];
+        const error = form.formState.errors[field.name];
         const message = typeof error?.message === "string" ? error.message : undefined;
-        const id = `business-${field.name}`;
+        const id = `${idPrefix}-${field.name}`;
         const common = {
           id,
-          disabled,
+          disabled: disabled || field.locked,
           "aria-invalid": error ? true : undefined,
           "aria-describedby": fieldDescriptionIds(id, { hint: field.hint, error }),
-          ...form.register(name),
+          ...form.register(field.name),
         };
         return (
           <FormField
@@ -61,7 +50,7 @@ export function BusinessFields<T extends FieldValues>({
             label={field.label}
             hint={field.hint}
             error={message}
-            className={field.multiline ? "sm:col-span-2" : undefined}
+            className={cn((field.multiline || field.wide) && "sm:col-span-2")}
           >
             {field.multiline ? (
               <Textarea rows={3} {...common} />
