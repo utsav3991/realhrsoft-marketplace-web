@@ -50,14 +50,20 @@ export function PortalGate({
   return <>{children}</>;
 }
 
-/** Page-level guard inside a portal, for pages that need a specific permission. */
+/**
+ * Page-level guard inside a portal, for pages that need a specific permission. Portal pages
+ * pass `inOrganization` to check grants in the selected organization instead of global ones.
+ */
 export function RequirePermission({
   anyOf,
+  inOrganization = false,
   children,
 }: {
   anyOf: readonly PermissionCode[];
+  inOrganization?: boolean;
   children: ReactNode;
 }) {
   const { actor } = useSession();
-  return canAny(actor, anyOf) ? <>{children}</> : <ForbiddenState />;
+  const scope = inOrganization ? { organizationId: actor?.organization?.id ?? null } : {};
+  return canAny(actor, anyOf, scope) ? <>{children}</> : <ForbiddenState />;
 }

@@ -67,6 +67,7 @@ export function UsersDirectory() {
         <form onSubmit={onSearch} role="search" className="flex w-full max-w-sm gap-2">
           <Input
             type="search"
+            maxLength={320}
             placeholder="Search by email"
             aria-label="Search users by email"
             value={draft}

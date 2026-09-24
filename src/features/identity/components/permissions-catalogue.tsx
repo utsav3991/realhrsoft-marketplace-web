@@ -64,6 +64,7 @@ export function PermissionsCatalogue() {
                 <TableRow>
                   <TableHead>Permission</TableHead>
                   <TableHead>Description</TableHead>
+                  <TableHead>Scope</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -80,6 +81,9 @@ export function PermissionsCatalogue() {
                     </TableCell>
                     <TableCell className="text-muted-foreground max-w-md whitespace-normal">
                       {permission.description ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {permission.scope === "organization" ? "Organization" : "Platform-wide"}
                     </TableCell>
                     <TableCell>
                       <StatusBadge domain="permission" status={permission.status} />

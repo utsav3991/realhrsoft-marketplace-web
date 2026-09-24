@@ -1,17 +1,29 @@
 import {
   Building2,
+  ClipboardCheck,
+  ClipboardList,
+  FileText,
   Gift,
   Handshake,
   KeyRound,
   LayoutDashboard,
   ShieldCheck,
   Store,
+  Tag,
   Users,
   type LucideIcon,
 } from "lucide-react";
 
-import type { CurrentActor } from "@/shared/auth";
-import { IdentityPermission, canAny, type PermissionCode } from "@/shared/authorization";
+import type { Capacity, CurrentActor } from "@/shared/auth";
+import {
+  EmployerPermission,
+  GLOBAL_PERMISSIONS,
+  IdentityPermission,
+  OrganizationAdminPermission,
+  PartnerPermission,
+  canAny,
+  type PermissionCode,
+} from "@/shared/authorization";
 
 export type PortalId = "marketplace" | "partner" | "employer" | "admin";
 
@@ -21,6 +33,8 @@ export interface NavItem {
   icon: LucideIcon;
   /** Shown when the actor holds any of these. Omit for items every portal user sees. */
   anyOf?: readonly PermissionCode[];
+  /** Check `anyOf` in the selected organization (portal permissions) instead of globally. */
+  inOrganization?: boolean;
 }
 
 export interface Portal {
@@ -30,10 +44,15 @@ export interface Portal {
   basePath: `/${PortalId}`;
   /** Capability-derived, never role- or actor_type-derived. UX only; the API decides. */
   canAccess: (actor: CurrentActor) => boolean;
+  /** Offered in the switcher and as a landing page. Defaults to `canAccess`. */
+  listed?: (actor: CurrentActor) => boolean;
+  /** Organization capacity the portal acts for; its pages are scoped to one organization. */
+  capacity?: Capacity;
   navigation: readonly NavItem[];
 }
 
-const ADMIN_CONSOLE_PERMISSIONS = Object.values(IdentityPermission);
+const hasCapacity = (actor: CurrentActor, capacity: Capacity) =>
+  actor.memberships.some((membership) => membership[capacity]);
 
 /** Every portal, in landing-preference order: specialised workspaces before the marketplace. */
 export const PORTALS: readonly Portal[] = [
@@ -42,7 +61,8 @@ export const PORTALS: readonly Portal[] = [
     label: "Aayulogic Admin",
     icon: ShieldCheck,
     basePath: "/admin",
-    canAccess: (actor) => canAny(actor, ADMIN_CONSOLE_PERMISSIONS),
+    // Global grants only: an organization grant never opens the console (ADR-014).
+    canAccess: (actor) => canAny(actor, GLOBAL_PERMISSIONS),
     navigation: [
       { href: "/admin", label: "Overview", icon: LayoutDashboard },
       {
@@ -63,6 +83,24 @@ export const PORTALS: readonly Portal[] = [
         icon: KeyRound,
         anyOf: [IdentityPermission.PERMISSION_VIEW],
       },
+      {
+        href: "/admin/organizations",
+        label: "Organizations",
+        icon: Building2,
+        anyOf: [OrganizationAdminPermission.ORGANIZATION_VIEW],
+      },
+      {
+        href: "/admin/partner-applications",
+        label: "Partner applications",
+        icon: ClipboardList,
+        anyOf: [OrganizationAdminPermission.APPLICATION_VIEW],
+      },
+      {
+        href: "/admin/offers",
+        label: "Offer review",
+        icon: ClipboardCheck,
+        anyOf: [OrganizationAdminPermission.OFFER_REVIEW],
+      },
     ],
   },
   {
@@ -70,18 +108,53 @@ export const PORTALS: readonly Portal[] = [
     label: "Partner Portal",
     icon: Handshake,
     basePath: "/partner",
-    // No partner capability exists in the backend yet. Enable with its permission codes.
-    canAccess: () => false,
-    navigation: [{ href: "/partner", label: "Dashboard", icon: LayoutDashboard }],
+    // Any signed-in account may apply to become a Partner; the portal's own pages need a
+    // verified Partner organization and grants there.
+    canAccess: () => true,
+    listed: (actor) => hasCapacity(actor, "partner"),
+    capacity: "partner",
+    navigation: [
+      { href: "/partner", label: "Dashboard", icon: LayoutDashboard },
+      {
+        href: "/partner/offers",
+        label: "Offers",
+        icon: Tag,
+        anyOf: [PartnerPermission.OFFER_VIEW],
+        inOrganization: true,
+      },
+      {
+        href: "/partner/profile",
+        label: "Profile",
+        icon: Building2,
+        anyOf: [PartnerPermission.PROFILE_VIEW],
+        inOrganization: true,
+      },
+      { href: "/partner/application", label: "Application", icon: FileText },
+    ],
   },
   {
     id: "employer",
     label: "Employer Portal",
     icon: Building2,
     basePath: "/employer",
-    // No employer capability exists in the backend yet. Enable with its permission codes.
-    canAccess: () => false,
-    navigation: [{ href: "/employer", label: "Company benefits", icon: Gift }],
+    canAccess: (actor) => hasCapacity(actor, "employer"),
+    capacity: "employer",
+    navigation: [
+      {
+        href: "/employer",
+        label: "Company benefits",
+        icon: Gift,
+        anyOf: [EmployerPermission.BENEFIT_VIEW],
+        inOrganization: true,
+      },
+      {
+        href: "/employer/profile",
+        label: "Profile",
+        icon: Building2,
+        anyOf: [EmployerPermission.PROFILE_VIEW],
+        inOrganization: true,
+      },
+    ],
   },
   {
     id: "marketplace",
@@ -100,11 +173,20 @@ export function getPortal(id: PortalId): Portal {
   return portal;
 }
 
+/** Portals offered to the actor (switcher and landing). */
 export function accessiblePortals(actor: CurrentActor | null): Portal[] {
-  return actor ? PORTALS.filter((portal) => portal.canAccess(actor)) : [];
+  if (!actor) return [];
+  return PORTALS.filter((portal) => (portal.listed ?? portal.canAccess)(actor));
 }
 
 /** Where a signed-in actor lands when no ?next= destination was requested. */
 export function defaultPortalPath(actor: CurrentActor | null): string {
   return accessiblePortals(actor)[0]?.basePath ?? "/marketplace";
+}
+
+/** Whether a navigation item is offered to the actor. */
+export function showsNavItem(actor: CurrentActor | null, item: NavItem): boolean {
+  if (!item.anyOf) return true;
+  const scope = item.inOrganization ? { organizationId: actor?.organization?.id ?? null } : {};
+  return canAny(actor, item.anyOf, scope);
 }

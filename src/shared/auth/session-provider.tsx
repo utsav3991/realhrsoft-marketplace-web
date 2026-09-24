@@ -14,7 +14,9 @@ import {
 
 import {
   ApiError,
+  clearDeniedOrganizations,
   getActiveOrganizationId,
+  markOrganizationDenied,
   setActiveOrganizationId,
   subscribeActiveOrganization,
 } from "@/shared/api";
@@ -59,10 +61,35 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => listenForLogoutElsewhere(), []);
 
-  // Signed out (logout, expiry, another tab): drop every cached read model.
+  // Signed out (logout, expiry, another tab): drop every cached read model and mutation
+  // (whose variables can hold what an administrator typed).
   useEffect(() => {
-    if (!token) queryClient.removeQueries();
+    if (!token) queryClient.clear();
   }, [token, queryClient]);
+
+  // A 403 from any call may mean this actor's grants changed since /auth/me was read.
+  // Re-read it so navigation and action gating stop offering what the API now refuses.
+  useEffect(() => {
+    const refreshActorOnForbidden = (error: unknown) => {
+      if (error instanceof ApiError && error.isForbidden) {
+        void queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+      }
+    };
+    const unsubscribeQueries = queryClient.getQueryCache().subscribe((event) => {
+      if (event.type === "updated" && event.action.type === "error") {
+        if (event.query.queryKey[0] !== "auth") refreshActorOnForbidden(event.action.error);
+      }
+    });
+    const unsubscribeMutations = queryClient.getMutationCache().subscribe((event) => {
+      if (event.type === "updated" && event.action.type === "error") {
+        refreshActorOnForbidden(event.action.error);
+      }
+    });
+    return () => {
+      unsubscribeQueries();
+      unsubscribeMutations();
+    };
+  }, [queryClient]);
 
   const actorQuery = useQuery({
     queryKey: currentActorKey(organizationId),
@@ -71,17 +98,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     staleTime: 60_000,
   });
 
-  // The backend rejects an organization scope that is not assigned to this user.
+  // The backend rejects an organization where this user is not a verified member holding a
+  // grant. Remember the refusal so the organization is not selected automatically again.
   const actorError = actorQuery.error;
   useEffect(() => {
     if (organizationId && actorError instanceof ApiError && actorError.isForbidden) {
+      markOrganizationDenied(organizationId);
       setActiveOrganizationId(null);
     }
   }, [actorError, organizationId]);
 
   const handleLogin = useCallback(
     async (credentials: { email: string; password: string }) => {
-      queryClient.removeQueries();
+      queryClient.clear();
+      clearDeniedOrganizations();
       await login(credentials);
     },
     [queryClient],

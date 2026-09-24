@@ -25,6 +25,7 @@ const viewer: CurrentActor = {
   roles: [],
   globalPermissions: new Set([IdentityPermission.USER_VIEW]),
   organization: null,
+  memberships: [],
 };
 
 describe("<Can>", () => {

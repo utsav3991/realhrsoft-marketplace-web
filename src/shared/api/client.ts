@@ -5,7 +5,7 @@ import { getAccessToken } from "@/shared/auth/token-store";
 import { env } from "@/shared/config/env";
 
 import { normalizeApiError } from "./errors";
-import { getActiveOrganizationId } from "./organization-context";
+import { getActiveOrganizationId, isOrganizationScoped } from "./organization-context";
 
 /** Transport DTOs from the backend's OpenAPI contract. Never hand-write these. */
 export type Schemas = components["schemas"];
@@ -21,12 +21,17 @@ export function setAccessTokenRenewer(renewer: AccessTokenRenewer): void {
   renewAccessToken = renewer;
 }
 
+function apiPath(request: Request): string {
+  const { pathname } = new URL(request.url);
+  return pathname.startsWith(env.apiBasePath) ? pathname.slice(env.apiBasePath.length) : pathname;
+}
+
 function withContext(request: Request): Request {
   const token = getAccessToken();
   if (token) request.headers.set("Authorization", `Bearer ${token}`);
   else request.headers.delete("Authorization");
 
-  const organizationId = getActiveOrganizationId();
+  const organizationId = isOrganizationScoped(apiPath(request)) ? getActiveOrganizationId() : null;
   if (organizationId) request.headers.set("X-Organization-ID", organizationId);
   else request.headers.delete("X-Organization-ID");
 
@@ -44,13 +49,9 @@ async function send(request: Request): Promise<Response> {
   }
 }
 
-function apiPath(request: Request): string {
-  const { pathname } = new URL(request.url);
-  return pathname.startsWith(env.apiBasePath) ? pathname.slice(env.apiBasePath.length) : pathname;
-}
-
 /**
- * Attaches the bearer token, organization scope and a correlation id. An expired access token
+ * Attaches the bearer token, the organization scope (organization-scoped paths only) and a
+ * correlation id. An expired access token
  * (401) is renewed once through the refresh cookie and the request replayed once.
  */
 export async function apiFetch(request: Request): Promise<Response> {

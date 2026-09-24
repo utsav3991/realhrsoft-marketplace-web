@@ -59,6 +59,9 @@ export function RolesList() {
                       {role.display_name}
                     </Link>
                     {role.is_system ? <Badge intent="info">System</Badge> : null}
+                    {role.scope === "organization" ? (
+                      <Badge intent="outline">Organization</Badge>
+                    ) : null}
                   </span>
                   <span className="text-muted-foreground font-mono text-xs">{role.code}</span>
                 </div>

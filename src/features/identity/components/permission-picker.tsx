@@ -15,6 +15,8 @@ interface PermissionPickerProps {
   disabled?: boolean;
   /** Prefix for element ids, so two pickers can share a page. */
   idPrefix?: string;
+  /** Only permissions of this scope can be added (a role holds codes of one scope only). */
+  scope?: "global" | "organization";
 }
 
 interface Option {
@@ -29,11 +31,15 @@ interface Option {
  * Offers active catalogue permissions. A permission already in the value stays listed even
  * when it is retired or unknown, so it can be seen and removed.
  */
-function optionsFor(catalogue: readonly Permission[], value: readonly PermissionGrantValue[]) {
+function optionsFor(
+  catalogue: readonly Permission[],
+  value: readonly PermissionGrantValue[],
+  scope: "global" | "organization",
+) {
   const options = new Map<string, Option>();
   for (const permission of catalogue) {
     const selected = value.some((grant) => grant.code === permission.code);
-    if (permission.status !== "active" && !selected) continue;
+    if ((permission.status !== "active" || permission.scope !== scope) && !selected) continue;
     options.set(permission.code, {
       code: permission.code,
       displayName: permission.display_name,
@@ -65,7 +71,10 @@ export function PermissionPicker({
   onChange,
   disabled = false,
   idPrefix = "permission",
+  scope = "global",
 }: PermissionPickerProps) {
+  // Organization permissions are never held globally, so they cannot be delegated (ADR-014).
+  const delegation = scope === "global";
   const selected = new Map(value.map((grant) => [grant.code, grant]));
 
   function toggle(code: string, included: boolean) {
@@ -80,7 +89,7 @@ export function PermissionPicker({
     onChange(value.map((grant) => (grant.code === code ? { ...grant, delegable } : grant)));
   }
 
-  const modules = optionsFor(catalogue, value);
+  const modules = optionsFor(catalogue, value, scope);
   if (modules.length === 0) {
     return <p className="text-muted-foreground text-sm">The permission catalogue is empty.</p>;
   }
@@ -123,20 +132,22 @@ export function PermissionPicker({
                       ) : null}
                     </label>
                   </div>
-                  <div className="flex items-center gap-2 pl-7 sm:pl-0">
-                    <Checkbox
-                      id={delegateId}
-                      checked={grant?.delegable ?? false}
-                      disabled={disabled || grant === undefined}
-                      onCheckedChange={(checked) => setDelegable(option.code, checked === true)}
-                    />
-                    <label
-                      htmlFor={delegateId}
-                      className="text-muted-foreground text-sm whitespace-nowrap"
-                    >
-                      Can delegate
-                    </label>
-                  </div>
+                  {delegation ? (
+                    <div className="flex items-center gap-2 pl-7 sm:pl-0">
+                      <Checkbox
+                        id={delegateId}
+                        checked={grant?.delegable ?? false}
+                        disabled={disabled || grant === undefined}
+                        onCheckedChange={(checked) => setDelegable(option.code, checked === true)}
+                      />
+                      <label
+                        htmlFor={delegateId}
+                        className="text-muted-foreground text-sm whitespace-nowrap"
+                      >
+                        Can delegate
+                      </label>
+                    </div>
+                  ) : null}
                 </li>
               );
             })}

@@ -14,6 +14,7 @@ const catalogue: Schemas["PermissionResponse"][] = [
     module: "identity",
     status: "active",
     is_system: true,
+    scope: "global",
   },
   {
     code: "identity.legacy",
@@ -22,6 +23,16 @@ const catalogue: Schemas["PermissionResponse"][] = [
     module: "identity",
     status: "retired",
     is_system: true,
+    scope: "global",
+  },
+  {
+    code: "offers.offer.create",
+    display_name: "Create offers",
+    description: null,
+    module: "offers",
+    status: "active",
+    is_system: true,
+    scope: "organization",
   },
 ];
 
@@ -66,5 +77,25 @@ describe("<PermissionPicker>", () => {
     );
     expect(screen.getByText("Legacy")).toBeInTheDocument();
     expect(screen.getByText("Retired")).toBeInTheDocument();
+  });
+
+  it("offers only permissions of the role's scope, without delegation for organization roles", () => {
+    const onChange = vi.fn();
+    const { rerender } = render(
+      <PermissionPicker catalogue={catalogue} value={[]} onChange={onChange} />,
+    );
+    expect(screen.queryByRole("checkbox", { name: /Create offers/ })).not.toBeInTheDocument();
+
+    rerender(
+      <PermissionPicker
+        catalogue={catalogue}
+        value={[]}
+        onChange={onChange}
+        scope="organization"
+      />,
+    );
+    expect(screen.getByRole("checkbox", { name: /Create offers/ })).toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: /View users/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: "Can delegate" })).not.toBeInTheDocument();
   });
 });

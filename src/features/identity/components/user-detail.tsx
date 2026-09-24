@@ -34,7 +34,7 @@ import { formatDateTime } from "@/shared/lib/format";
 import { useDisableUser, useReactivateUser, useRevokeRole } from "../api/mutations";
 import { useUser } from "../api/queries";
 import { AssignRoleDialog } from "./assign-role-dialog";
-import { ReasonDialog } from "./reason-dialog";
+import { ReasonDialog } from "@/shared/components/reason-dialog";
 
 type User = Schemas["UserDetailResponse"];
 type Grant = Schemas["GrantResponse"];
@@ -194,9 +194,17 @@ function GrantsCard({ user, isSelf }: { user: User; isSelf: boolean }) {
   const canAssign = useCan(IdentityPermission.ROLE_ASSIGN);
   const canListRoles = useCan(IdentityPermission.ROLE_VIEW);
   const canRevoke = useCan(IdentityPermission.ROLE_REVOKE);
+  // Organization roles are granted and revoked with organization-role authority (ADR-014).
+  const canManageOrganizationRoles = useCan(IdentityPermission.ORGANIZATION_ROLE_MANAGE);
   // Grants can be revoked from a disabled user, but not given to one.
-  const showAssign = !isSelf && user.status === "active" && canAssign && canListRoles;
-  const showRevoke = !isSelf && canRevoke;
+  const showAssign =
+    !isSelf &&
+    user.status === "active" &&
+    (canAssign || canManageOrganizationRoles) &&
+    canListRoles;
+  const mayRevoke = (grant: Grant) =>
+    !isSelf && (grant.organization_id ? canManageOrganizationRoles : canRevoke);
+  const showRevoke = user.grants.some(mayRevoke);
 
   return (
     <Card>
@@ -205,7 +213,7 @@ function GrantsCard({ user, isSelf }: { user: User; isSelf: boolean }) {
           <CardTitle>Role grants</CardTitle>
           <CardDescription>
             {user.status === "active"
-              ? "Active platform-wide roles held by this user."
+              ? "Active roles held by this user, platform-wide or within one organization."
               : "Kept while the account is disabled. Roles cannot be granted to a disabled user."}
           </CardDescription>
         </div>
@@ -225,6 +233,7 @@ function GrantsCard({ user, isSelf }: { user: User; isSelf: boolean }) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Role</TableHead>
+                  <TableHead>Scope</TableHead>
                   <TableHead>Granted</TableHead>
                   <TableHead>Granted by</TableHead>
                   {showRevoke ? (
@@ -255,6 +264,16 @@ function GrantsCard({ user, isSelf }: { user: User; isSelf: boolean }) {
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
+                      {grant.organization_id ? (
+                        <span className="flex flex-col">
+                          Organization
+                          <span className="font-mono text-xs">{grant.organization_id}</span>
+                        </span>
+                      ) : (
+                        "Platform-wide"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
                       {formatDateTime(grant.granted_at)}
                     </TableCell>
                     <TableCell className="text-muted-foreground font-mono text-xs">
@@ -262,9 +281,11 @@ function GrantsCard({ user, isSelf }: { user: User; isSelf: boolean }) {
                     </TableCell>
                     {showRevoke ? (
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => setRevoking(grant)}>
-                          Revoke
-                        </Button>
+                        {mayRevoke(grant) ? (
+                          <Button variant="ghost" size="sm" onClick={() => setRevoking(grant)}>
+                            Revoke
+                          </Button>
+                        ) : null}
                       </TableCell>
                     ) : null}
                   </TableRow>

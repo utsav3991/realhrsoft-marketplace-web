@@ -3,14 +3,17 @@ import type { CurrentActor } from "@/shared/auth";
 import type { PermissionCode } from "./permission-codes";
 
 export interface PermissionScope {
-  /** The organization owning the resource. Omit for platform-wide (global-only) checks. */
+  /**
+   * The organization the check is about. Omit for platform-wide checks (global grants only);
+   * pass it for portal checks (grants in that organization only).
+   */
   organizationId?: string | null;
 }
 
 /**
- * Mirrors the backend's AuthorizationService.require: an unscoped check accepts only global
- * grants; a check scoped to an organization also accepts an organization grant when that
- * organization is the actor's selected one. UX only: the API remains the security boundary.
+ * Mirrors the backend (ADR-014): `AuthorizationService.require` accepts only global grants and
+ * `require_organization` only grants in the selected organization. A global grant never opens a
+ * portal and an organization grant never opens the admin console. UX only: the API decides.
  */
 export function can(
   actor: CurrentActor | null,
@@ -18,10 +21,10 @@ export function can(
   scope: PermissionScope = {},
 ): boolean {
   if (!actor) return false;
-  if (actor.globalPermissions.has(permission)) return true;
   const { organizationId } = scope;
+  if (organizationId === undefined) return actor.globalPermissions.has(permission);
   return (
-    organizationId != null &&
+    organizationId !== null &&
     actor.organization?.id === organizationId &&
     actor.organization.permissions.has(permission)
   );

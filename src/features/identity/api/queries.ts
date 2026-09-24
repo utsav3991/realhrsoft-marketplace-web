@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
-import { api, unwrap } from "@/shared/api";
+import { api, pathId, unwrap } from "@/shared/api";
 
 export type UserStatusFilter = "active" | "disabled";
 
@@ -47,7 +47,12 @@ export function useUser(userId: string) {
   return useQuery({
     queryKey: identityKeys.user(userId),
     queryFn: ({ signal }) =>
-      unwrap(api.GET("/admin/users/{user_id}", { params: { path: { user_id: userId } }, signal })),
+      unwrap(
+        api.GET("/admin/users/{user_id}", {
+          params: { path: { user_id: pathId(userId) } },
+          signal,
+        }),
+      ),
   });
 }
 
@@ -63,7 +68,12 @@ export function useRole(roleId: string) {
   return useQuery({
     queryKey: identityKeys.role(roleId),
     queryFn: ({ signal }) =>
-      unwrap(api.GET("/admin/roles/{role_id}", { params: { path: { role_id: roleId } }, signal })),
+      unwrap(
+        api.GET("/admin/roles/{role_id}", {
+          params: { path: { role_id: pathId(roleId) } },
+          signal,
+        }),
+      ),
   });
 }
 

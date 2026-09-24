@@ -1,25 +1,28 @@
 import { z } from "zod";
 
+import { isUuid } from "@/shared/api";
+import { reasonSchema } from "@/shared/forms/reason";
+
 // Mirrors the backend request bounds; the server re-validates regardless.
-export const reasonSchema = z
-  .string()
-  .trim()
-  .min(1, "Give a reason; it is kept in the audit log")
-  .max(500, "Keep the reason under 500 characters");
 
-export const reasonFormSchema = z.object({ reason: reasonSchema });
-export type ReasonValues = z.infer<typeof reasonFormSchema>;
-
-export const assignRoleSchema = z.object({
-  roleId: z.string().min(1, "Choose a role"),
-  reason: reasonSchema,
-});
+export const assignRoleSchema = z
+  .object({
+    scope: z.enum(["global", "organization"]),
+    organizationId: z.string().trim(),
+    roleId: z.string().min(1, "Choose a role"),
+    reason: reasonSchema,
+  })
+  .refine((values) => values.scope === "global" || isUuid(values.organizationId), {
+    path: ["organizationId"],
+    message: "Enter the organization ID",
+  });
 export type AssignRoleValues = z.infer<typeof assignRoleSchema>;
 
 export const permissionGrantSchema = z.object({ code: z.string(), delegable: z.boolean() });
 export type PermissionGrantValue = z.infer<typeof permissionGrantSchema>;
 
 export const createRoleSchema = z.object({
+  scope: z.enum(["global", "organization"]),
   code: z
     .string()
     .trim()

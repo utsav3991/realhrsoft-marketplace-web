@@ -5,7 +5,7 @@ import { AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { fieldDescriptionIds, FormField } from "@/design-system/components/form-field";
@@ -22,13 +22,28 @@ import { Input } from "@/design-system/primitives/input";
 import { Skeleton } from "@/design-system/primitives/skeleton";
 import { Textarea } from "@/design-system/primitives/textarea";
 import { errorMessage } from "@/shared/api";
+import { IdentityPermission, useCan } from "@/shared/authorization";
 import { ErrorState } from "@/shared/feedback/states";
+import { cn } from "@/shared/lib/cn";
 import { applyApiFieldErrors } from "@/shared/forms/api-field-errors";
 
 import { useCreateRole } from "../api/mutations";
 import { usePermissions } from "../api/queries";
 import { createRoleSchema, type CreateRoleValues } from "../schemas/admin";
 import { PermissionPicker } from "./permission-picker";
+
+const SCOPES = [
+  {
+    value: "global",
+    label: "Platform-wide",
+    description: "Aayulogic administration. Granted without an organization.",
+  },
+  {
+    value: "organization",
+    label: "Organization",
+    description: "Employer or Partner portal work inside one organization.",
+  },
+] as const;
 
 export function CreateRoleForm() {
   const router = useRouter();
@@ -37,9 +52,19 @@ export function CreateRoleForm() {
   const [failure, setFailure] = useState<string | null>(null);
   const form = useForm<CreateRoleValues>({
     resolver: zodResolver(createRoleSchema),
-    defaultValues: { code: "", displayName: "", description: "", permissions: [], reason: "" },
+    defaultValues: {
+      scope: "global",
+      code: "",
+      displayName: "",
+      description: "",
+      permissions: [],
+      reason: "",
+    },
   });
   const { errors, isSubmitting } = form.formState;
+  // Organization roles need organization-role authority as well as role creation.
+  const canCreateOrganizationRoles = useCan(IdentityPermission.ORGANIZATION_ROLE_MANAGE);
+  const scope = useWatch({ control: form.control, name: "scope" });
 
   const onSubmit = form.handleSubmit(async (values) => {
     setFailure(null);
@@ -49,6 +74,7 @@ export function CreateRoleForm() {
         display_name: values.displayName,
         description: values.description || null,
         permissions: values.permissions,
+        scope: values.scope,
         reason: values.reason,
       });
       toast.success(`Created ${values.displayName}`);
@@ -59,6 +85,7 @@ export function CreateRoleForm() {
         display_name: "displayName",
         description: "description",
         permissions: "permissions",
+        scope: "scope",
         reason: "reason",
       });
       if (!placed) setFailure(errorMessage(error));
@@ -73,6 +100,55 @@ export function CreateRoleForm() {
           <AlertTitle>The role was not created</AlertTitle>
           <AlertDescription>{failure}</AlertDescription>
         </Alert>
+      ) : null}
+
+      {canCreateOrganizationRoles ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Where the role applies</CardTitle>
+            <CardDescription>
+              Fixed once created. A role holds permissions of one scope only, and neither scope can
+              stand in for the other.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Controller
+              control={form.control}
+              name="scope"
+              render={({ field }) => (
+                <div
+                  role="radiogroup"
+                  aria-label="Role scope"
+                  className="grid gap-2 sm:grid-cols-2"
+                >
+                  {SCOPES.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={field.value === option.value}
+                      disabled={isSubmitting}
+                      onClick={() => {
+                        if (field.value === option.value) return;
+                        field.onChange(option.value);
+                        form.setValue("permissions", []);
+                      }}
+                      className={cn(
+                        "rounded-lg border p-3 text-left text-sm transition-colors",
+                        field.value === option.value
+                          ? "border-primary bg-accent"
+                          : "hover:bg-accent/60",
+                      )}
+                    >
+                      <span className="block font-medium">{option.label}</span>
+                      <span className="text-muted-foreground block">{option.description}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            />
+          </CardContent>
+        </Card>
       ) : null}
 
       <Card>
@@ -131,7 +207,9 @@ export function CreateRoleForm() {
         <CardHeader>
           <CardTitle>Permissions</CardTitle>
           <CardDescription>
-            You can include only permissions you may delegate yourself.
+            {scope === "global"
+              ? "You can include only permissions you may delegate yourself."
+              : "Portal permissions, granted to verified members within one organization."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -149,6 +227,7 @@ export function CreateRoleForm() {
                   value={field.value}
                   onChange={field.onChange}
                   disabled={isSubmitting}
+                  scope={scope}
                 />
               )}
             />

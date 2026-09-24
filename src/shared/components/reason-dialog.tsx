@@ -21,7 +21,7 @@ import { Textarea } from "@/design-system/primitives/textarea";
 import { errorMessage } from "@/shared/api";
 import { applyApiFieldErrors } from "@/shared/forms/api-field-errors";
 
-import { reasonFormSchema, type ReasonValues } from "../schemas/admin";
+import { reasonFormSchema, type ReasonValues } from "@/shared/forms/reason";
 
 interface ReasonDialogProps {
   open: boolean;

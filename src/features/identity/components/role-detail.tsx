@@ -94,7 +94,10 @@ function editBlocker(role: Role, heldRoleCodes: readonly string[]): string | nul
 function LoadedRole({ role }: { role: Role }) {
   const { actor } = useSession();
   const [editing, setEditing] = useState(false);
-  const canManage = useCan(IdentityPermission.ROLE_PERMISSION_MANAGE);
+  const canManagePermissions = useCan(IdentityPermission.ROLE_PERMISSION_MANAGE);
+  const canManageOrganizationRoles = useCan(IdentityPermission.ORGANIZATION_ROLE_MANAGE);
+  // Organization roles also need organization-role authority (ADR-014).
+  const canManage = canManagePermissions && (role.scope === "global" || canManageOrganizationRoles);
   const canViewCatalogue = useCan(IdentityPermission.PERMISSION_VIEW);
   const blocker = editBlocker(role, actor?.roles ?? []);
 
@@ -125,6 +128,9 @@ function LoadedRole({ role }: { role: Role }) {
                 <StatusBadge domain="role" status={role.status} />
                 {role.is_system ? <Badge intent="info">System</Badge> : null}
               </span>
+            </Detail>
+            <Detail label="Scope">
+              {role.scope === "organization" ? "Organization" : "Platform-wide"}
             </Detail>
             <Detail label="Holders">{role.active_assignments}</Detail>
             <Detail label="Version">{role.version}</Detail>
@@ -296,6 +302,7 @@ function EditPermissions({ role, onDone }: { role: Role; onDone: () => void }) {
                   value={field.value}
                   onChange={field.onChange}
                   disabled={isSubmitting}
+                  scope={role.scope === "organization" ? "organization" : "global"}
                 />
               )}
             />

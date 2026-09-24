@@ -1,6 +1,7 @@
 /**
- * The organization the actor is acting for, sent as X-Organization-ID on every request.
- * The backend accepts only scopes assigned to the user and answers 403 otherwise.
+ * The organization the actor is acting for, sent as X-Organization-ID on organization-scoped
+ * requests only (see `isOrganizationScoped`). The backend accepts only an organization where the
+ * user is a verified member holding a grant, and answers 403 otherwise (ADR-014).
  * Kept per tab (sessionStorage) so two tabs can work in different organizations.
  */
 type Listener = () => void;
@@ -39,4 +40,33 @@ export function setActiveOrganizationId(organizationId: string | null): void {
 export function subscribeActiveOrganization(listener: Listener): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
+}
+
+/**
+ * Paths whose handlers act inside the selected organization, plus /auth/me (which reports the
+ * grants held there). Administration and Partner applications are never organization-scoped:
+ * sending the header there would only make the backend demand a membership it does not need.
+ */
+export function isOrganizationScoped(path: string): boolean {
+  if (path === "/auth/me") return true;
+  if (path.startsWith("/employer/")) return true;
+  return path.startsWith("/partner/") && !path.startsWith("/partner/applications");
+}
+
+// Organizations the API refused for this actor (member without any grant there). They are not
+// selected automatically again, which would loop between selecting and being refused.
+const denied = new Set<string>();
+
+export function markOrganizationDenied(organizationId: string): void {
+  denied.add(organizationId);
+  listeners.forEach((listener) => listener());
+}
+
+export function isOrganizationDenied(organizationId: string): boolean {
+  return denied.has(organizationId);
+}
+
+/** Forget refusals, e.g. after signing in again or after grants change. */
+export function clearDeniedOrganizations(): void {
+  denied.clear();
 }

@@ -38,6 +38,24 @@ describe("apiFetch", () => {
     expect(sent(0).headers.get("X-Request-ID")).toBeTruthy();
   });
 
+  it.each([
+    ["/auth/me", true],
+    ["/employer/benefits", true],
+    ["/partner/offers/1", true],
+    ["/partner/profile", true],
+    ["/partner/applications/mine", false],
+    ["/admin/users", false],
+    ["/admin/organizations", false],
+  ])("sends X-Organization-ID to %s only when organization-scoped (%s)", async (path, scoped) => {
+    setAccessToken("token-1");
+    setActiveOrganizationId("org-1");
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+
+    await apiFetch(new Request(`http://localhost:3000/api/v1${path}`));
+
+    expect(sent(0).headers.get("X-Organization-ID")).toBe(scoped ? "org-1" : null);
+  });
+
   it("renews once on 401 and replays with the new token", async () => {
     setAccessToken("expired");
     setAccessTokenRenewer(async () => {

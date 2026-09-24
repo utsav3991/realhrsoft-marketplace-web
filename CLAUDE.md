@@ -14,16 +14,16 @@ src/
 ├── app/                 routes only: layouts, pages, thin route-local components
 │   ├── (auth)/login/
 │   ├── marketplace/     employee experience
-│   ├── partner/         closed until the backend defines partner permissions
-│   ├── employer/        closed until the backend defines employer permissions
+│   ├── partner/         Partner portal: onboarding for any account; offers/profile per organization
+│   ├── employer/        Employer portal: Company Benefits per organization
 │   └── admin/           Aayulogic Admin
 ├── features/<domain>/   api/ (queries + mutations), components/, schemas/, …
 ├── shared/
 │   ├── api/             the only API client, Problem Details, organization context
 │   ├── auth/            in-memory token, session restore/refresh, SessionProvider, /me model
 │   ├── authorization/   permission codes, can()/canAny(), <Can>, useCan()
-│   ├── navigation/      portal registry, PortalLayout/PortalGate, safe redirects
-│   ├── components/      marketplace-wide components (StatusBadge, …)
+│   ├── navigation/      portal registry, PortalLayout/PortalGate, organization scope, safe redirects
+│   ├── components/      marketplace-wide components (StatusBadge, ReasonDialog, FieldsDialog, …)
 │   ├── feedback/        Loading/Error/Forbidden states
 │   └── config/ lib/
 ├── design-system/       primitives/ (shadcn-style), components/, styles/globals.css (tokens)
@@ -48,17 +48,34 @@ Only `shared/api` imports `@/generated/*`. Everyone else uses `Schemas` from `@/
 - **Data fetching is client-side** (TanStack Query in `features/<x>/api/`). The Next server
   never sees the session, so Server Components render static chrome only.
 - **Call the API only through `api` + `unwrap` from `@/shared/api`.** The client adds the
-  bearer token, `X-Organization-ID` and `X-Request-ID`, renews once on a 401, and turns every
-  failure into `ApiError` (Problem Details `code`). Branch on `code`/`status`, never on `detail` text.
+  bearer token, `X-Request-ID` and, on organization-scoped paths only (`/auth/me`, `/employer/*`,
+  `/partner/*` except `/partner/applications*`; see `isOrganizationScoped`), `X-Organization-ID`.
+  It renews once on a 401 and turns every failure into `ApiError` (Problem Details `code`).
+  Branch on `code`/`status`, never on `detail` text.
 - **Contract changes:** `yarn api:generate --pull` (backend running) updates the snapshot and
   types. Commit both.
+- **Path ids go through `pathId()`** (and route pages check `isUuid()` and call `notFound()`).
+  `..` survives URL encoding, so an unchecked id from the address bar could retarget an
+  authenticated call. A contract-coverage test fails when an OpenAPI operation has no caller.
+- **Content-Security-Policy is per request** (`src/proxy.ts`): scripts run only with the
+  response's nonce, so every page renders dynamically (the root layout awaits `connection()`).
+  Never add inline `<script>`, `dangerouslySetInnerHTML` or third-party script origins.
 
 ## Authorization rules
 
 - Gate on **permission codes** (`shared/authorization/permission-codes.ts`, mirroring the
   backend catalogue). Never gate on role names or `actor_type`.
-- `can(actor, code)` accepts only global grants. `can(actor, code, { organizationId })` also
-  accepts an organization grant for the selected organization, mirroring the backend.
+- **Scopes never substitute (ADR-014).** `can(actor, code)` accepts only global grants;
+  `can(actor, code, { organizationId })` accepts only a grant in that organization when it is the
+  selected one. Portal pages and actions use `inOrganization` (`<RequirePermission>`, `<Can>`,
+  `NavItem`) or `useCanInOrganization`. A global grant never opens a portal, and an organization
+  grant never opens the admin console.
+- **Organization selection.** `actor.memberships` (from `/auth/me`) lists the organizations the
+  user may select, with their Employer/Partner capacities. Portal pages render inside
+  `<RequireOrganization capacity=…>`, which auto-selects a single candidate, asks when there
+  are several, and skips organizations the API refused (member without grants). Portal feature
+  components read the id with `useSelectedOrganizationId()` and key their queries by it.
+  A membership grants nothing by itself.
 - Layers: portal (`Portal.canAccess`), page (`<RequirePermission>`), action (`<Can>`/`useCan`),
   and API responses (`ErrorState` renders 403 as forbidden). None of these is security. The API is.
 - Add a permission code only when a backend handler enforces it.
@@ -83,6 +100,9 @@ Don't add a global client store without an ADR.
 - Reuse `design-system/primitives` before creating a component. Add new primitives in the same
   shadcn style (`components.json` points the shadcn CLI there).
 - Domain statuses render only through `StatusBadge` + `STATUS_DEFINITIONS`.
+- Every governance decision carries an audited reason: `ReasonDialog`, or `FieldsDialog` when
+  it needs a few fields too. Owner actions without a reason use `ConfirmDialog`. Transitions
+  send the loaded `version`; a 409 means the record changed, so mutations refetch on settle.
 - Confirm a completed mutation with `toast` from `sonner` (the `Toaster` is mounted in
   `app/providers.tsx`). Show failures inline in the form or dialog, not in a toast.
 - A page that uses `useSearchParams` sits under `<Suspense>`.

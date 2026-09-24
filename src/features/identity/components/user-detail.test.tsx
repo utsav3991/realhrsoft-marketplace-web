@@ -48,6 +48,7 @@ function actor(id: string, permissions: PermissionCode[]): CurrentActor {
     roles: [],
     globalPermissions: new Set(permissions),
     organization: null,
+    memberships: [],
   };
 }
 

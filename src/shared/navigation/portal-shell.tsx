@@ -15,11 +15,18 @@ import {
   DropdownMenuTrigger,
 } from "@/design-system/primitives/dropdown-menu";
 import { useSession } from "@/shared/auth";
-import { canAny } from "@/shared/authorization";
 import { cn } from "@/shared/lib/cn";
 
+import { OrganizationSwitcher } from "./organization-scope";
 import { PortalGate } from "./portal-gate";
-import { accessiblePortals, getPortal, type NavItem, type Portal, type PortalId } from "./portals";
+import {
+  accessiblePortals,
+  getPortal,
+  showsNavItem,
+  type NavItem,
+  type Portal,
+  type PortalId,
+} from "./portals";
 
 function isActive(pathname: string, item: NavItem, portal: Portal): boolean {
   if (item.href === portal.basePath) return pathname === item.href;
@@ -99,7 +106,7 @@ function AccountMenu() {
 function PortalNavigation({ portal }: { portal: Portal }) {
   const { actor } = useSession();
   const pathname = usePathname();
-  const items = portal.navigation.filter((item) => !item.anyOf || canAny(actor, item.anyOf));
+  const items = portal.navigation.filter((item) => showsNavItem(actor, item));
 
   return (
     <nav aria-label={`${portal.label} navigation`}>
@@ -150,6 +157,7 @@ export function PortalLayout({
               /
             </span>
             <PortalSwitcher current={portal} />
+            {portal.capacity ? <OrganizationSwitcher capacity={portal.capacity} /> : null}
           </div>
           <AccountMenu />
         </header>

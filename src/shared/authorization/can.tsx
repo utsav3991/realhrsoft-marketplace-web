@@ -18,7 +18,15 @@ export function useCanAny(
   return canAny(useSession().actor, permissions, scope);
 }
 
+/** Portal check: the permission, granted in the organization the actor currently selects. */
+export function useCanInOrganization(permission: PermissionCode): boolean {
+  const { actor } = useSession();
+  return can(actor, permission, { organizationId: actor?.organization?.id ?? null });
+}
+
 type CanProps = PermissionScope & {
+  /** Check within the currently selected organization (portal actions). */
+  inOrganization?: boolean;
   children: ReactNode;
   /** Rendered when the permission is absent. Defaults to nothing. */
   fallback?: ReactNode;
@@ -28,10 +36,18 @@ type CanProps = PermissionScope & {
   );
 
 /** Shows its children only when the actor holds the permission. Hiding is not authorization. */
-export function Can({ permission, anyOf, organizationId, fallback = null, children }: CanProps) {
+export function Can({
+  permission,
+  anyOf,
+  organizationId,
+  inOrganization = false,
+  fallback = null,
+  children,
+}: CanProps) {
   const { actor } = useSession();
-  const allowed = anyOf
-    ? canAny(actor, anyOf, { organizationId })
-    : can(actor, permission, { organizationId });
+  const scope = inOrganization
+    ? { organizationId: actor?.organization?.id ?? null }
+    : { organizationId };
+  const allowed = anyOf ? canAny(actor, anyOf, scope) : can(actor, permission, scope);
   return <>{allowed ? children : fallback}</>;
 }

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { api, unwrap, type Schemas } from "@/shared/api";
+import { api, pathId, unwrap, type Schemas } from "@/shared/api";
 
 import { identityKeys } from "./queries";
 
@@ -23,7 +23,7 @@ export function useDisableUser(userId: string) {
     mutationFn: ({ reason }: { reason: string }) =>
       unwrap(
         api.POST("/admin/users/{user_id}/disable", {
-          params: { path: { user_id: userId } },
+          params: { path: { user_id: pathId(userId) } },
           body: { reason },
         }),
       ),
@@ -37,7 +37,7 @@ export function useReactivateUser(userId: string) {
     mutationFn: ({ reason }: { reason: string }) =>
       unwrap(
         api.POST("/admin/users/{user_id}/reactivate", {
-          params: { path: { user_id: userId } },
+          params: { path: { user_id: pathId(userId) } },
           body: { reason },
         }),
       ),
@@ -48,11 +48,23 @@ export function useReactivateUser(userId: string) {
 export function useAssignRole(userId: string) {
   const invalidate = useInvalidateUser();
   return useMutation({
-    mutationFn: ({ roleId, reason }: { roleId: string; reason: string }) =>
+    mutationFn: ({
+      roleId,
+      organizationId,
+      reason,
+    }: {
+      roleId: string;
+      /** Organization roles only: the organization the grant is scoped to. */
+      organizationId?: string | null;
+      reason: string;
+    }) =>
       unwrap(
         api.POST("/admin/users/{user_id}/roles", {
-          params: { path: { user_id: userId } },
-          body: { role_id: roleId, reason },
+          params: { path: { user_id: pathId(userId) } },
+          // Platform-wide grants omit the field entirely.
+          body: organizationId
+            ? { role_id: roleId, organization_id: organizationId, reason }
+            : { role_id: roleId, reason },
         }),
       ),
     onSettled: () => invalidate(userId),
@@ -65,7 +77,7 @@ export function useRevokeRole(userId: string) {
     mutationFn: ({ assignmentId, reason }: { assignmentId: string; reason: string }) =>
       unwrap(
         api.POST("/admin/users/{user_id}/roles/{assignment_id}/revoke", {
-          params: { path: { user_id: userId, assignment_id: assignmentId } },
+          params: { path: { user_id: pathId(userId), assignment_id: pathId(assignmentId) } },
           body: { reason },
         }),
       ),
@@ -87,7 +99,7 @@ export function useReplaceRolePermissions(roleId: string) {
     mutationFn: (body: { version: number; permissions: PermissionGrant[]; reason: string }) =>
       unwrap(
         api.PUT("/admin/roles/{role_id}/permissions", {
-          params: { path: { role_id: roleId } },
+          params: { path: { role_id: pathId(roleId) } },
           body,
         }),
       ),

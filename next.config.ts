@@ -7,14 +7,21 @@ import { fileURLToPath } from "node:url";
 // backend; in deployed environments the ingress routes /api/* instead and this is unset.
 const apiProxyTarget = process.env.API_PROXY_TARGET;
 
+// The Content-Security-Policy is per request (it carries a script nonce): see src/proxy.ts.
 const securityHeaders = [
   // Nothing in this app is meant to be framed. Revisit with ADR-013 if RealHRsoft embeds
   // /marketplace, because that needs a per-environment frame-ancestors allow-list.
-  { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  // Isolates this window from cross-origin openers and popups.
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+  // Browsers ignore HSTS over plain http, so it is harmless locally; deployments are https-only.
+  ...(process.env.NODE_ENV === "production"
+    ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" }]
+    : []),
 ];
 
 const nextConfig: NextConfig = {

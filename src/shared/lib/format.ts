@@ -13,3 +13,19 @@ export function formatDate(iso: string): string {
 export function formatDateTime(iso: string): string {
   return dateTimeFormat.format(new Date(iso));
 }
+
+/** ISO timestamp → value for an <input type="datetime-local"> in the viewer's time zone. */
+export function toDateTimeLocal(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const date = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+    `T${pad(date.getHours())}:${pad(date.getMinutes())}`
+  );
+}
+
+/** <input type="datetime-local"> value → ISO 8601 with zone, or null when empty. */
+export function fromDateTimeLocal(value: string): string | null {
+  return value ? new Date(value).toISOString() : null;
+}

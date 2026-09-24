@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import type { ReactNode } from "react";
 
 import "@/design-system/styles/globals.css";
@@ -10,7 +11,10 @@ export const metadata: Metadata = {
   description: "Employee offers, partner campaigns and company benefits.",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  // Render per request so Next.js can stamp each response's CSP nonce on its scripts
+  // (src/proxy.ts). A prerendered page would carry no nonce and its scripts would be blocked.
+  await connection();
   return (
     <html lang="en">
       {/* Extensions (ColorZilla, Grammarly, …) add attributes to <body> before hydration.

@@ -1,6 +1,15 @@
 "use client";
 
-import { ArrowRight, KeyRound, ShieldCheck, Users, type LucideIcon } from "lucide-react";
+import {
+  ArrowRight,
+  Building2,
+  ClipboardCheck,
+  ClipboardList,
+  KeyRound,
+  ShieldCheck,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/design-system/primitives/button";
@@ -11,7 +20,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/design-system/primitives/card";
-import { Can, IdentityPermission, type PermissionCode } from "@/shared/authorization";
+import {
+  Can,
+  IdentityPermission,
+  OrganizationAdminPermission,
+  type PermissionCode,
+} from "@/shared/authorization";
 
 interface Section {
   href: string;
@@ -42,6 +56,27 @@ const SECTIONS: readonly Section[] = [
     description: "Browse every permission the platform enforces.",
     icon: KeyRound,
     permission: IdentityPermission.PERMISSION_VIEW,
+  },
+  {
+    href: "/admin/organizations",
+    title: "Organizations",
+    description: "Verified members, Employer and Partner capacities, commercial entitlement.",
+    icon: Building2,
+    permission: OrganizationAdminPermission.ORGANIZATION_VIEW,
+  },
+  {
+    href: "/admin/partner-applications",
+    title: "Partner applications",
+    description: "Verify, reject or request changes to business applications.",
+    icon: ClipboardList,
+    permission: OrganizationAdminPermission.APPLICATION_VIEW,
+  },
+  {
+    href: "/admin/offers",
+    title: "Offer review",
+    description: "Approve Partner offer content before it can be published.",
+    icon: ClipboardCheck,
+    permission: OrganizationAdminPermission.OFFER_REVIEW,
   },
 ];
 
