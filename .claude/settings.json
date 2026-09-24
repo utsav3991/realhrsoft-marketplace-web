@@ -2,34 +2,37 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
-      "Bash(npm run dev*)",
-      "Bash(npm run build*)",
-      "Bash(npm run lint*)",
-      "Bash(npm run type-check*)",
-      "Bash(npm install*)",
-      "Bash(npx prettier*)",
-      "Bash(docker compose*)",
+      "Bash(yarn dev*)",
+      "Bash(yarn build*)",
+      "Bash(yarn lint*)",
+      "Bash(yarn type-check*)",
+      "Bash(yarn test*)",
+      "Bash(yarn check*)",
+      "Bash(yarn format*)",
+      "Bash(yarn api:generate*)",
+      "Bash(yarn install*)",
+      "Bash(yarn prettier*)",
       "Bash(git status)",
       "Bash(git diff*)",
       "Bash(git log*)",
       "Bash(git add*)",
       "Bash(git commit*)",
       "Read(./**)",
-      "Edit(./partner-portal/**)",
-      "Edit(./employer-portal/**)",
-      "Edit(./admin-console/**)",
-      "Edit(./employee-embed/**)",
-      "Write(./partner-portal/**)",
-      "Write(./employer-portal/**)",
-      "Write(./admin-console/**)",
-      "Write(./employee-embed/**)"
+      "Edit(./src/**)",
+      "Edit(./e2e/**)",
+      "Write(./src/**)",
+      "Write(./e2e/**)"
     ],
     "deny": [
       "Bash(git push --force*)",
       "Bash(rm -rf*)",
-      "Read(./.env*)",
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.env.*.local)",
       "Read(**/.env.production)",
-      "Read(**/*.pem)"
+      "Read(**/*.pem)",
+      "Edit(./src/generated/**)",
+      "Write(./src/generated/**)"
     ]
   },
   "hooks": {
@@ -39,7 +42,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/format-on-save.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/format-on-save.sh"
           }
         ]
       }

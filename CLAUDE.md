@@ -1,133 +1,102 @@
 # Frontend — realhrsoft-marketplace-web
 
-Next.js 14 + TypeScript + Tailwind CSS frontend for the RealHRsoft Workforce Marketplace.
-
-**Root context:** `CLAUDE.md` at the workspace root. Read that first. This file adds frontend-specific detail.
+One Next.js 16 application (App Router, React 19, TypeScript, Tailwind 4, Yarn 4) serving the
+four Marketplace experiences as route segments. The governing decision is **ADR-013**
+(`realhrsoft-marketplace-api/docs/architecture/adrs/`). Read it before changing auth, the API
+client or routing.
 
 ---
 
-## Portal layout
+## Layout
 
 ```
-realhrsoft-marketplace-web/
-├── partner-portal/     # Partner/advertiser portal — SSR/ISR, standalone Node container
-├── employer-portal/    # Employer/HR admin portal — SSR/ISR, standalone Node container
-├── admin-console/      # Aayulogic admin console — SSR/ISR, standalone Node container
-└── employee-embed/     # Employee-facing embed — STATIC EXPORT ONLY (runs in RealHRsoft iframe)
+src/
+├── app/                 routes only: layouts, pages, thin route-local components
+│   ├── (auth)/login/
+│   ├── marketplace/     employee experience
+│   ├── partner/         closed until the backend defines partner permissions
+│   ├── employer/        closed until the backend defines employer permissions
+│   └── admin/           Aayulogic Admin
+├── features/<domain>/   api/ (queries + mutations), components/, schemas/, …
+├── shared/
+│   ├── api/             the only API client, Problem Details, organization context
+│   ├── auth/            in-memory token, session restore/refresh, SessionProvider, /me model
+│   ├── authorization/   permission codes, can()/canAny(), <Can>, useCan()
+│   ├── navigation/      portal registry, PortalLayout/PortalGate, safe redirects
+│   ├── components/      marketplace-wide components (StatusBadge, …)
+│   ├── feedback/        Loading/Error/Forbidden states
+│   └── config/ lib/
+├── design-system/       primitives/ (shadcn-style), components/, styles/globals.css (tokens)
+└── generated/api/       generated from openapi/v1.json. Never edit by hand
 ```
 
-Each portal is an independent Next.js application with its own `package.json`, `next.config.ts`, and `app/` directory.
+**Dependency direction** (ESLint-enforced): `app → features → shared/design-system → generated`.
+Only `shared/api` imports `@/generated/*`. Everyone else uses `Schemas` from `@/shared/api`.
 
 ---
 
-## Critical delivery rule: employee-embed is static only
+## Session and API rules
 
-`employee-embed` renders inside RealHRsoft's iframe. It **must** be a static export:
-- Next.js config: `output: 'export'`
-- **No** server components that use `cookies()`, `headers()`, or other Node-only APIs
-- **No** `getServerSideProps` or server actions
-- **No** internal Next.js API routes
-- All data fetching must be client-side (React Query / SWR)
-- Auth token is passed by RealHRsoft via `postMessage` or URL param — not via cookies
+- **Same origin only.** The browser calls `/api/v1/*` on this app's origin. In development
+  Next proxies it to `API_PROXY_TARGET`; when deployed, the ingress routes `/api/*`. The backend
+  has no CORS, and its refresh cookie is `SameSite=Strict` and scoped to `/api/v1/auth`.
+- **The access token lives in memory** (`shared/auth/token-store.ts`), never in storage or a
+  readable cookie. A reload restores it with `POST /auth/refresh`. Refreshes are single-flight and
+  serialized across tabs, because refresh rotates the cookie secret.
+- **The frontend holds no secret and never decodes or verifies JWTs.** Identity and permissions
+  come only from `GET /auth/me`.
+- **Data fetching is client-side** (TanStack Query in `features/<x>/api/`). The Next server
+  never sees the session, so Server Components render static chrome only.
+- **Call the API only through `api` + `unwrap` from `@/shared/api`.** The client adds the
+  bearer token, `X-Organization-ID` and `X-Request-ID`, renews once on a 401, and turns every
+  failure into `ApiError` (Problem Details `code`). Branch on `code`/`status`, never on `detail` text.
+- **Contract changes:** `yarn api:generate --pull` (backend running) updates the snapshot and
+  types. Commit both.
 
-The `frontend-component-reviewer` agent enforces this on every edit to `employee-embed/`.
+## Authorization rules
 
----
+- Gate on **permission codes** (`shared/authorization/permission-codes.ts`, mirroring the
+  backend catalogue). Never gate on role names or `actor_type`.
+- `can(actor, code)` accepts only global grants. `can(actor, code, { organizationId })` also
+  accepts an organization grant for the selected organization, mirroring the backend.
+- Layers: portal (`Portal.canAccess`), page (`<RequirePermission>`), action (`<Can>`/`useCan`),
+  and API responses (`ErrorState` renders 403 as forbidden). None of these is security. The API is.
+- Add a permission code only when a backend handler enforces it.
 
-## Rendering per portal
+## State ownership
 
-| Portal | `output` | Data fetching pattern |
-|---|---|---|
-| `partner-portal` | `standalone` | Server components for initial data, React Query for mutations/refetch |
-| `employer-portal` | `standalone` | Server components for initial data, React Query for mutations/refetch |
-| `admin-console` | `standalone` | Server components for initial data, React Query for mutations/refetch |
-| `employee-embed` | `export` | React Query / SWR (client-side only) |
+| State                 | Owner                                           |
+| --------------------- | ----------------------------------------------- |
+| Server data           | TanStack Query (`features/<x>/api/`)            |
+| Session / actor       | `SessionProvider` (`useSession()`)              |
+| Active organization   | `useActiveOrganization()` (per tab)             |
+| Search, filters, sort | URL search params                               |
+| Forms                 | React Hook Form + Zod (`features/<x>/schemas/`) |
+| Transient UI          | component state                                 |
 
----
+Don't add a global client store without an ADR.
 
-## API call pattern
+## UI conventions
 
-**Never call the backend API directly from a component.** Always go through the shared API client:
+- Tailwind utilities with the semantic tokens in `design-system/styles/globals.css`
+  (`bg-primary`, `text-muted-foreground`, …). No raw colors, no inline styles.
+- Reuse `design-system/primitives` before creating a component. Add new primitives in the same
+  shadcn style (`components.json` points the shadcn CLI there).
+- Domain statuses render only through `StatusBadge` + `STATUS_DEFINITIONS`.
+- Confirm a completed mutation with `toast` from `sonner` (the `Toaster` is mounted in
+  `app/providers.tsx`). Show failures inline in the form or dialog, not in a toast.
+- A page that uses `useSearchParams` sits under `<Suspense>`.
+- TypeScript strict with `noUncheckedIndexedAccess`. No `any`. `@ts-expect-error` needs a reason.
 
-```typescript
-// lib/api-client.ts (one per portal)
-// Handles: auth token injection, base URL, error normalization (RFC 7807)
-import { apiClient } from '@/lib/api-client'
-
-// In a Server Component (SSR portals):
-const offers = await apiClient.get('/api/v1/partner/offers')
-
-// In a Client Component:
-const { data } = useQuery({ queryKey: ['offers'], queryFn: () => apiClient.get('/api/v1/partner/offers') })
-```
-
-The API client must:
-- Attach the portal JWT as `Authorization: Bearer <token>` on every request
-- Forward `X-Request-ID` (generate if absent)
-- Parse RFC 7807 error responses into typed `ApiError` objects — never expose raw HTTP error details to UI
-
----
-
-## Next.js App Router conventions
-
-- **Server components** (no `"use client"`): data fetching, layout, static rendering — default for everything
-- **Client components** (`"use client"`): interactivity only — forms, modals, dropdowns, real-time updates
-- Push `"use client"` as deep as possible. Don't mark a parent layout `"use client"` just because one child needs interactivity.
-- **Loading states:** `loading.tsx` for every async page (Next.js Suspense boundary)
-- **Error boundaries:** `error.tsx` for every async page
-- **Not found:** `not-found.tsx` for every major route group
-
----
-
-## Tailwind CSS conventions
-
-- Use Tailwind utility classes for all styling. No CSS modules, no styled-components.
-- No inline `style={{...}}` unless the value is dynamic and cannot be expressed as a Tailwind class.
-- No arbitrary values (`w-[357px]`) unless the value matches a documented design token.
-- Design tokens (colors, spacing, typography) defined in each portal's `tailwind.config.ts` — don't hardcode hex colors in class names.
-- Shared component patterns live in each portal's `components/ui/` directory — check there before creating new components.
-
----
-
-## TypeScript conventions
-
-- `strict: true` in every portal's `tsconfig.json` — no exceptions
-- No `any` type. No `@ts-ignore` or `@ts-expect-error` without an accompanying explanation comment.
-- All API response shapes must have corresponding TypeScript types in `types/api.ts` — generated from the OpenAPI spec where possible
-- Props typed with explicit `interface` or `type` — not `{}` or `object`
-- Form state: React Hook Form with Zod validation schemas (mirrors the backend Pydantic v2 schemas)
-
----
-
-## Auth flow per portal
-
-| Portal | Token source | Token storage |
-|---|---|---|
-| `partner-portal` | Login form → backend `/api/v1/auth/partner/login` | `httpOnly` cookie (managed by Next.js middleware) |
-| `employer-portal` | Login form → backend `/api/v1/auth/employer/login` | `httpOnly` cookie |
-| `admin-console` | Login form → backend `/api/v1/auth/admin/login` | `httpOnly` cookie |
-| `employee-embed` | RealHRsoft SSO → identity handoff | In-memory / `sessionStorage` only (no cookie — no server) |
-
-Middleware in each portal (`middleware.ts`) validates the cookie on every request and redirects to `/login` if invalid.
-
----
-
-## Key commands (run from `realhrsoft-marketplace-web/<portal>/`)
+## Commands (run from this directory)
 
 ```bash
-npm run dev       # dev server (http://localhost:3000)
-npm run build     # production build
-npm run start     # production server (standalone portals only)
-npm run lint      # ESLint + TypeScript check
-npm run type-check # tsc --noEmit
+yarn dev             # http://localhost:3000; must match MARKETPLACE_TRUSTED_ORIGINS
+yarn build           # production build (standalone)
+yarn lint            # ESLint (incl. layer rules)
+yarn type-check      # tsc --noEmit
+yarn test            # Vitest unit + component tests
+yarn test:e2e        # Playwright (starts yarn dev)
+yarn api:generate    # regenerate types from openapi/v1.json (--pull to refresh the snapshot)
+yarn check           # lint + type-check + format:check + test
 ```
-
----
-
-## Where to look before creating a new component
-
-1. `components/ui/` — base UI elements (Button, Input, Modal, Table, Badge, etc.)
-2. `components/<feature>/` — feature-specific composite components
-3. `app/<route>/` — page-level components and layouts
-
-If the component you need doesn't exist: create it in `components/ui/` if it's generic, or `components/<feature>/` if it's domain-specific. Use the `/new-frontend-page` command for new pages.

@@ -1,29 +1,32 @@
 ---
-description: Scaffold a Next.js page or component in the correct frontend portal
-argument-hint: <portal> <page-name>
+description: Scaffold a page in the correct portal segment, following ADR-013
+argument-hint: <portal: marketplace|partner|employer|admin> <page-path>
 ---
 
-Scaffold a new Next.js page or component named `$2` in the `$1` portal (`$1/`).
+Scaffold a page at `src/app/$1/$2/page.tsx`. `$1` is one of `marketplace`, `partner`,
+`employer` or `admin`.
 
 Before writing anything:
-1. Read `CLAUDE.md` for the portal-specific rules (SSR vs. static-export, API client conventions, Tailwind guidelines).
-2. Check `$1/app/` for existing page structure to match the routing convention already in use.
-3. Check `$1/components/` for existing components to reuse before creating new ones.
 
-**Portal rules (enforce strictly):**
+1. Read `CLAUDE.md` (session/API rules, authorization layers, dependency direction).
+2. Look at the existing pages in `src/app/$1/` and the portal entry in
+   `src/shared/navigation/portals.ts`.
+3. Check `src/design-system/primitives/`, `src/design-system/components/` and
+   `src/shared/components/` for reusable pieces.
 
-| Portal | Rendering | Node APIs | Backend calls |
-|---|---|---|---|
-| `partner-portal` | SSR/ISR allowed | Yes | Via shared API client |
-| `employer-portal` | SSR/ISR allowed | Yes | Via shared API client |
-| `admin-console` | SSR/ISR allowed | Yes | Via shared API client |
-| `employee-embed` | **Static export only** | **No** | Via shared API client (client-side only) |
+Structure:
 
-**Required structure for a new page:**
-- Server component for data fetching (in `app/` directory)
-- Client components only where interactivity is needed (marked with `"use client"`)
-- Pydantic-compatible TypeScript type for the API response (in `types/` or `lib/`)
-- Loading skeleton (`loading.tsx`) for any async page
-- Error boundary (`error.tsx`) for any async page
+- `page.tsx` is a Server Component: `metadata`, `PageHeader`, and the feature component. It
+  does no data fetching.
+- The interactive feature component lives in `src/features/<domain>/components/` (`"use client"`).
+  Its data comes from hooks in `src/features/<domain>/api/` that use `api` + `unwrap`, typed by
+  the generated contract (`Schemas`). Run `yarn api:generate --pull` if the endpoint is new.
+- Wrap the page in `<RequirePermission anyOf={[…]}>` when it needs a permission. Gate actions
+  with `<Can>`. Add a nav item (with `anyOf`) to the portal registry if the page belongs in
+  the navigation.
+- Handle pending, empty and error states (`Skeleton`, `EmptyState`, `ErrorState`).
+- Put filters and pagination in URL search params. A component using `useSearchParams` sits
+  under `<Suspense>`.
+- Add tests for any permission logic or non-trivial behaviour.
 
-After scaffolding, offer to invoke the `frontend-component-reviewer` agent on the new file.
+Afterwards, run `yarn check` and offer to invoke the `frontend-component-reviewer` agent.

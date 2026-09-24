@@ -1,0 +1,35 @@
+import type { NextConfig } from "next";
+import { fileURLToPath } from "node:url";
+
+// The browser must reach the API on this app's own origin: the backend has no CORS, its
+// refresh cookie is SameSite=Strict and scoped to /api/v1/auth, and refresh/logout check
+// the Origin header (ADR-010, ADR-013). In local development Next proxies /api/* to the
+// backend; in deployed environments the ingress routes /api/* instead and this is unset.
+const apiProxyTarget = process.env.API_PROXY_TARGET;
+
+const securityHeaders = [
+  // Nothing in this app is meant to be framed. Revisit with ADR-013 if RealHRsoft embeds
+  // /marketplace, because that needs a per-environment frame-ancestors allow-list.
+  { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+];
+
+const nextConfig: NextConfig = {
+  output: "standalone",
+  poweredByHeader: false,
+  reactStrictMode: true,
+  // Pin the workspace root: a stray lockfile in a parent directory must not be picked up.
+  turbopack: { root: fileURLToPath(new URL(".", import.meta.url)) },
+  async headers() {
+    return [{ source: "/:path*", headers: securityHeaders }];
+  },
+  async rewrites() {
+    if (!apiProxyTarget) return [];
+    return [{ source: "/api/:path*", destination: `${apiProxyTarget}/api/:path*` }];
+  },
+};
+
+export default nextConfig;
