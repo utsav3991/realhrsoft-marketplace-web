@@ -1,4 +1,11 @@
-import { ApiError, api, setAccessTokenRenewer, unwrap } from "@/shared/api";
+import {
+  ApiError,
+  api,
+  clearDeniedOrganizations,
+  setAccessTokenRenewer,
+  setActiveOrganizationId,
+  unwrap,
+} from "@/shared/api";
 
 import { getAccessToken, setAccessToken } from "./token-store";
 
@@ -50,8 +57,18 @@ export async function logout(): Promise<void> {
     // Already signed out server-side; the local session is cleared regardless.
   } finally {
     setAccessToken(null);
+    clearOrganizationScope();
     broadcast()?.postMessage("logout");
   }
+}
+
+/**
+ * The selected organization belongs to the signed-out user. Kept, the next sign-in in this tab
+ * would send it as X-Organization-ID on /auth/me and get 403 when that user is not a member.
+ */
+function clearOrganizationScope(): void {
+  setActiveOrganizationId(null);
+  clearDeniedOrganizations();
 }
 
 function broadcast(): BroadcastChannel | null {
@@ -63,7 +80,9 @@ export function listenForLogoutElsewhere(): () => void {
   const channel = broadcast();
   if (!channel) return () => undefined;
   channel.onmessage = (event: MessageEvent) => {
-    if (event.data === "logout" && getAccessToken()) setAccessToken(null);
+    if (event.data !== "logout") return;
+    if (getAccessToken()) setAccessToken(null);
+    clearOrganizationScope();
   };
   return () => channel.close();
 }

@@ -2,10 +2,12 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 
 import { api, pathId, unwrap, type Schemas } from "@/shared/api";
 
-export type BenefitStatus = "draft" | "active" | "retired";
+export type BenefitStatus = "draft" | "active" | "paused" | "retired";
+export type BenefitType = Schemas["BenefitBody"]["benefit_type"];
 
 export interface BenefitFilters {
   status?: BenefitStatus;
+  type?: BenefitType;
   q?: string;
 }
 
@@ -31,6 +33,7 @@ export function useBenefits(organizationId: string, filters: BenefitFilters) {
           params: {
             query: {
               status: filters.status,
+              type: filters.type,
               q: filters.q || undefined,
               cursor: pageParam ?? undefined,
               limit: PAGE_SIZE,
@@ -64,11 +67,14 @@ export function useCreateBenefit(organizationId: string) {
   });
 }
 
-/** Edits and transitions refetch on failure too: a 409 means the loaded version is stale. */
-function useBenefitMutation<V>(
+/**
+ * Edits, transitions and option changes refetch on failure too: a 409 means the loaded version
+ * is stale. Options belong to the benefit, so every option change bumps the benefit's version.
+ */
+function useBenefitMutation<V, R>(
   organizationId: string,
   benefitId: string,
-  send: (path: { benefit_id: string }, variables: V) => Promise<Schemas["VersionResponse"]>,
+  send: (path: { benefit_id: string }, variables: V) => Promise<R>,
 ) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -99,5 +105,51 @@ export function usePublishBenefit(organizationId: string, benefitId: string) {
 export function useRetireBenefit(organizationId: string, benefitId: string) {
   return useBenefitMutation(organizationId, benefitId, (path, body: Schemas["VersionRequest"]) =>
     unwrap(api.POST("/employer/benefits/{benefit_id}/retire", { params: { path }, body })),
+  );
+}
+
+export function usePauseBenefit(organizationId: string, benefitId: string) {
+  return useBenefitMutation(organizationId, benefitId, (path, body: Schemas["VersionRequest"]) =>
+    unwrap(api.POST("/employer/benefits/{benefit_id}/pause", { params: { path }, body })),
+  );
+}
+
+export function useResumeBenefit(organizationId: string, benefitId: string) {
+  return useBenefitMutation(organizationId, benefitId, (path, body: Schemas["VersionRequest"]) =>
+    unwrap(api.POST("/employer/benefits/{benefit_id}/resume", { params: { path }, body })),
+  );
+}
+
+export function useAddBenefitOption(organizationId: string, benefitId: string) {
+  return useBenefitMutation(organizationId, benefitId, (path, body: Schemas["AddOptionRequest"]) =>
+    unwrap(api.POST("/employer/benefits/{benefit_id}/options", { params: { path }, body })),
+  );
+}
+
+export function useUpdateBenefitOption(organizationId: string, benefitId: string) {
+  return useBenefitMutation(
+    organizationId,
+    benefitId,
+    (path, { optionId, body }: { optionId: string; body: Schemas["UpdateOptionRequest"] }) =>
+      unwrap(
+        api.PATCH("/employer/benefits/{benefit_id}/options/{option_id}", {
+          params: { path: { ...path, option_id: pathId(optionId) } },
+          body,
+        }),
+      ),
+  );
+}
+
+/** DELETE carries the loaded version as a query parameter. */
+export function useRemoveBenefitOption(organizationId: string, benefitId: string) {
+  return useBenefitMutation(
+    organizationId,
+    benefitId,
+    (path, { optionId, version }: { optionId: string; version: number }) =>
+      unwrap(
+        api.DELETE("/employer/benefits/{benefit_id}/options/{option_id}", {
+          params: { path: { ...path, option_id: pathId(optionId) }, query: { version } },
+        }),
+      ),
   );
 }

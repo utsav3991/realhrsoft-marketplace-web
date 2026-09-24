@@ -638,6 +638,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/employer/benefits/{benefit_id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pause Benefit */
+        post: operations["pause_benefit_api_v1_employer_benefits__benefit_id__pause_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/employer/benefits/{benefit_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume Benefit */
+        post: operations["resume_benefit_api_v1_employer_benefits__benefit_id__resume_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/employer/benefits/{benefit_id}/retire": {
         parameters: {
             query?: never;
@@ -653,6 +687,41 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/employer/benefits/{benefit_id}/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Option */
+        post: operations["add_option_api_v1_employer_benefits__benefit_id__options_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/employer/benefits/{benefit_id}/options/{option_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Option */
+        delete: operations["remove_option_api_v1_employer_benefits__benefit_id__options__option_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Option */
+        patch: operations["update_option_api_v1_employer_benefits__benefit_id__options__option_id__patch"];
         trace?: never;
     };
     "/partner/offers": {
@@ -790,6 +859,22 @@ export interface components {
             /** Reason */
             reason: string;
         };
+        /** AddOptionRequest */
+        AddOptionRequest: {
+            /** Name */
+            name: string;
+            /** Description */
+            description?: string | null;
+            /** Value */
+            value?: string | null;
+            /**
+             * Sort Order
+             * @default 0
+             */
+            sort_order: number;
+            /** Version */
+            version: number;
+        };
         /** AssignRoleRequest */
         AssignRoleRequest: {
             /**
@@ -838,6 +923,17 @@ export interface components {
             valid_until?: string | null;
             /** Usage Limit Per Employee */
             usage_limit_per_employee?: number | null;
+            /**
+             * Benefit Type
+             * @default other
+             * @enum {string}
+             */
+            benefit_type: "health" | "insurance" | "wellness" | "leave" | "financial" | "learning" | "travel" | "food" | "other";
+            /** Usage Instructions */
+            usage_instructions?: string | null;
+            /** External Url */
+            external_url?: string | null;
+            contact?: components["schemas"]["ContactBody"] | null;
         };
         /** BenefitPageResponse */
         BenefitPageResponse: {
@@ -870,6 +966,15 @@ export interface components {
             valid_until: string | null;
             /** Usage Limit Per Employee */
             usage_limit_per_employee: number | null;
+            /** Benefit Type */
+            benefit_type: string;
+            /** Usage Instructions */
+            usage_instructions: string | null;
+            /** External Url */
+            external_url: string | null;
+            contact: components["schemas"]["ContactResponse"] | null;
+            /** Options */
+            options: components["schemas"]["OptionResponse"][];
             /** Audience */
             audience: string;
             /** Status */
@@ -888,6 +993,8 @@ export interface components {
             updated_at: string;
             /** Published At */
             published_at: string | null;
+            /** Paused At */
+            paused_at: string | null;
             /** Retired At */
             retired_at: string | null;
         };
@@ -920,6 +1027,24 @@ export interface components {
             website: string | null;
             /** Description */
             description: string | null;
+        };
+        /** ContactBody */
+        ContactBody: {
+            /** Name */
+            name?: string | null;
+            /** Email */
+            email?: string | null;
+            /** Phone */
+            phone?: string | null;
+        };
+        /** ContactResponse */
+        ContactResponse: {
+            /** Name */
+            name: string | null;
+            /** Email */
+            email: string | null;
+            /** Phone */
+            phone: string | null;
         };
         /** CorrectApplicationRequest */
         CorrectApplicationRequest: {
@@ -963,6 +1088,16 @@ export interface components {
             scope: "global" | "organization";
             /** Reason */
             reason: string;
+        };
+        /** CreatedOptionResponse */
+        CreatedOptionResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Version */
+            version: number;
         };
         /** CreatedResponse */
         CreatedResponse: {
@@ -1192,6 +1327,24 @@ export interface components {
             last_review: components["schemas"]["ReviewResponse"] | null;
             publication: components["schemas"]["PublicationResponse"];
         };
+        /** OptionResponse */
+        OptionResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string | null;
+            /** Value */
+            value: string | null;
+            /** Sort Order */
+            sort_order: number;
+            /** Is Active */
+            is_active: boolean;
+        };
         /** OrganizationPageResponse */
         OrganizationPageResponse: {
             /** Items */
@@ -1405,6 +1558,17 @@ export interface components {
             valid_until?: string | null;
             /** Usage Limit Per Employee */
             usage_limit_per_employee?: number | null;
+            /**
+             * Benefit Type
+             * @default other
+             * @enum {string}
+             */
+            benefit_type: "health" | "insurance" | "wellness" | "leave" | "financial" | "learning" | "travel" | "food" | "other";
+            /** Usage Instructions */
+            usage_instructions?: string | null;
+            /** External Url */
+            external_url?: string | null;
+            contact?: components["schemas"]["ContactBody"] | null;
             /** Version */
             version: number;
         };
@@ -1432,6 +1596,27 @@ export interface components {
             valid_until?: string | null;
             /** Version */
             version: number;
+        };
+        /** UpdateOptionRequest */
+        UpdateOptionRequest: {
+            /** Name */
+            name: string;
+            /** Description */
+            description?: string | null;
+            /** Value */
+            value?: string | null;
+            /**
+             * Sort Order
+             * @default 0
+             */
+            sort_order: number;
+            /** Version */
+            version: number;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
         };
         /** UpdatePartnerProfileRequest */
         UpdatePartnerProfileRequest: {
@@ -2958,7 +3143,8 @@ export interface operations {
     list_benefits_api_v1_employer_benefits_get: {
         parameters: {
             query?: {
-                status?: ("draft" | "active" | "retired") | null;
+                status?: ("draft" | "active" | "paused" | "retired") | null;
+                type?: ("health" | "insurance" | "wellness" | "leave" | "financial" | "learning" | "travel" | "food" | "other") | null;
                 q?: string | null;
                 cursor?: string | null;
                 limit?: number;
@@ -3138,6 +3324,82 @@ export interface operations {
             };
         };
     };
+    pause_benefit_api_v1_employer_benefits__benefit_id__pause_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                benefit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resume_benefit_api_v1_employer_benefits__benefit_id__resume_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                benefit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     retire_benefit_api_v1_employer_benefits__benefit_id__retire_post: {
         parameters: {
             query?: never;
@@ -3153,6 +3415,120 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_option_api_v1_employer_benefits__benefit_id__options_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                benefit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddOptionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedOptionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_option_api_v1_employer_benefits__benefit_id__options__option_id__delete: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                benefit_id: string;
+                option_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_option_api_v1_employer_benefits__benefit_id__options__option_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-organization-id"?: string | null;
+            };
+            path: {
+                benefit_id: string;
+                option_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateOptionRequest"];
             };
         };
         responses: {

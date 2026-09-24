@@ -9,6 +9,7 @@ import { expect, test, type Page } from "@playwright/test";
 const USER_ID = "00000000-0000-4000-8000-000000000001";
 const ACME = "00000000-0000-4000-8000-0000000000a1";
 const BENEFIT_ID = "00000000-0000-4000-8000-0000000000b1";
+const OPTION_ID = "00000000-0000-4000-8000-0000000000b2";
 const OFFER_ID = "00000000-0000-4000-8000-0000000000c1";
 const APPLICATION_ID = "00000000-0000-4000-8000-0000000000d1";
 const NOW = "2026-09-24T10:00:00Z";
@@ -19,6 +20,7 @@ const EMPLOYER_CODES = [
   "employer_benefits.benefit.create",
   "employer_benefits.benefit.edit",
   "employer_benefits.benefit.publish",
+  "employer_benefits.benefit.pause",
   "employer_benefits.benefit.retire",
 ];
 const PARTNER_CODES = [
@@ -35,6 +37,7 @@ const PARTNER_CODES = [
 interface Call {
   operation: string;
   body: unknown;
+  query: string;
   organization: string | null;
 }
 
@@ -109,13 +112,19 @@ async function fakeBackend(page: Page, capacity: Capacity): Promise<Call[]> {
             valid_from: null,
             valid_until: null,
             usage_limit_per_employee: null,
+            benefit_type: "other",
+            usage_instructions: null,
+            external_url: null,
+            contact: null,
             ...body,
+            options: [],
             audience: "own_employees",
             status: "draft",
             version: 1,
             created_at: NOW,
             updated_at: NOW,
             published_at: null,
+            paused_at: null,
             retired_at: null,
           };
           return [201, { id: BENEFIT_ID }];
@@ -133,6 +142,53 @@ async function fakeBackend(page: Page, capacity: Capacity): Promise<Call[]> {
           if (!benefit) return 404;
           benefit.status = "active";
           benefit.published_at = NOW;
+          return version(benefit);
+        },
+      ],
+      [
+        "POST /employer/benefits/{benefit_id}/pause",
+        /^\/employer\/benefits\/[^/]+\/pause$/,
+        () => {
+          if (!benefit) return 404;
+          benefit.status = "paused";
+          benefit.paused_at = NOW;
+          return version(benefit);
+        },
+      ],
+      [
+        "POST /employer/benefits/{benefit_id}/resume",
+        /^\/employer\/benefits\/[^/]+\/resume$/,
+        () => {
+          if (!benefit) return 404;
+          benefit.status = "active";
+          benefit.paused_at = null;
+          return version(benefit);
+        },
+      ],
+      [
+        "POST /employer/benefits/{benefit_id}/options",
+        /^\/employer\/benefits\/[^/]+\/options$/,
+        ({ version: _version, ...fields }) => {
+          if (!benefit) return 404;
+          benefit.options = [
+            {
+              id: OPTION_ID,
+              description: null,
+              value: null,
+              sort_order: 0,
+              ...fields,
+              is_active: true,
+            },
+          ];
+          return [201, { id: OPTION_ID, ...version(benefit) }];
+        },
+      ],
+      [
+        "DELETE /employer/benefits/{benefit_id}/options/{option_id}",
+        /^\/employer\/benefits\/[^/]+\/options\/[^/]+$/,
+        () => {
+          if (!benefit) return 404;
+          benefit.options = [];
           return version(benefit);
         },
       ],
@@ -218,7 +274,8 @@ async function fakeBackend(page: Page, capacity: Capacity): Promise<Call[]> {
     for (const [operation, pattern, handle] of routes) {
       if (!pattern.test(path) || !operation.startsWith(`${request.method()} `)) continue;
       const body = request.postData() ? (request.postDataJSON() as Record<string, unknown>) : {};
-      calls.push({ operation, body: request.postData() ? body : null, organization });
+      const query = new URL(request.url()).search;
+      calls.push({ operation, body: request.postData() ? body : null, query, organization });
       const result = handle(body, organization);
       const [status, payload] = Array.isArray(result)
         ? (result as [number, unknown])
@@ -264,17 +321,22 @@ test("an Employer member manages benefits for the selected organization", async 
   await page.waitForLoadState("networkidle");
   await page.getByLabel("Title").fill("Gym membership");
   await page.getByLabel("Description").fill("Free gym access for staff.");
+  await page.getByLabel("How to use it").fill("Show your staff card at reception.");
   await page.getByRole("button", { name: "Create draft" }).click();
   await expect(page).toHaveURL(new RegExp(`/employer/benefits/${BENEFIT_ID}$`));
 
   const created = calls.findLast((call) => call.operation === "POST /employer/benefits");
   expect(created?.body).toEqual({
     title: "Gym membership",
+    benefit_type: "other",
     description: "Free gym access for staff.",
+    usage_instructions: "Show your staff card at reception.",
     terms: null,
+    external_url: null,
     valid_from: null,
     valid_until: null,
     usage_limit_per_employee: null,
+    contact: null,
   });
 
   await page.getByRole("button", { name: "Publish" }).click();
@@ -282,6 +344,39 @@ test("an Employer member manages benefits for the selected organization", async 
   await expect(page.getByRole("dialog")).toBeHidden();
   const published = calls.findLast((call) => call.operation.endsWith("/publish"));
   expect(published?.body).toEqual({ version: 1 });
+
+  // Pause hides the benefit from employees; resume shows it again (ADR-015).
+  await page.getByRole("button", { name: "Pause" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Pause" }).click();
+  await expect(page.getByRole("button", { name: "Resume" })).toBeVisible();
+  await page.getByRole("button", { name: "Resume" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Resume" }).click();
+  await expect(page.getByRole("button", { name: "Pause" })).toBeVisible();
+  expect(calls.findLast((c) => c.operation.endsWith("/pause"))?.body).toEqual({ version: 2 });
+  expect(calls.findLast((c) => c.operation.endsWith("/resume"))?.body).toEqual({ version: 3 });
+
+  // Options are part of the benefit and carry its loaded version.
+  await page.getByRole("button", { name: "Add option" }).click();
+  const optionDialog = page.getByRole("dialog");
+  await optionDialog.getByLabel("Name").fill("Premium");
+  await optionDialog.getByLabel("Value").fill("Pool included");
+  await optionDialog.getByRole("button", { name: "Add option" }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(page.getByRole("cell", { name: "Pool included" })).toBeVisible();
+  const added = calls.findLast((c) => c.operation.endsWith("/options"));
+  expect(added?.body).toEqual({
+    name: "Premium",
+    value: "Pool included",
+    description: null,
+    sort_order: 0,
+    version: 4,
+  });
+
+  await page.getByRole("button", { name: "Remove option Premium" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Remove" }).click();
+  await expect(page.getByText("No options.")).toBeVisible();
+  const removed = calls.findLast((c) => c.operation.startsWith("DELETE "));
+  expect(removed?.query).toBe("?version=5");
 
   for (const call of calls.filter((c) => c.operation.includes(" /employer/"))) {
     expect(call.organization, call.operation).toBe(ACME);

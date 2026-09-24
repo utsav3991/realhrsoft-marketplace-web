@@ -54,6 +54,11 @@ export const STATUS_DEFINITIONS = {
   benefit: {
     draft: { label: "Draft", intent: "neutral", description: "Not visible to employees" },
     active: { label: "Active", intent: "success", description: "Visible to your employees" },
+    paused: {
+      label: "Paused",
+      intent: "warning",
+      description: "Hidden from employees until resumed",
+    },
     retired: { label: "Retired", intent: "neutral", description: "No longer offered" },
   },
   offer: {

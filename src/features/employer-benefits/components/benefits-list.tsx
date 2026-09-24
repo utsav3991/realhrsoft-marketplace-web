@@ -9,6 +9,13 @@ import { EmptyState } from "@/design-system/components/empty-state";
 import { Button } from "@/design-system/primitives/button";
 import { Input } from "@/design-system/primitives/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/design-system/primitives/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -23,17 +30,26 @@ import { ListSkeleton } from "@/shared/feedback/list-skeleton";
 import { ErrorState } from "@/shared/feedback/states";
 import { formatDate } from "@/shared/lib/format";
 
-import { useBenefits, type BenefitStatus } from "../api/benefits";
+import { useBenefits, type BenefitStatus, type BenefitType } from "../api/benefits";
+import { BENEFIT_TYPES, benefitTypeLabel } from "../schemas/benefit";
 
 const FILTERS: { value: BenefitStatus | undefined; label: string }[] = [
   { value: undefined, label: "All" },
   { value: "draft", label: "Draft" },
   { value: "active", label: "Active" },
+  { value: "paused", label: "Paused" },
   { value: "retired", label: "Retired" },
 ];
 
+// Radix Select cannot hold an empty value, so "all types" has its own sentinel.
+const ALL_TYPES = "all";
+
 function parseStatus(value: string | null): BenefitStatus | undefined {
   return FILTERS.find((filter) => filter.value === value)?.value;
+}
+
+function parseType(value: string | null): BenefitType | undefined {
+  return BENEFIT_TYPES.find((type) => type.value === value)?.value;
 }
 
 function validity(from: string | null, until: string | null): string {
@@ -47,9 +63,10 @@ export function BenefitsList() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const status = parseStatus(searchParams.get("status"));
+  const type = parseType(searchParams.get("type"));
   const q = searchParams.get("q") ?? "";
   const [draft, setDraft] = useState(q);
-  const benefits = useBenefits(organizationId, { status, q });
+  const benefits = useBenefits(organizationId, { status, type, q });
   const canCreate = useCanInOrganization(EmployerPermission.BENEFIT_CREATE);
   const rows = benefits.data?.pages.flatMap((page) => page.items) ?? [];
 
@@ -98,6 +115,22 @@ export function BenefitsList() {
               </Button>
             ))}
           </div>
+          <Select
+            value={type ?? ALL_TYPES}
+            onValueChange={(value) => updateUrl({ type: value === ALL_TYPES ? undefined : value })}
+          >
+            <SelectTrigger className="w-36" aria-label="Filter by type">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_TYPES}>All types</SelectItem>
+              {BENEFIT_TYPES.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {canCreate ? (
             <Button asChild>
               <Link href="/employer/benefits/new">
@@ -118,7 +151,9 @@ export function BenefitsList() {
           icon={Gift}
           title="No benefits yet"
           description={
-            q || status ? "Try a different search or filter." : "Create a draft, then publish it."
+            q || status || type
+              ? "Try a different search or filter."
+              : "Create a draft, then publish it."
           }
         />
       ) : (
@@ -127,6 +162,7 @@ export function BenefitsList() {
             <TableHeader>
               <TableRow>
                 <TableHead>Benefit</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Validity</TableHead>
                 <TableHead>Updated</TableHead>
@@ -142,6 +178,9 @@ export function BenefitsList() {
                     >
                       {benefit.title}
                     </Link>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {benefitTypeLabel(benefit.benefit_type)}
                   </TableCell>
                   <TableCell>
                     <StatusBadge domain="benefit" status={benefit.status} />

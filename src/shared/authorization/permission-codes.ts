@@ -40,6 +40,8 @@ export const EmployerPermission = {
   BENEFIT_CREATE: "employer_benefits.benefit.create",
   BENEFIT_EDIT: "employer_benefits.benefit.edit",
   BENEFIT_PUBLISH: "employer_benefits.benefit.publish",
+  /** Pause and resume (ADR-015). */
+  BENEFIT_PAUSE: "employer_benefits.benefit.pause",
   BENEFIT_RETIRE: "employer_benefits.benefit.retire",
 } as const;
 

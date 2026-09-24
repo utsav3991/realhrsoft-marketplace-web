@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Archive, Pencil, Send } from "lucide-react";
+import { ArrowLeft, Archive, Pause, Pencil, Play, Send } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -19,11 +19,20 @@ import { StatusBadge } from "@/shared/components/status-badge";
 import { ErrorState } from "@/shared/feedback/states";
 import { formatDateTime } from "@/shared/lib/format";
 
-import { useBenefit, usePublishBenefit, useRetireBenefit, useUpdateBenefit } from "../api/benefits";
-import { benefitBody, benefitValues } from "../schemas/benefit";
+import {
+  useBenefit,
+  usePauseBenefit,
+  usePublishBenefit,
+  useResumeBenefit,
+  useRetireBenefit,
+  useUpdateBenefit,
+} from "../api/benefits";
+import { benefitBody, benefitTypeLabel, benefitValues } from "../schemas/benefit";
 import { BenefitForm } from "./benefit-form";
+import { BenefitOptions } from "./benefit-options";
 
 type Benefit = Schemas["BenefitResponse"];
+type Transition = "publish" | "pause" | "resume" | "retire";
 
 function BackToBenefits() {
   return (
@@ -66,10 +75,11 @@ export function BenefitDetail({ benefitId }: { benefitId: string }) {
 
 function LoadedBenefit({ organizationId, benefit }: { organizationId: string; benefit: Benefit }) {
   const [editing, setEditing] = useState(false);
-  const [confirming, setConfirming] = useState<"publish" | "retire" | null>(null);
+  const [confirming, setConfirming] = useState<Transition | null>(null);
   const update = useUpdateBenefit(organizationId, benefit.id);
   const canEdit = useCanInOrganization(EmployerPermission.BENEFIT_EDIT);
   const canPublish = useCanInOrganization(EmployerPermission.BENEFIT_PUBLISH);
+  const canPause = useCanInOrganization(EmployerPermission.BENEFIT_PAUSE);
   const canRetire = useCanInOrganization(EmployerPermission.BENEFIT_RETIRE);
   const retired = benefit.status === "retired";
 
@@ -90,6 +100,18 @@ function LoadedBenefit({ organizationId, benefit }: { organizationId: string; be
               <Button variant="outline" onClick={() => setConfirming("retire")}>
                 <Archive aria-hidden />
                 Retire
+              </Button>
+            ) : null}
+            {canPause && benefit.status === "active" ? (
+              <Button variant="outline" onClick={() => setConfirming("pause")}>
+                <Pause aria-hidden />
+                Pause
+              </Button>
+            ) : null}
+            {canPause && benefit.status === "paused" ? (
+              <Button onClick={() => setConfirming("resume")}>
+                <Play aria-hidden />
+                Resume
               </Button>
             ) : null}
             {canPublish && benefit.status === "draft" ? (
@@ -128,6 +150,7 @@ function LoadedBenefit({ organizationId, benefit }: { organizationId: string; be
               <Detail label="Status">
                 <StatusBadge domain="benefit" status={benefit.status} />
               </Detail>
+              <Detail label="Type">{benefitTypeLabel(benefit.benefit_type)}</Detail>
               <Detail label="Audience">Your organization&apos;s employees</Detail>
               <Detail label="Uses per employee">
                 {benefit.usage_limit_per_employee ?? "No limit"}
@@ -141,8 +164,43 @@ function LoadedBenefit({ organizationId, benefit }: { organizationId: string; be
               <Detail label="Published">
                 {benefit.published_at ? formatDateTime(benefit.published_at) : "—"}
               </Detail>
+              {benefit.paused_at ? (
+                <Detail label="Paused">{formatDateTime(benefit.paused_at)}</Detail>
+              ) : null}
+              <Detail label="Contact">
+                {benefit.contact ? (
+                  <span className="flex flex-col">
+                    {benefit.contact.name ? <span>{benefit.contact.name}</span> : null}
+                    {benefit.contact.email ? (
+                      <a href={`mailto:${benefit.contact.email}`} className="hover:underline">
+                        {benefit.contact.email}
+                      </a>
+                    ) : null}
+                    {benefit.contact.phone ? <span>{benefit.contact.phone}</span> : null}
+                  </span>
+                ) : (
+                  "—"
+                )}
+              </Detail>
+              <Detail label="Link">
+                {benefit.external_url ? (
+                  <a
+                    href={benefit.external_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="break-all hover:underline"
+                  >
+                    {benefit.external_url}
+                  </a>
+                ) : (
+                  "—"
+                )}
+              </Detail>
               <Detail label="Description" className="sm:col-span-2 lg:col-span-3">
                 <span className="whitespace-pre-line">{benefit.description}</span>
+              </Detail>
+              <Detail label="How to use it" className="sm:col-span-2 lg:col-span-3">
+                <span className="whitespace-pre-line">{benefit.usage_instructions ?? "—"}</span>
               </Detail>
               <Detail label="Terms" className="sm:col-span-2 lg:col-span-3">
                 <span className="whitespace-pre-line">{benefit.terms ?? "—"}</span>
@@ -151,6 +209,8 @@ function LoadedBenefit({ organizationId, benefit }: { organizationId: string; be
           </CardContent>
         </Card>
       )}
+
+      <BenefitOptions organizationId={organizationId} benefit={benefit} canEdit={canEdit} />
 
       <TransitionDialog
         organizationId={organizationId}
@@ -168,6 +228,16 @@ const COPY = {
     description: "It becomes visible to your organization's employees. You can retire it later.",
     confirm: "Publish",
   },
+  pause: {
+    title: "Pause this benefit?",
+    description: "Employees stop seeing it until you resume it. You can still edit it meanwhile.",
+    confirm: "Pause",
+  },
+  resume: {
+    title: "Resume this benefit?",
+    description: "It becomes visible to your organization's employees again.",
+    confirm: "Resume",
+  },
   retire: {
     title: "Retire this benefit?",
     description: "Employees stop seeing it. A retired benefit cannot be edited or republished.",
@@ -175,7 +245,14 @@ const COPY = {
   },
 } as const;
 
-/** Employer-controlled transitions; no Aayulogic approval (ADR-014). */
+const DONE: Record<Transition, string> = {
+  publish: "Benefit published",
+  pause: "Benefit paused",
+  resume: "Benefit resumed",
+  retire: "Benefit retired",
+};
+
+/** Employer-controlled transitions; no Aayulogic approval (ADR-014, ADR-015). */
 function TransitionDialog({
   organizationId,
   benefit,
@@ -184,11 +261,15 @@ function TransitionDialog({
 }: {
   organizationId: string;
   benefit: Benefit;
-  action: "publish" | "retire" | null;
+  action: Transition | null;
   onClose: () => void;
 }) {
-  const publish = usePublishBenefit(organizationId, benefit.id);
-  const retire = useRetireBenefit(organizationId, benefit.id);
+  const mutations = {
+    publish: usePublishBenefit(organizationId, benefit.id),
+    pause: usePauseBenefit(organizationId, benefit.id),
+    resume: useResumeBenefit(organizationId, benefit.id),
+    retire: useRetireBenefit(organizationId, benefit.id),
+  };
   const copy = COPY[action ?? "publish"];
 
   return (
@@ -200,9 +281,9 @@ function TransitionDialog({
       confirmLabel={copy.confirm}
       destructive={action === "retire"}
       onConfirm={async () => {
-        if (action === "publish") await publish.mutateAsync({ version: benefit.version });
-        else await retire.mutateAsync({ version: benefit.version });
-        toast.success(action === "publish" ? "Benefit published" : "Benefit retired");
+        if (!action) return;
+        await mutations[action].mutateAsync({ version: benefit.version });
+        toast.success(DONE[action]);
       }}
     />
   );
