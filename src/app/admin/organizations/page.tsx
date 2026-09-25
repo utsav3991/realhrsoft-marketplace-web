@@ -13,7 +13,7 @@ export default function AdminOrganizationsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Organizations"
-        description="Organizations, their verified members and their Employer and Partner capacities."
+        description="Organization identities and their verified portal members."
       />
       <RequirePermission anyOf={[OrganizationAdminPermission.ORGANIZATION_VIEW]}>
         <Suspense>

@@ -1,10 +1,12 @@
 #!/usr/bin/env node
-// Generates the typed API contract from the backend's OpenAPI document (ADR-013).
+// Generates the typed API contract from the Django backend's OpenAPI document.
 //
 //   yarn api:generate          regenerate types from the committed snapshot (openapi/v1.json)
 //   yarn api:generate --pull   fetch the live document first and update the snapshot
 //
-// The pull source defaults to a locally running backend; override with OPENAPI_URL.
+// The pull source defaults to a locally running Django backend (drf-spectacular serves the
+// document at /api/schema/); override with OPENAPI_URL. Export it offline with
+// `poetry run python manage.py spectacular --format openapi-json`.
 // The backend publishes paths with their version prefix (/api/v1/auth/me). The prefix is
 // stripped here so feature code writes "/auth/me" and the version lives only in the
 // client's base path.
@@ -14,8 +16,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 const VERSION_PREFIX = "/api/v1";
 const SNAPSHOT = new URL("../openapi/v1.json", import.meta.url);
 const OUTPUT = new URL("../src/generated/api/v1.ts", import.meta.url);
-const OPENAPI_URL =
-  process.env.OPENAPI_URL ?? `http://127.0.0.1:8000${VERSION_PREFIX}/openapi.json`;
+const OPENAPI_URL = process.env.OPENAPI_URL ?? "http://127.0.0.1:8000/api/schema/?format=json";
 
 async function loadDocument() {
   if (!process.argv.includes("--pull")) {

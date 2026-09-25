@@ -4,7 +4,7 @@ import type { ComponentProps } from "react";
 import { cn } from "@/shared/lib/cn";
 
 const alertVariants = cva(
-  "relative grid w-full grid-cols-[0_1fr] items-start gap-y-0.5 rounded-lg border px-4 py-3 text-sm has-[>svg]:grid-cols-[--spacing(4)_1fr] has-[>svg]:gap-x-3 [&>svg]:size-4 [&>svg]:translate-y-0.5",
+  "relative grid w-full grid-cols-[0_1fr] items-start gap-y-0.5 rounded-xl border px-4 py-3 text-sm has-[>svg]:grid-cols-[--spacing(4)_1fr] has-[>svg]:gap-x-3 [&>svg]:size-4 [&>svg]:translate-y-0.5",
   {
     variants: {
       variant: {
@@ -25,7 +25,7 @@ export function Alert({
 }
 
 export function AlertTitle({ className, ...props }: ComponentProps<"div">) {
-  return <div className={cn("col-start-2 font-medium", className)} {...props} />;
+  return <div className={cn("col-start-2 font-bold", className)} {...props} />;
 }
 
 export function AlertDescription({ className, ...props }: ComponentProps<"div">) {

@@ -42,20 +42,15 @@ export function subscribeActiveOrganization(listener: Listener): () => void {
   return () => listeners.delete(listener);
 }
 
-// Partner registration is owned by the applicant's account, which has no organization until
-// verification (global applicant grants).
-const APPLICANT_PATHS = ["/partner/registration"];
-
 /**
  * Paths whose handlers act inside the selected organization, plus /auth/me (which reports the
- * grants held there). Administration and Partner onboarding are never organization-scoped:
- * sending the header there would only make the backend demand a membership it does not need.
+ * grants held there). Partner self-service registration is organization-scoped too: an
+ * organization registers itself (POST /partner/me). Administration is never
+ * organization-scoped: sending the header there would only make the backend demand a
+ * membership it does not need.
  */
 export function isOrganizationScoped(path: string): boolean {
-  if (path === "/auth/me") return true;
-  if (path.startsWith("/employer/")) return true;
-  if (!path.startsWith("/partner/")) return false;
-  return !APPLICANT_PATHS.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+  return path === "/auth/me" || path.startsWith("/employer/") || path.startsWith("/partner/");
 }
 
 // Organizations the API refused for this actor (member without any grant there). They are not

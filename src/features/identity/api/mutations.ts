@@ -1,10 +1,18 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { api, pathId, unwrap, type Schemas } from "@/shared/api";
+import {
+  ApiError,
+  api,
+  normalizeApiError,
+  pathId,
+  pathToken,
+  unwrap,
+  type Schemas,
+} from "@/shared/api";
 
 import { identityKeys } from "./queries";
 
-type PermissionGrant = Schemas["PermissionGrantBody"];
+type PermissionGrant = Schemas["PermissionGrant"];
 
 /** A user's status and grants appear in the directory, the detail view and role counts. */
 function useInvalidateUser() {
@@ -15,6 +23,14 @@ function useInvalidateUser() {
       queryClient.invalidateQueries({ queryKey: identityKeys.userLists() }),
       queryClient.invalidateQueries({ queryKey: identityKeys.roles() }),
     ]);
+}
+
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schemas["CreateUserRequest"]) => unwrap(api.POST("/admin/users", { body })),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: identityKeys.userLists() }),
+  });
 }
 
 export function useDisableUser(userId: string) {
@@ -109,5 +125,30 @@ export function useReplaceRolePermissions(roleId: string) {
         queryClient.invalidateQueries({ queryKey: identityKeys.role(roleId) }),
         queryClient.invalidateQueries({ queryKey: identityKeys.roles() }),
       ]),
+  });
+}
+
+/**
+ * Completes an invitation. An invalid or expired link, or a password the backend rejects,
+ * answers 400 with a plain `{ message }` rather than Problem Details; surface that message.
+ */
+export function useSetPassword(uidb64: string, token: string) {
+  return useMutation({
+    mutationFn: async (body: Schemas["SetPasswordRequest"]) => {
+      const { data, error, response } = await api.POST(
+        "/users/auth/password-setup/{uidb64}/{token}/",
+        { params: { path: { uidb64: pathToken(uidb64), token: pathToken(token) } }, body },
+      );
+      if (response.ok && data) return data;
+      if (response.status === 400 && error && typeof error.message === "string") {
+        throw new ApiError({
+          status: 400,
+          code: "BAD_REQUEST",
+          title: "Password not set",
+          detail: error.message,
+        });
+      }
+      throw normalizeApiError(error, response);
+    },
   });
 }

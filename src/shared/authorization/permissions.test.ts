@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CurrentActor } from "@/shared/auth";
 
-import { IdentityPermission, PartnerPermission } from "./permission-codes";
+import { IdentityPermission } from "./permission-codes";
 import { can, canAny } from "./permissions";
 
 const ORG_A = "00000000-0000-0000-0000-00000000000a";
@@ -33,32 +33,32 @@ describe("can", () => {
 
   it("never lets a global grant satisfy an organization check (ADR-014)", () => {
     const admin = actor({
-      globalPermissions: new Set([PartnerPermission.OFFER_CREATE]),
+      globalPermissions: new Set([IdentityPermission.ROLE_CREATE]),
       organization: { id: ORG_A, permissions: new Set() },
     });
-    expect(can(admin, PartnerPermission.OFFER_CREATE, { organizationId: ORG_A })).toBe(false);
+    expect(can(admin, IdentityPermission.ROLE_CREATE, { organizationId: ORG_A })).toBe(false);
   });
 
   it("denies an organization check when no organization is selected", () => {
     const member = actor({
-      organization: { id: ORG_A, permissions: new Set([PartnerPermission.OFFER_VIEW]) },
+      organization: { id: ORG_A, permissions: new Set([IdentityPermission.ROLE_VIEW]) },
     });
-    expect(can(member, PartnerPermission.OFFER_VIEW, { organizationId: null })).toBe(false);
+    expect(can(member, IdentityPermission.ROLE_VIEW, { organizationId: null })).toBe(false);
   });
 
   it("never lets an organization grant satisfy an unscoped check", () => {
     const member = actor({
-      organization: { id: ORG_A, permissions: new Set([PartnerPermission.OFFER_VIEW]) },
+      organization: { id: ORG_A, permissions: new Set([IdentityPermission.ROLE_VIEW]) },
     });
-    expect(can(member, PartnerPermission.OFFER_VIEW)).toBe(false);
+    expect(can(member, IdentityPermission.ROLE_VIEW)).toBe(false);
   });
 
   it("accepts an organization grant only for the selected organization", () => {
     const member = actor({
-      organization: { id: ORG_A, permissions: new Set([PartnerPermission.OFFER_VIEW]) },
+      organization: { id: ORG_A, permissions: new Set([IdentityPermission.ROLE_VIEW]) },
     });
-    expect(can(member, PartnerPermission.OFFER_VIEW, { organizationId: ORG_A })).toBe(true);
-    expect(can(member, PartnerPermission.OFFER_VIEW, { organizationId: ORG_B })).toBe(false);
+    expect(can(member, IdentityPermission.ROLE_VIEW, { organizationId: ORG_A })).toBe(true);
+    expect(can(member, IdentityPermission.ROLE_VIEW, { organizationId: ORG_B })).toBe(false);
   });
 
   it("ignores roles and actor type", () => {

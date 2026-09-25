@@ -6,7 +6,7 @@ import type { Schemas } from "@/shared/api";
 
 import type { PermissionGrantValue } from "../schemas/admin";
 
-type Permission = Schemas["PermissionResponse"];
+type Permission = Schemas["Permission"];
 
 interface PermissionPickerProps {
   catalogue: readonly Permission[];

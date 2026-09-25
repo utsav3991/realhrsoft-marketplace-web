@@ -6,7 +6,7 @@ import type { Schemas } from "@/shared/api";
 
 import { PermissionPicker } from "./permission-picker";
 
-const catalogue: Schemas["PermissionResponse"][] = [
+const catalogue: Schemas["Permission"][] = [
   {
     code: "identity.user.view",
     display_name: "View users",

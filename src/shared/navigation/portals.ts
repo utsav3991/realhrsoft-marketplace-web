@@ -1,24 +1,23 @@
 import {
+  BadgeCheck,
   Building2,
-  ClipboardCheck,
-  FileText,
-  Gift,
   Handshake,
   KeyRound,
   LayoutDashboard,
   ShieldCheck,
   Store,
-  Tag,
   Users,
   type LucideIcon,
 } from "lucide-react";
 
 import type { Capacity, CurrentActor } from "@/shared/auth";
+
+import type { OrganizationFilter } from "./organization-scope";
 import {
-  EmployerPermission,
   GLOBAL_PERMISSIONS,
   IdentityPermission,
   OrganizationAdminPermission,
+  PartnerAdminPermission,
   PartnerPermission,
   canAny,
   type PermissionCode,
@@ -45,8 +44,8 @@ export interface Portal {
   canAccess: (actor: CurrentActor) => boolean;
   /** Offered in the switcher and as a landing page. Defaults to `canAccess`. */
   listed?: (actor: CurrentActor) => boolean;
-  /** Organization capacity the portal acts for; its pages are scoped to one organization. */
-  capacity?: Capacity;
+  /** Organizations the portal acts for; its pages are scoped to one organization. */
+  capacity?: OrganizationFilter;
   navigation: readonly NavItem[];
 }
 
@@ -92,13 +91,7 @@ export const PORTALS: readonly Portal[] = [
         href: "/admin/partners",
         label: "Partners",
         icon: Handshake,
-        anyOf: [OrganizationAdminPermission.PARTNER_SEARCH],
-      },
-      {
-        href: "/admin/offers",
-        label: "Offer review",
-        icon: ClipboardCheck,
-        anyOf: [OrganizationAdminPermission.OFFER_REVIEW],
+        anyOf: [PartnerAdminPermission.PARTNER_VIEW],
       },
     ],
   },
@@ -107,28 +100,21 @@ export const PORTALS: readonly Portal[] = [
     label: "Partner Portal",
     icon: Handshake,
     basePath: "/partner",
-    // Any signed-in account may apply to become a Partner; the portal's own pages need a
-    // verified Partner organization and grants there.
-    canAccess: () => true,
-    listed: (actor) => hasCapacity(actor, "partner"),
-    capacity: "partner",
+    // Any selectable organization may apply (self-service registration happens here), so the
+    // portal opens for every membership; the organization's grants decide what it shows.
+    canAccess: (actor) => actor.memberships.length > 0,
+    // Offered to registered partners and to organizations with no capacity yet (applicants).
+    listed: (actor) => actor.memberships.some((m) => m.partner || !m.employer),
+    capacity: "any",
     navigation: [
       { href: "/partner", label: "Dashboard", icon: LayoutDashboard },
       {
-        href: "/partner/offers",
-        label: "Offers",
-        icon: Tag,
-        anyOf: [PartnerPermission.OFFER_VIEW],
-        inOrganization: true,
-      },
-      {
         href: "/partner/profile",
-        label: "Profile",
-        icon: Building2,
+        label: "Business profile",
+        icon: BadgeCheck,
         anyOf: [PartnerPermission.PROFILE_VIEW],
         inOrganization: true,
       },
-      { href: "/partner/application", label: "Registration", icon: FileText },
     ],
   },
   {
@@ -136,24 +122,10 @@ export const PORTALS: readonly Portal[] = [
     label: "Employer Portal",
     icon: Building2,
     basePath: "/employer",
+    // The Django backend provisions no Employer capacity yet, so no membership qualifies.
     canAccess: (actor) => hasCapacity(actor, "employer"),
     capacity: "employer",
-    navigation: [
-      {
-        href: "/employer",
-        label: "Company benefits",
-        icon: Gift,
-        anyOf: [EmployerPermission.BENEFIT_VIEW],
-        inOrganization: true,
-      },
-      {
-        href: "/employer/profile",
-        label: "Profile",
-        icon: Building2,
-        anyOf: [EmployerPermission.PROFILE_VIEW],
-        inOrganization: true,
-      },
-    ],
+    navigation: [{ href: "/employer", label: "Overview", icon: LayoutDashboard }],
   },
   {
     id: "marketplace",

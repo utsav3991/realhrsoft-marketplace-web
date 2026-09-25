@@ -1,10 +1,11 @@
 import type { NextConfig } from "next";
 import { fileURLToPath } from "node:url";
 
-// The browser must reach the API on this app's own origin: the backend has no CORS, its
-// refresh cookie is SameSite=Strict and scoped to /api/v1/auth, and refresh/logout check
-// the Origin header (ADR-010, ADR-013). In local development Next proxies /api/* to the
-// backend; in deployed environments the ingress routes /api/* instead and this is unset.
+// The browser must reach the Django API on this app's own origin: its refresh cookie is
+// SameSite=Strict and scoped to {FORCE_SCRIPT_NAME}/api/v1/auth, and refresh/logout check the
+// Origin against DJANGO_TRUSTED_ORIGINS. In local development Next proxies /api/* to Django
+// (FORCE_SCRIPT_NAME unset); deployed, Nginx serves Django under /backend on the same origin
+// (NEXT_PUBLIC_API_BASE_PATH=/backend/api/v1) and this is unset.
 const apiProxyTarget = process.env.API_PROXY_TARGET;
 
 // The Content-Security-Policy is per request (it carries a script nonce): see src/proxy.ts.

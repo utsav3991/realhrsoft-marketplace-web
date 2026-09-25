@@ -18,7 +18,7 @@ import { ErrorState } from "@/shared/feedback/states";
 
 import { usePermissions } from "../api/queries";
 
-type Permission = Schemas["PermissionResponse"];
+type Permission = Schemas["Permission"];
 
 function byModule(permissions: readonly Permission[]): [string, Permission[]][] {
   const modules = new Map<string, Permission[]>();

@@ -15,3 +15,18 @@ export function pathId(value: string): string {
   if (!isUuid(value)) throw new TypeError("Invalid resource identifier");
   return value;
 }
+
+const TOKEN = /^[A-Za-z0-9_-]{1,200}$/;
+
+/**
+ * Guards an opaque, URL-safe path segment such as a password-setup link's uidb64 and token.
+ * Like `pathId`, it rejects "." and "..", so the value cannot retarget the request.
+ */
+export function pathToken(value: string): string {
+  if (!TOKEN.test(value)) throw new TypeError("Invalid path token");
+  return value;
+}
+
+export function isPathToken(value: string): boolean {
+  return TOKEN.test(value);
+}

@@ -5,22 +5,27 @@ import type { ComponentProps } from "react";
 import { cn } from "@/shared/lib/cn";
 
 export const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-full text-sm font-bold tracking-[-0.01em] whitespace-nowrap transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90",
-        outline: "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        /** Cobalt: the one committing action in a view (Save, Approve, Invite). */
+        default: "bg-primary text-primary-foreground hover:bg-primary-deep active:bg-primary-deep",
+        /** Black pill: promotional CTAs on marketplace browsing surfaces only. */
+        ink: "bg-ink text-ink-foreground hover:bg-ink-pressed active:bg-ink-pressed",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        /** Outlined pill paired with a primary, or on its own for secondary actions. */
+        outline:
+          "border-2 border-foreground/12 bg-transparent hover:border-foreground/30 active:bg-secondary",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/70",
+        ghost: "hover:bg-secondary hover:text-foreground",
+        link: "rounded-none text-primary underline-offset-4 hover:text-primary-deep hover:underline",
       },
       size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 px-3",
-        lg: "h-10 px-6",
-        icon: "size-9",
+        default: "h-11 px-7",
+        sm: "h-9 px-4",
+        lg: "h-12 px-8 text-base",
+        icon: "size-10",
       },
     },
     defaultVariants: { variant: "default", size: "default" },

@@ -3,7 +3,6 @@
 import {
   ArrowRight,
   Building2,
-  ClipboardCheck,
   Handshake,
   KeyRound,
   ShieldCheck,
@@ -24,6 +23,7 @@ import {
   Can,
   IdentityPermission,
   OrganizationAdminPermission,
+  PartnerAdminPermission,
   type PermissionCode,
 } from "@/shared/authorization";
 
@@ -60,23 +60,16 @@ const SECTIONS: readonly Section[] = [
   {
     href: "/admin/organizations",
     title: "Organizations",
-    description: "Verified members, Employer and Partner capacities, commercial entitlement.",
+    description: "Organization identities and the verified portal members who may act for them.",
     icon: Building2,
     permission: OrganizationAdminPermission.ORGANIZATION_VIEW,
   },
   {
     href: "/admin/partners",
     title: "Partners",
-    description: "Review Partner verification, manage standing and assisted registration.",
+    description: "Review partner registrations, verify or reject them, and register on behalf.",
     icon: Handshake,
-    permission: OrganizationAdminPermission.PARTNER_SEARCH,
-  },
-  {
-    href: "/admin/offers",
-    title: "Offer review",
-    description: "Approve Partner offer content before it can be published.",
-    icon: ClipboardCheck,
-    permission: OrganizationAdminPermission.OFFER_REVIEW,
+    permission: PartnerAdminPermission.PARTNER_VIEW,
   },
 ];
 

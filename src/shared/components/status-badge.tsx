@@ -25,94 +25,20 @@ export const STATUS_DEFINITIONS = {
     active: { label: "Active", intent: "success", description: "Can be added to roles" },
     retired: { label: "Retired", intent: "neutral", description: "Can no longer be added" },
   },
-  employerProfile: {
-    enabled: { label: "Employer", intent: "success", description: "Employer portal is open" },
-    disabled: { label: "Employer off", intent: "neutral", description: "Employer portal closed" },
+  /** Portal membership in an organization: current until an administrator ends it. */
+  membership: {
+    current: { label: "Current", intent: "success", description: "May act for the organization" },
+    ended: { label: "Ended", intent: "neutral", description: "Membership was ended" },
   },
-  /** An organization's Partner standing (directory): verified only when also active. */
-  partnerProfile: {
-    verified: {
-      label: "Verified partner",
-      intent: "success",
-      description: "Verified by Aayulogic and active",
-    },
-    suspended: {
-      label: "Suspended",
+  /** Partner verification, and the outcome of each verification decision. */
+  partner: {
+    pending: { label: "Pending", intent: "warning", description: "Awaiting Aayulogic review" },
+    verified: { label: "Verified", intent: "success", description: "Passed verification" },
+    rejected: {
+      label: "Rejected",
       intent: "danger",
-      description: "Offers are offline until reinstated",
+      description: "Not accepted; can be edited and resubmitted",
     },
-    closed: { label: "Partner closed", intent: "neutral", description: "No longer a Partner" },
-    draft: { label: "Partner draft", intent: "neutral", description: "Not yet submitted" },
-    submitted: { label: "Partner submitted", intent: "info", description: "Awaiting review" },
-    under_review: { label: "Partner in review", intent: "info", description: "Being reviewed" },
-    changes_requested: {
-      label: "Partner changes requested",
-      intent: "warning",
-      description: "The applicant must correct and resubmit",
-    },
-    rejected: { label: "Partner rejected", intent: "danger", description: "Not verified" },
-  },
-  /** Partner Management (ADR-017): verification by Aayulogic Governance. */
-  partnerVerification: {
-    draft: { label: "Draft", intent: "neutral", description: "Not yet submitted for verification" },
-    submitted: { label: "Submitted", intent: "info", description: "Waiting for Aayulogic review" },
-    under_review: { label: "Under review", intent: "info", description: "Aayulogic is reviewing" },
-    changes_requested: {
-      label: "Changes requested",
-      intent: "warning",
-      description: "Correct the details and resubmit",
-    },
-    verified: { label: "Verified", intent: "success", description: "Verified by Aayulogic" },
-    rejected: { label: "Rejected", intent: "danger", description: "Verification not granted" },
-  },
-  /** Partner Management (ADR-017): operational standing, independent of verification. */
-  partnerOperational: {
-    active: { label: "Active", intent: "success", description: "Operating normally" },
-    suspended: {
-      label: "Suspended",
-      intent: "danger",
-      description: "Offers are offline until reinstated",
-    },
-    closed: { label: "Closed", intent: "neutral", description: "No longer a Partner" },
-  },
-  /** Verified AND active. Commercial entitlement and content approval are separate gates. */
-  marketplaceEligibility: {
-    eligible: {
-      label: "Eligible",
-      intent: "success",
-      description: "Verified and active: may take part in the marketplace",
-    },
-    ineligible: {
-      label: "Not eligible",
-      intent: "warning",
-      description: "Must be verified and active to take part in the marketplace",
-    },
-  },
-  benefit: {
-    draft: { label: "Draft", intent: "neutral", description: "Not visible to employees" },
-    active: { label: "Active", intent: "success", description: "Visible to your employees" },
-    paused: {
-      label: "Paused",
-      intent: "warning",
-      description: "Hidden from employees until resumed",
-    },
-    retired: { label: "Retired", intent: "neutral", description: "No longer offered" },
-  },
-  offer: {
-    draft: { label: "Draft", intent: "neutral", description: "Not submitted for review" },
-    submitted: { label: "In review", intent: "info", description: "Waiting for content review" },
-    changes_requested: {
-      label: "Changes requested",
-      intent: "warning",
-      description: "Edit and resubmit",
-    },
-    approved: { label: "Approved", intent: "success", description: "Content approved" },
-    rejected: { label: "Rejected", intent: "danger", description: "Content not accepted" },
-  },
-  entitlement: {
-    active: { label: "Active", intent: "success", description: "Commercial entitlement recorded" },
-    revoked: { label: "Revoked", intent: "danger", description: "Entitlement revoked" },
-    none: { label: "None", intent: "neutral", description: "No entitlement recorded" },
   },
 } as const satisfies Record<string, Record<string, StatusDefinition>>;
 

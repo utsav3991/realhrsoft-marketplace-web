@@ -1,10 +1,9 @@
 export { Can, useCan, useCanAny, useCanInOrganization } from "./can";
 export {
-  EmployerPermission,
   GLOBAL_PERMISSIONS,
   IdentityPermission,
   OrganizationAdminPermission,
-  PartnerApplicantPermission,
+  PartnerAdminPermission,
   PartnerPermission,
   type GlobalPermissionCode,
   type IdentityPermissionCode,

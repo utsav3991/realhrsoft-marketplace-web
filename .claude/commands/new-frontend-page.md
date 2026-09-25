@@ -11,7 +11,9 @@ Before writing anything:
 1. Read `CLAUDE.md` (session/API rules, authorization layers, dependency direction).
 2. Look at the existing pages in `src/app/$1/` and the portal entry in
    `src/shared/navigation/portals.ts`.
-3. Check `src/design-system/primitives/`, `src/design-system/components/` and
+3. Read `DESIGN.md` for the visual rules (pill buttons, one cobalt action per region, flat
+   cards, type scale).
+4. Check `src/design-system/primitives/`, `src/design-system/components/` and
    `src/shared/components/` for reusable pieces.
 
 Structure:

@@ -16,12 +16,21 @@ import { isOrganizationDenied, subscribeActiveOrganization } from "@/shared/api"
 import { useActiveOrganization, useSession, type Capacity, type Membership } from "@/shared/auth";
 import { LoadingState } from "@/shared/feedback/states";
 
-const CAPACITY_LABEL: Record<Capacity, string> = { employer: "Employer", partner: "Partner" };
+/** A capacity the organization must already have, or "any" selectable membership. */
+export type OrganizationFilter = Capacity | "any";
 
-/** Organizations where the actor is a member and the organization has this capacity. */
-export function useCapableOrganizations(capacity: Capacity): readonly Membership[] {
+const ORGANIZATIONS_LABEL: Record<OrganizationFilter, string> = {
+  employer: "Employer organizations",
+  partner: "Partner organizations",
+  any: "organizations",
+};
+
+/** Organizations where the actor is a member and the organization passes the filter. */
+export function useCapableOrganizations(capacity: OrganizationFilter): readonly Membership[] {
   const { actor } = useSession();
-  return (actor?.memberships ?? []).filter((membership) => membership[capacity]);
+  return (actor?.memberships ?? []).filter(
+    (membership) => capacity === "any" || membership[capacity],
+  );
 }
 
 function useDeniedFilter(memberships: readonly Membership[]) {
@@ -35,7 +44,7 @@ function useDeniedFilter(memberships: readonly Membership[]) {
 }
 
 /** Header control to change the organization a portal acts for. */
-export function OrganizationSwitcher({ capacity }: { capacity: Capacity }) {
+export function OrganizationSwitcher({ capacity }: { capacity: OrganizationFilter }) {
   const candidates = useCapableOrganizations(capacity);
   const { organizationId, selectOrganization } = useActiveOrganization();
   const current = candidates.find((m) => m.organizationId === organizationId);
@@ -59,7 +68,9 @@ export function OrganizationSwitcher({ capacity }: { capacity: Capacity }) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
-        <DropdownMenuLabel>{CAPACITY_LABEL[capacity]} organizations</DropdownMenuLabel>
+        <DropdownMenuLabel className="first-letter:uppercase">
+          {ORGANIZATIONS_LABEL[capacity]}
+        </DropdownMenuLabel>
         {candidates.map((membership) => (
           <DropdownMenuItem
             key={membership.organizationId}
@@ -84,7 +95,7 @@ export function RequireOrganization({
   empty,
   children,
 }: {
-  capacity: Capacity;
+  capacity: OrganizationFilter;
   /** Shown when the user belongs to no organization with this capacity. */
   empty?: ReactNode;
   children: ReactNode;
@@ -111,7 +122,7 @@ export function RequireOrganization({
         {empty ?? (
           <EmptyState
             icon={Building2}
-            title={`You are not a member of any ${CAPACITY_LABEL[capacity]} organization`}
+            title={`You are not a member of any ${ORGANIZATIONS_LABEL[capacity].replace(/s$/, "")}`}
             description="Aayulogic records organization memberships. Ask a platform administrator."
           />
         )}
@@ -131,7 +142,7 @@ export function RequireOrganization({
     <EmptyState
       icon={Building2}
       title="Choose an organization"
-      description={`You belong to more than one ${CAPACITY_LABEL[capacity]} organization.`}
+      description={`You belong to more than one of these ${ORGANIZATIONS_LABEL[capacity]}.`}
       action={
         <div className="flex flex-wrap justify-center gap-2">
           {selectable.map((membership) => (

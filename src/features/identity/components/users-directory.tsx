@@ -19,9 +19,10 @@ import {
 } from "@/design-system/primitives/table";
 import { StatusBadge } from "@/shared/components/status-badge";
 import { ErrorState } from "@/shared/feedback/states";
-import { formatDate } from "@/shared/lib/format";
+import { formatPersonName } from "@/shared/lib/format";
 
 import { useUsers, type UserStatusFilter } from "../api/queries";
+import { NewUserAction } from "./new-user-action";
 
 const STATUS_FILTERS: { value: UserStatusFilter | undefined; label: string }[] = [
   { value: undefined, label: "All" },
@@ -90,6 +91,7 @@ export function UsersDirectory() {
             </Button>
           ))}
         </div>
+        <NewUserAction />
       </div>
 
       {users.isPending ? (
@@ -112,9 +114,9 @@ export function UsersDirectory() {
             <TableHeader>
               <TableRow>
                 <TableHead>Email</TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead>Actor type</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -125,12 +127,10 @@ export function UsersDirectory() {
                       {user.email}
                     </Link>
                   </TableCell>
+                  <TableCell>{formatPersonName(user.first_name, user.last_name)}</TableCell>
                   <TableCell className="text-muted-foreground">{user.actor_type}</TableCell>
                   <TableCell>
                     <StatusBadge domain="user" status={user.status} />
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDate(user.created_at)}
                   </TableCell>
                 </TableRow>
               ))}

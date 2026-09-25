@@ -4,65 +4,66 @@ import { api, pathId, unwrap, type Schemas } from "@/shared/api";
 
 import { organizationKeys } from "./queries";
 
-function useInvalidateOrganization() {
-  const queryClient = useQueryClient();
-  return (organizationId: string) =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: organizationKeys.detail(organizationId) }),
-      queryClient.invalidateQueries({ queryKey: organizationKeys.members(organizationId) }),
-      queryClient.invalidateQueries({ queryKey: organizationKeys.lists() }),
-    ]);
-}
-
-// --- Organizations and membership ------------------------------------------------------------
-
 export function useCreateOrganization() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: Schemas["CreateOrganizationRequest"]) =>
+    mutationFn: (body: Schemas["CreateOrganization"]) =>
       unwrap(api.POST("/admin/organizations", { body })),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: organizationKeys.lists() }),
   });
 }
 
-export function useAddMember(organizationId: string) {
-  const invalidate = useInvalidateOrganization();
+export function useUpdateOrganization(organizationId: string) {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: Schemas["AddMemberRequest"]) =>
+    mutationFn: (body: Schemas["UpdateOrganization"]) =>
       unwrap(
-        api.POST("/admin/organizations/{organization_id}/members", {
+        api.PUT("/admin/organizations/{organization_id}", {
           params: { path: { organization_id: pathId(organizationId) } },
           body,
         }),
       ),
-    onSettled: () => invalidate(organizationId),
+    // Refetch on failure too: a 409 means the loaded version is stale.
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: organizationKeys.detail(organizationId) }),
+        queryClient.invalidateQueries({ queryKey: organizationKeys.lists() }),
+      ]),
   });
 }
 
-export function useRemoveMember(organizationId: string) {
-  const invalidate = useInvalidateOrganization();
+function useInvalidateMemberships(organizationId: string) {
+  const queryClient = useQueryClient();
+  return () =>
+    queryClient.invalidateQueries({ queryKey: organizationKeys.memberships(organizationId) });
+}
+
+export function useVerifyMembership(organizationId: string) {
+  const invalidate = useInvalidateMemberships(organizationId);
   return useMutation({
-    mutationFn: ({ userId, reason }: { userId: string; reason: string }) =>
+    mutationFn: (body: Schemas["VerifyMembership"]) =>
       unwrap(
-        api.POST("/admin/organizations/{organization_id}/members/{user_id}/remove", {
-          params: { path: { organization_id: pathId(organizationId), user_id: pathId(userId) } },
-          body: { reason },
+        api.POST("/admin/organizations/{organization_id}/memberships", {
+          params: { path: { organization_id: pathId(organizationId) } },
+          body,
         }),
       ),
-    onSettled: () => invalidate(organizationId),
+    onSettled: invalidate,
   });
 }
 
-export function useChangeEmployerProfile(organizationId: string) {
-  const invalidate = useInvalidateOrganization();
+export function useEndMembership(organizationId: string) {
+  const invalidate = useInvalidateMemberships(organizationId);
   return useMutation({
-    mutationFn: ({ action, reason }: { action: "enable" | "disable"; reason: string }) =>
+    mutationFn: ({ membershipId, reason }: { membershipId: string; reason: string }) =>
       unwrap(
-        api.POST("/admin/organizations/{organization_id}/employer-profile/{action}", {
-          params: { path: { organization_id: pathId(organizationId), action } },
+        api.POST("/admin/organizations/{organization_id}/memberships/{membership_id}/end", {
+          params: {
+            path: { organization_id: pathId(organizationId), membership_id: pathId(membershipId) },
+          },
           body: { reason },
         }),
       ),
-    onSettled: () => invalidate(organizationId),
+    onSettled: invalidate,
   });
 }

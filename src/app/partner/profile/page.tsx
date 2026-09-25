@@ -6,16 +6,17 @@ import { PartnerPermission } from "@/shared/authorization/permission-codes";
 import { RequireOrganization } from "@/shared/navigation/organization-scope";
 import { RequirePermission } from "@/shared/navigation/portal-gate";
 
-import { PartnerOnboarding } from "../partner-dashboard";
-
-export const metadata: Metadata = { title: "Profile" };
+export const metadata: Metadata = { title: "Business profile" };
 
 export default function PartnerProfilePage() {
   return (
     <div className="space-y-6">
-      <PageHeader title="Partner profile" />
-      <RequireOrganization capacity="partner" empty={<PartnerOnboarding />}>
-        <RequirePermission inOrganization anyOf={[PartnerPermission.PROFILE_VIEW]}>
+      <PageHeader
+        title="Business profile"
+        description="What Aayulogic verifies, its current status and every review decision."
+      />
+      <RequireOrganization capacity="any">
+        <RequirePermission anyOf={[PartnerPermission.PROFILE_VIEW]} inOrganization>
           <OwnPartnerProfile />
         </RequirePermission>
       </RequireOrganization>

@@ -11,13 +11,15 @@ import { UserDetail } from "./user-detail";
 
 const USER_ID = "7d8f4c1e-0000-4000-8000-000000000001";
 
-const user: Schemas["UserDetailResponse"] = {
+const user: Schemas["UserDetail"] = {
   id: USER_ID,
   email: "ana@example.com",
-  actor_type: "staff",
+  username: "ana",
+  first_name: "Ana",
+  last_name: null,
+  contact: null,
+  actor_type: "marketplace_staff",
   status: "active",
-  created_at: "2026-09-01T10:00:00Z",
-  disabled_at: null,
   grants: [
     {
       assignment_id: "a1",

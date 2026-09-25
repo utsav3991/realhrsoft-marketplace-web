@@ -1,36 +1,29 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
-import { api, pathId, unwrap } from "@/shared/api";
+import { api, nextOffset, PAGE_SIZE, pathId, unwrap } from "@/shared/api";
 
 export const organizationKeys = {
   all: ["organizations"] as const,
   lists: () => [...organizationKeys.all, "list"] as const,
-  list: (q: string) => [...organizationKeys.lists(), q] as const,
+  list: (search: string) => [...organizationKeys.lists(), search] as const,
   detail: (id: string) => [...organizationKeys.all, "detail", id] as const,
-  members: (id: string) => [...organizationKeys.all, "members", id] as const,
-  // Portal reads are keyed by the organization they were fetched under.
-  employerProfile: (organizationId: string) =>
-    [...organizationKeys.all, "employer-profile", organizationId] as const,
+  memberships: (id: string) => [...organizationKeys.all, "memberships", id] as const,
 };
 
-const PAGE_SIZE = 50;
-
-// --- Administration ------------------------------------------------------------------------
-
-export function useOrganizations(q: string) {
+export function useOrganizations(search: string) {
   return useInfiniteQuery({
-    queryKey: organizationKeys.list(q),
-    initialPageParam: null as string | null,
+    queryKey: organizationKeys.list(search),
+    initialPageParam: 0,
     queryFn: ({ pageParam, signal }) =>
       unwrap(
         api.GET("/admin/organizations", {
           params: {
-            query: { q: q || undefined, cursor: pageParam ?? undefined, limit: PAGE_SIZE },
+            query: { search: search || undefined, offset: pageParam, limit: PAGE_SIZE },
           },
           signal,
         }),
       ),
-    getNextPageParam: (page) => page.next_cursor,
+    getNextPageParam: nextOffset,
   });
 }
 
@@ -47,24 +40,21 @@ export function useOrganization(organizationId: string) {
   });
 }
 
-export function useMembers(organizationId: string) {
-  return useQuery({
-    queryKey: organizationKeys.members(organizationId),
-    queryFn: ({ signal }) =>
+/** Current and ended portal memberships, most recently verified first. */
+export function useMemberships(organizationId: string) {
+  return useInfiniteQuery({
+    queryKey: organizationKeys.memberships(organizationId),
+    initialPageParam: 0,
+    queryFn: ({ pageParam, signal }) =>
       unwrap(
-        api.GET("/admin/organizations/{organization_id}/members", {
-          params: { path: { organization_id: pathId(organizationId) } },
+        api.GET("/admin/organizations/{organization_id}/memberships", {
+          params: {
+            path: { organization_id: pathId(organizationId) },
+            query: { offset: pageParam, limit: PAGE_SIZE },
+          },
           signal,
         }),
       ),
-  });
-}
-
-// --- Portals (organization-scoped) -------------------------------------------------------------
-
-export function useEmployerProfile(organizationId: string) {
-  return useQuery({
-    queryKey: organizationKeys.employerProfile(organizationId),
-    queryFn: ({ signal }) => unwrap(api.GET("/employer/profile", { signal })),
+    getNextPageParam: nextOffset,
   });
 }

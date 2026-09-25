@@ -19,7 +19,7 @@ export function Toaster(props: ToasterProps) {
         unstyled: true,
         classNames: {
           toast:
-            "bg-popover text-popover-foreground flex w-full items-start gap-3 rounded-lg border p-4 text-sm shadow-lg sm:w-(--width)",
+            "bg-popover text-popover-foreground flex w-full items-start gap-3 rounded-xl border p-4 text-sm shadow-panel sm:w-(--width)",
           title: "font-medium",
           description: "text-muted-foreground",
           icon: "mt-0.5",

@@ -42,7 +42,7 @@ import { usePermissions, useRole } from "../api/queries";
 import { editRolePermissionsSchema, type EditRolePermissionsValues } from "../schemas/admin";
 import { PermissionPicker } from "./permission-picker";
 
-type Role = Schemas["RoleResponse"];
+type Role = Schemas["Role"];
 
 function BackToRoles() {
   return (

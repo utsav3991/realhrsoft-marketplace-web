@@ -26,7 +26,7 @@ export interface CurrentActor {
   memberships: readonly Membership[];
 }
 
-export function toCurrentActor(response: Schemas["CurrentActorResponse"]): CurrentActor {
+export function toCurrentActor(response: Schemas["CurrentActor"]): CurrentActor {
   return {
     id: response.actor_id,
     actorType: response.actor_type,

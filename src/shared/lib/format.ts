@@ -29,3 +29,8 @@ export function toDateTimeLocal(iso: string | null | undefined): string {
 export function fromDateTimeLocal(value: string): string | null {
   return value ? new Date(value).toISOString() : null;
 }
+
+/** "First Last" from optional name parts, or an em dash when neither is set. */
+export function formatPersonName(firstName: string | null, lastName: string | null): string {
+  return [firstName, lastName].filter(Boolean).join(" ") || "—";
+}

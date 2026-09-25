@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
-import { api, pathId, unwrap } from "@/shared/api";
+import { api, pathId, pathToken, unwrap } from "@/shared/api";
 
 export type UserStatusFilter = "active" | "disabled";
 
@@ -84,5 +84,22 @@ export function usePermissions({ enabled = true }: { enabled?: boolean } = {}) {
     // The catalogue changes only with a backend release.
     staleTime: 5 * 60_000,
     enabled,
+  });
+}
+
+/** Whether an invitation's password-setup link is still usable. Public: no session needed. */
+export function usePasswordSetupLink(uidb64: string, token: string) {
+  return useQuery({
+    queryKey: [...identityKeys.all, "password-setup", uidb64, token] as const,
+    queryFn: ({ signal }) =>
+      unwrap(
+        api.GET("/users/auth/password-setup/{uidb64}/{token}/", {
+          params: { path: { uidb64: pathToken(uidb64), token: pathToken(token) } },
+          signal,
+        }),
+      ),
+    // A link is single-use: never refetch it behind the form.
+    staleTime: Infinity,
+    retry: false,
   });
 }

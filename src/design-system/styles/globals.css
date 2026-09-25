@@ -1,62 +1,71 @@
 @import "tailwindcss";
 
 /*
- * Design tokens. Components use the semantic names (bg-primary, text-muted-foreground, …),
- * never raw colors, so the four portals stay visually related and themeable in one place.
+ * Design tokens. DESIGN.md is the spec; this file implements it. Components use the semantic
+ * names (bg-primary, text-muted-foreground, …), never raw colors, so the four portals stay
+ * visually related and themeable in one place.
  */
 :root {
-  --radius: 0.625rem;
-
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.2 0.02 265);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.02 265);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.02 265);
-  --primary: oklch(0.47 0.16 262);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.96 0.01 265);
-  --secondary-foreground: oklch(0.25 0.02 265);
-  --muted: oklch(0.965 0.005 265);
-  --muted-foreground: oklch(0.5 0.02 265);
-  --accent: oklch(0.95 0.02 262);
-  --accent-foreground: oklch(0.3 0.08 262);
-  --destructive: oklch(0.55 0.2 27);
-  --destructive-foreground: oklch(0.98 0 0);
-  --success: oklch(0.55 0.13 155);
-  --success-foreground: oklch(0.98 0 0);
-  --warning: oklch(0.75 0.15 75);
-  --warning-foreground: oklch(0.25 0.05 75);
-  --border: oklch(0.91 0.01 265);
-  --input: oklch(0.88 0.01 265);
-  --ring: oklch(0.47 0.16 262);
-  --sidebar: oklch(0.985 0.003 265);
+  --background: #ffffff; /* canvas */
+  --foreground: #0a1317; /* ink-deep */
+  --card: #ffffff;
+  --card-foreground: #0a1317;
+  --popover: #ffffff;
+  --popover-foreground: #0a1317;
+  --primary: #0064e0; /* cobalt: the one committing action per view */
+  --primary-deep: #0457cb; /* primary hover/pressed, active links */
+  --primary-foreground: #ffffff;
+  --ink: #000000; /* black pill: marketplace promotional CTAs */
+  --ink-pressed: #444950; /* charcoal */
+  --ink-foreground: #ffffff;
+  --secondary: #f1f4f7; /* surface-soft */
+  --secondary-foreground: #1c2a31;
+  --muted: #f1f4f7;
+  --muted-foreground: #5d6c7b; /* steel */
+  --accent: #dbeeff; /* primary-soft at ~15% on canvas */
+  --accent-foreground: #0457cb;
+  --destructive: #e41e3f; /* critical */
+  --destructive-foreground: #ffffff;
+  --success: #237b3a; /* #31a24c darkened to pass AA with white text */
+  --success-foreground: #ffffff;
+  --warning: #f7b928;
+  --warning-foreground: #0a1317;
+  --border: #dee3e9; /* hairline-soft */
+  --input: #ced0d4; /* hairline */
+  --ring: #1876f2; /* focus and selected controls */
+  --sidebar: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: oklch(0.17 0.015 265);
-    --foreground: oklch(0.96 0.005 265);
-    --card: oklch(0.21 0.015 265);
-    --card-foreground: oklch(0.96 0.005 265);
-    --popover: oklch(0.21 0.015 265);
-    --popover-foreground: oklch(0.96 0.005 265);
-    --primary: oklch(0.68 0.14 262);
-    --primary-foreground: oklch(0.17 0.015 265);
-    --secondary: oklch(0.27 0.015 265);
-    --secondary-foreground: oklch(0.96 0.005 265);
-    --muted: oklch(0.25 0.015 265);
-    --muted-foreground: oklch(0.7 0.015 265);
-    --accent: oklch(0.28 0.03 262);
-    --accent-foreground: oklch(0.92 0.03 262);
-    --destructive: oklch(0.65 0.19 25);
-    --success: oklch(0.68 0.13 155);
-    --success-foreground: oklch(0.17 0.015 265);
-    --warning: oklch(0.8 0.14 75);
-    --border: oklch(0.3 0.015 265);
-    --input: oklch(0.34 0.015 265);
-    --ring: oklch(0.68 0.14 262);
-    --sidebar: oklch(0.19 0.015 265);
+    --background: #0a1317;
+    --foreground: #f1f4f7;
+    --card: #111c21;
+    --card-foreground: #f1f4f7;
+    --popover: #111c21;
+    --popover-foreground: #f1f4f7;
+    --primary: #0091ff; /* primary-soft */
+    --primary-deep: #3aa7ff;
+    --primary-foreground: #0a1317;
+    --ink: #ffffff;
+    --ink-pressed: #dee3e9;
+    --ink-foreground: #0a1317;
+    --secondary: #1c2a31;
+    --secondary-foreground: #f1f4f7;
+    --muted: #1c2a31;
+    --muted-foreground: #9aa8b5;
+    --accent: #0f2e4d;
+    --accent-foreground: #9fd0ff;
+    --destructive: #ff5c75;
+    --destructive-foreground: #0a1317;
+    --success: #45bd62;
+    --success-foreground: #0a1317;
+    --warning: #f7b928;
+    --warning-foreground: #0a1317;
+    --border: #26343b;
+    --input: #34434b;
+    --ring: #0091ff;
+    --sidebar: #0a1317;
   }
 }
 
@@ -70,7 +79,11 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  --color-primary-deep: var(--primary-deep);
   --color-primary-foreground: var(--primary-foreground);
+  --color-ink: var(--ink);
+  --color-ink-pressed: var(--ink-pressed);
+  --color-ink-foreground: var(--ink-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -87,10 +100,17 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-sidebar: var(--sidebar);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* DESIGN.md rounded scale: controls lg, cards xl, callouts 2xl, showcase 3xl/4xl, pills full. */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-3xl: 32px;
+  --radius-4xl: 40px;
+  /* The only elevation: sticky panels and floating layers. Cards stay flat. */
+  --shadow-panel: 0 1px 4px 0 rgb(20 22 26 / 0.3);
 }
 
 @layer base {
@@ -99,5 +119,13 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    /* Body roles run fractionally snug (-0.16px at 16px). */
+    letter-spacing: -0.01em;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-medium;
   }
 }

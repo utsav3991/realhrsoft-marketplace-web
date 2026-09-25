@@ -8,13 +8,7 @@ import { describe, expect, it } from "vitest";
  * cannot land without its frontend integration going unnoticed. Endpoints the frontend
  * deliberately does not call belong in NOT_CALLED, with a reason.
  */
-const NOT_CALLED: Readonly<Record<string, string>> = {
-  // Attaching a document needs a completed upload recorded by a server-side storage adapter,
-  // which does not exist yet (ADR-017 amendment): the API answers 404 until it does. Removal is
-  // called; attachment gets a caller together with the upload flow.
-  "POST /partner/registration/{partner_id}/documents":
-    "no upload/storage service yet; attachment fails closed",
-};
+const NOT_CALLED: Readonly<Record<string, string>> = {};
 
 const root = process.cwd();
 const apiBase = "/api/v1";

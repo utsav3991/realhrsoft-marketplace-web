@@ -119,10 +119,10 @@ function PortalNavigation({ portal }: { portal: Portal }) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-2 rounded-md px-3 py-2 text-sm whitespace-nowrap transition-colors",
+                  "flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold whitespace-nowrap transition-colors",
                   active
-                    ? "bg-accent text-accent-foreground font-medium"
-                    : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                 )}
               >
                 <item.icon className="size-4" aria-hidden />
@@ -148,9 +148,9 @@ export function PortalLayout({
   return (
     <PortalGate portal={portalId}>
       <div className="flex min-h-dvh flex-col">
-        <header className="bg-background/95 sticky top-0 z-40 flex h-14 items-center justify-between gap-4 border-b px-4 backdrop-blur">
+        <header className="bg-background/95 sticky top-0 z-40 flex h-16 items-center justify-between gap-4 border-b px-4 backdrop-blur">
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-sm font-semibold tracking-tight">
+            <Link href="/" className="text-sm font-bold">
               RealHRsoft Marketplace
             </Link>
             <span className="text-border" aria-hidden>

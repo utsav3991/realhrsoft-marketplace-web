@@ -32,6 +32,8 @@ export interface DialogField {
   kind?: "text" | "uuid" | "datetime";
   optional?: boolean;
   maxLength?: number;
+  /** Initial value, e.g. the current name when editing. */
+  defaultValue?: string;
 }
 
 /** Submitted values: text as typed (trimmed), uuids as-is, datetimes as ISO 8601 with zone. */
@@ -84,7 +86,8 @@ export function FieldsDialog({
   const [failure, setFailure] = useState<string | null>(null);
   const schema = useMemo(() => schemaFor(fields), [fields]);
   const defaults = useMemo(
-    () => Object.fromEntries([...fields.map((f) => [f.name, ""]), ["reason", ""]]),
+    () =>
+      Object.fromEntries([...fields.map((f) => [f.name, f.defaultValue ?? ""]), ["reason", ""]]),
     [fields],
   );
   const form = useForm<Record<string, string>>({

@@ -29,15 +29,15 @@ import { useSession } from "@/shared/auth";
 import { Can, IdentityPermission, useCan } from "@/shared/authorization";
 import { StatusBadge } from "@/shared/components/status-badge";
 import { ErrorState } from "@/shared/feedback/states";
-import { formatDateTime } from "@/shared/lib/format";
+import { formatDateTime, formatPersonName } from "@/shared/lib/format";
 
 import { useDisableUser, useReactivateUser, useRevokeRole } from "../api/mutations";
 import { useUser } from "../api/queries";
 import { AssignRoleDialog } from "./assign-role-dialog";
 import { ReasonDialog } from "@/shared/components/reason-dialog";
 
-type User = Schemas["UserDetailResponse"];
-type Grant = Schemas["GrantResponse"];
+type User = Schemas["UserDetail"];
+type Grant = Schemas["Grant"];
 
 function BackToUsers() {
   return (
@@ -104,10 +104,8 @@ function LoadedUser({ user }: { user: User }) {
               <StatusBadge domain="user" status={user.status} />
             </Detail>
             <Detail label="Actor type">{user.actor_type}</Detail>
-            <Detail label="Created">{formatDateTime(user.created_at)}</Detail>
-            <Detail label="Disabled">
-              {user.disabled_at ? formatDateTime(user.disabled_at) : "—"}
-            </Detail>
+            <Detail label="Name">{formatPersonName(user.first_name, user.last_name)}</Detail>
+            <Detail label="Contact">{user.contact ?? "—"}</Detail>
             <Detail label="User ID" className="sm:col-span-2 lg:col-span-4">
               <span className="font-mono text-xs break-all">{user.id}</span>
             </Detail>

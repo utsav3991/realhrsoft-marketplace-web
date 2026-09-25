@@ -1,7 +1,7 @@
 /**
- * Permission codes the backend actually enforces. Mirrors each context's
- * application/catalogue.py: add a code here only once a backend handler checks it. The UI
- * keys off these codes, never off role names or actor_type.
+ * Permission codes the backend actually enforces. Mirrors the Django catalogue
+ * (realhrsoft-marketplace-rest-api permissions/catalogue.py): add a code here only once a
+ * backend handler checks it. The UI keys off these codes, never off role names or actor_type.
  *
  * Every code has one scope (ADR-014). Global codes come only from platform-wide grants;
  * organization codes come only from a grant in the organization selected with
@@ -9,6 +9,7 @@
  */
 export const IdentityPermission = {
   USER_VIEW: "identity.user.view",
+  USER_CREATE: "identity.user.create",
   USER_DISABLE: "identity.user.disable",
   USER_REACTIVATE: "identity.user.reactivate",
   ROLE_VIEW: "identity.role.view",
@@ -20,64 +21,37 @@ export const IdentityPermission = {
   ORGANIZATION_ROLE_MANAGE: "identity.organization_role.manage",
 } as const;
 
-/** Global: Aayulogic administration of organizations, membership and Partners. */
+/** Global: Aayulogic administration of organization identity and portal membership. */
 export const OrganizationAdminPermission = {
   ORGANIZATION_VIEW: "organizations.organization.view",
   ORGANIZATION_MANAGE: "organizations.organization.manage",
   MEMBERSHIP_MANAGE: "organizations.membership.manage",
-  /** Assisted Partner registration on behalf of an existing account. */
-  APPLICATION_CREATE: "organizations.partner_application.create",
-  /** Partner Management (ADR-017). */
-  PARTNER_VIEW: "organizations.partner.view",
-  PARTNER_SEARCH: "organizations.partner.search",
-  PARTNER_VERIFICATION_REVIEW: "organizations.partner_verification.review",
-  PARTNER_SUSPEND: "organizations.partner.suspend",
-  PARTNER_REINSTATE: "organizations.partner.reinstate",
-  PARTNER_CLOSE: "organizations.partner.close",
-  ENTITLEMENT_MANAGE: "commercial.entitlement.manage",
-  OFFER_REVIEW: "offers.offer.review",
 } as const;
 
 /**
- * Global, but held through the protected `partner_applicant` role: an applicant acts on its own
- * Partner until verification attaches it to an organization. Not an administrative grant, so it
- * does not open the admin console (see GLOBAL_PERMISSIONS).
+ * Global: Aayulogic administration of partners (/admin/partners). One code per endpoint or
+ * action, so review, assisted intake and history can be delegated separately.
  */
-export const PartnerApplicantPermission = {
-  CREATE: "organizations.partner.create",
-  READ_OWN: "organizations.partner.read_own",
-  UPDATE_OWN: "organizations.partner.update_own",
-  CONTACT_MANAGE_OWN: "organizations.partner_contact.manage_own",
-  LOCATION_MANAGE_OWN: "organizations.partner_location.manage_own",
-  DOCUMENT_MANAGE_OWN: "organizations.partner_document.manage_own",
-  VERIFICATION_SUBMIT: "organizations.partner_verification.submit",
+export const PartnerAdminPermission = {
+  PARTNER_VIEW: "partners.partner.view",
+  PARTNER_CREATE: "partners.partner.create",
+  PARTNER_UPDATE: "partners.partner.update",
+  PARTNER_RESUBMIT: "partners.partner.resubmit",
+  PARTNER_VERIFY: "partners.partner.verify",
+  PARTNER_REJECT: "partners.partner.reject",
+  PARTNER_DECISION_VIEW: "partners.partner_decision.view",
 } as const;
 
-/** Organization: the Employer portal. */
-export const EmployerPermission = {
-  PROFILE_VIEW: "organizations.employer_profile.view",
-  BENEFIT_VIEW: "employer_benefits.benefit.view",
-  BENEFIT_CREATE: "employer_benefits.benefit.create",
-  BENEFIT_EDIT: "employer_benefits.benefit.edit",
-  BENEFIT_PUBLISH: "employer_benefits.benefit.publish",
-  /** Pause and resume (ADR-015). */
-  BENEFIT_PAUSE: "employer_benefits.benefit.pause",
-  BENEFIT_RETIRE: "employer_benefits.benefit.retire",
-} as const;
-
-/** Organization: the Partner portal. */
+/** Organization: the selected organization's own partner registration (/partner/me). */
 export const PartnerPermission = {
-  PROFILE_VIEW: "organizations.partner_profile.view",
-  PROFILE_EDIT: "organizations.partner_profile.edit",
-  CONTACT_MANAGE: "organizations.partner_contact.manage",
-  LOCATION_MANAGE: "organizations.partner_location.manage",
-  ENTITLEMENT_VIEW: "commercial.entitlement.view",
-  OFFER_VIEW: "offers.offer.view",
-  OFFER_CREATE: "offers.offer.create",
-  OFFER_EDIT: "offers.offer.edit",
-  OFFER_SUBMIT: "offers.offer.submit",
-  OFFER_WITHDRAW: "offers.offer.withdraw",
+  PROFILE_VIEW: "partners.profile.view",
+  PROFILE_CREATE: "partners.profile.create",
+  PROFILE_UPDATE: "partners.profile.update",
+  PROFILE_RESUBMIT: "partners.profile.resubmit",
+  PROFILE_DECISION_VIEW: "partners.profile_decision.view",
 } as const;
+
+// Employer organization codes arrive with the Django slice that enforces them.
 
 type ValueOf<T> = T[keyof T];
 
@@ -85,13 +59,13 @@ export type IdentityPermissionCode = ValueOf<typeof IdentityPermission>;
 export type GlobalPermissionCode =
   | IdentityPermissionCode
   | ValueOf<typeof OrganizationAdminPermission>
-  | ValueOf<typeof PartnerApplicantPermission>;
-export type OrganizationPermissionCode =
-  ValueOf<typeof EmployerPermission> | ValueOf<typeof PartnerPermission>;
+  | ValueOf<typeof PartnerAdminPermission>;
+export type OrganizationPermissionCode = ValueOf<typeof PartnerPermission>;
 export type PermissionCode = GlobalPermissionCode | OrganizationPermissionCode;
 
 /** Every administrative global code: holding any of them opens the admin console. */
 export const GLOBAL_PERMISSIONS: readonly GlobalPermissionCode[] = [
   ...Object.values(IdentityPermission),
   ...Object.values(OrganizationAdminPermission),
+  ...Object.values(PartnerAdminPermission),
 ];

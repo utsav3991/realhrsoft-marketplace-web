@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isUuid, pathId } from "./identifiers";
+import { isPathToken, isUuid, pathId, pathToken } from "./identifiers";
 
 describe("pathId", () => {
   it("passes canonical UUIDs", () => {
@@ -16,4 +16,16 @@ describe("pathId", () => {
       expect(() => pathId(value)).toThrow(TypeError);
     },
   );
+});
+
+describe("pathToken", () => {
+  it("passes URL-safe link segments", () => {
+    expect(pathToken("MQ")).toBe("MQ");
+    expect(pathToken("cz8q2x-3f1e9a0b7c2d")).toBe("cz8q2x-3f1e9a0b7c2d");
+  });
+
+  it.each(["..", ".", "a/b", "a.b", "", "a%2Fb"])("rejects %j", (value) => {
+    expect(isPathToken(value)).toBe(false);
+    expect(() => pathToken(value)).toThrow(TypeError);
+  });
 });

@@ -19,38 +19,37 @@ import {
 } from "@/design-system/primitives/table";
 import { OrganizationAdminPermission, useCan } from "@/shared/authorization";
 import { FieldsDialog } from "@/shared/components/fields-dialog";
-import { StatusBadge } from "@/shared/components/status-badge";
 import { ListSkeleton } from "@/shared/feedback/list-skeleton";
 import { ErrorState } from "@/shared/feedback/states";
-import { formatDate } from "@/shared/lib/format";
+import { formatDate, formatDateTime } from "@/shared/lib/format";
 
 import { useCreateOrganization } from "../api/mutations";
 import { useOrganizations } from "../api/queries";
 
-const NAME_FIELD = [{ name: "name", label: "Name", maxLength: 200 }] as const;
+const NAME_FIELD = [{ name: "name", label: "Name", maxLength: 255 }] as const;
 
 /** Search lives in the URL, so a filtered view can be shared and reloaded. */
 export function OrganizationsDirectory() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const q = searchParams.get("q") ?? "";
-  const [draft, setDraft] = useState(q);
+  const search = searchParams.get("search") ?? "";
+  const [draft, setDraft] = useState(search);
   const [creating, setCreating] = useState(false);
-  const organizations = useOrganizations(q);
+  const organizations = useOrganizations(search);
   const create = useCreateOrganization();
   const canCreate = useCan(OrganizationAdminPermission.ORGANIZATION_MANAGE);
 
   function onSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const params = new URLSearchParams(searchParams);
-    if (draft.trim()) params.set("q", draft.trim());
-    else params.delete("q");
+    if (draft.trim()) params.set("search", draft.trim());
+    else params.delete("search");
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname);
   }
 
-  const rows = organizations.data?.pages.flatMap((page) => page.items) ?? [];
+  const rows = organizations.data?.pages.flatMap((page) => page.results) ?? [];
 
   return (
     <div className="space-y-4">
@@ -58,7 +57,7 @@ export function OrganizationsDirectory() {
         <form onSubmit={onSearch} role="search" className="flex w-full max-w-sm gap-2">
           <Input
             type="search"
-            maxLength={200}
+            maxLength={255}
             placeholder="Search by name"
             aria-label="Search organizations by name"
             value={draft}
@@ -84,7 +83,7 @@ export function OrganizationsDirectory() {
         <EmptyState
           icon={Building2}
           title="No organizations found"
-          description={q ? "Try a different search." : undefined}
+          description={search ? "Try a different search." : undefined}
         />
       ) : (
         <div className="rounded-xl border">
@@ -92,8 +91,8 @@ export function OrganizationsDirectory() {
             <TableHeader>
               <TableRow>
                 <TableHead>Organization</TableHead>
-                <TableHead>Capacities</TableHead>
                 <TableHead>Created</TableHead>
+                <TableHead>Last updated</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -107,24 +106,11 @@ export function OrganizationsDirectory() {
                       {organization.name}
                     </Link>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {organization.employer_status ? (
-                        <StatusBadge
-                          domain="employerProfile"
-                          status={organization.employer_status}
-                        />
-                      ) : null}
-                      {organization.partner_status ? (
-                        <StatusBadge domain="partnerProfile" status={organization.partner_status} />
-                      ) : null}
-                      {!organization.employer_status && !organization.partner_status ? (
-                        <span className="text-muted-foreground text-sm">None</span>
-                      ) : null}
-                    </div>
-                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {formatDate(organization.created_at)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatDateTime(organization.updated_at)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -149,7 +135,7 @@ export function OrganizationsDirectory() {
         open={creating}
         onOpenChange={setCreating}
         title="New organization"
-        description="An organization has no capacities until you enable the Employer profile or verify a Partner application for it."
+        description="Creates the organization identity only. It grants no membership, roles, or Employer or Partner capacity."
         confirmLabel="Create organization"
         fields={NAME_FIELD}
         onConfirm={async ({ name, reason }) => {
