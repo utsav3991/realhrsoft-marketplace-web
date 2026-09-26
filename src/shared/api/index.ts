@@ -10,5 +10,5 @@ export {
   subscribeActiveOrganization,
 } from "./organization-context";
 export { isPathToken, isUuid, pathId, pathToken } from "./identifiers";
-export { nextOffset, PAGE_SIZE } from "./pagination";
+export { FIRST_PAGE, nextOffset, PAGE_SIZE, PAGE_SIZES, TABLE_PAGE_SIZE, type Page } from "./pagination";
 export { makeQueryClient } from "./query-client";

@@ -1,45 +1,49 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-import { api, pathId, pathToken, unwrap } from "@/shared/api";
+import type { SortOrdering } from "@/design-system/components/data-table";
+import { api, pathId, pathToken, unwrap, type Page } from "@/shared/api";
 
 export type UserStatusFilter = "active" | "disabled";
+
+/** User columns the API sorts by (`ordering`). */
+export const USER_SORTS = ["email"] as const;
 
 export interface UserListFilters {
   status?: UserStatusFilter;
   q?: string;
+  ordering: SortOrdering<(typeof USER_SORTS)[number]> | null;
 }
 
 export const identityKeys = {
   all: ["identity"] as const,
   userLists: () => [...identityKeys.all, "users"] as const,
-  users: (filters: UserListFilters) => [...identityKeys.userLists(), filters] as const,
+  users: (filters: UserListFilters, page: Page) =>
+    [...identityKeys.userLists(), filters, page] as const,
   user: (userId: string) => [...identityKeys.all, "user", userId] as const,
   roles: () => [...identityKeys.all, "roles"] as const,
   role: (roleId: string) => [...identityKeys.all, "role", roleId] as const,
   permissions: () => [...identityKeys.all, "permissions"] as const,
 };
 
-const PAGE_SIZE = 50;
-
-export function useUsers(filters: UserListFilters) {
-  return useInfiniteQuery({
-    queryKey: identityKeys.users(filters),
-    initialPageParam: null as string | null,
-    queryFn: ({ pageParam, signal }) =>
+export function useUsers(filters: UserListFilters, page: Page) {
+  return useQuery({
+    queryKey: identityKeys.users(filters, page),
+    placeholderData: keepPreviousData,
+    queryFn: ({ signal }) =>
       unwrap(
         api.GET("/admin/users", {
           params: {
             query: {
               status: filters.status,
               q: filters.q || undefined,
-              cursor: pageParam ?? undefined,
-              limit: PAGE_SIZE,
+              ordering: filters.ordering ?? undefined,
+              offset: page.offset,
+              limit: page.limit,
             },
           },
           signal,
         }),
       ),
-    getNextPageParam: (page) => page.next_cursor,
   });
 }
 

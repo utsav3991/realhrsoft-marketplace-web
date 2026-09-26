@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 import { OrganizationDetail } from "@/features/organizations/components/organization-detail";
 import { isUuid } from "@/shared/api";
@@ -17,7 +18,9 @@ export default async function AdminOrganizationPage({
   if (!isUuid(organizationId)) notFound();
   return (
     <RequirePermission anyOf={[OrganizationAdminPermission.ORGANIZATION_VIEW]}>
-      <OrganizationDetail organizationId={organizationId} />
+      <Suspense>
+        <OrganizationDetail organizationId={organizationId} />
+      </Suspense>
     </RequirePermission>
   );
 }

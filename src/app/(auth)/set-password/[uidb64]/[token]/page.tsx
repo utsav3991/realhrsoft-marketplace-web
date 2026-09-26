@@ -1,13 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/design-system/primitives/card";
 import { SetPasswordForm } from "@/features/identity/components/set-password-form";
 import { isPathToken } from "@/shared/api";
 
@@ -22,16 +15,14 @@ export default async function SetPasswordPage({
   const { uidb64, token } = await params;
   if (!isPathToken(uidb64) || !isPathToken(token)) notFound();
   return (
-    <main className="bg-muted/40 flex min-h-dvh items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-xl">Set your password</CardTitle>
-          <CardDescription>RealHRsoft Marketplace</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SetPasswordForm uidb64={uidb64} token={token} />
-        </CardContent>
-      </Card>
-    </main>
+    <div className="space-y-8">
+      <div className="space-y-3">
+        <p className="kicker text-muted-foreground">RealHRsoft Marketplace</p>
+        <h1 className="text-[clamp(1.75rem,3vw,2.25rem)] leading-[1.1] font-semibold tracking-[-0.03em]">
+          Set your password
+        </h1>
+      </div>
+      <SetPasswordForm uidb64={uidb64} token={token} />
+    </div>
   );
 }

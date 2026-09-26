@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { PageHeader } from "@/design-system/components/page-header";
 import { PermissionsCatalogue } from "@/features/identity/components/permissions-catalogue";
@@ -15,7 +16,9 @@ export default function AdminPermissionsPage() {
         description="Every permission the platform enforces. Roles bundle these codes."
       />
       <RequirePermission anyOf={[IdentityPermission.PERMISSION_VIEW]}>
-        <PermissionsCatalogue />
+        <Suspense>
+          <PermissionsCatalogue />
+        </Suspense>
       </RequirePermission>
     </div>
   );

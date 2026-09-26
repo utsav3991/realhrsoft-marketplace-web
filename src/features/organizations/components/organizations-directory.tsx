@@ -2,54 +2,75 @@
 
 import { Building2, Plus, Search } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
+import { type DataTableColumns } from "@/design-system/components/data-table";
 import { EmptyState } from "@/design-system/components/empty-state";
 import { Button } from "@/design-system/primitives/button";
 import { Input } from "@/design-system/primitives/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/design-system/primitives/table";
 import { OrganizationAdminPermission, useCan } from "@/shared/authorization";
 import { FieldsDialog } from "@/shared/components/fields-dialog";
-import { ListSkeleton } from "@/shared/feedback/list-skeleton";
-import { ErrorState } from "@/shared/feedback/states";
+import { QueryDataTable, type RowOf } from "@/shared/components/query-data-table";
+import { usePageParam } from "@/shared/hooks/use-page-param";
+import { useSortParam } from "@/shared/hooks/use-sort-param";
+import { useUrlParams } from "@/shared/hooks/use-url-params";
 import { formatDate, formatDateTime } from "@/shared/lib/format";
 
 import { useCreateOrganization } from "../api/mutations";
-import { useOrganizations } from "../api/queries";
+import { ORGANIZATION_SORTS, useOrganizations } from "../api/queries";
 
 const NAME_FIELD = [{ name: "name", label: "Name", maxLength: 255 }] as const;
 
 /** Search lives in the URL, so a filtered view can be shared and reloaded. */
 export function OrganizationsDirectory() {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const { searchParams, set } = useUrlParams();
   const search = searchParams.get("search") ?? "";
   const [draft, setDraft] = useState(search);
   const [creating, setCreating] = useState(false);
-  const organizations = useOrganizations(search);
+  const sort = useSortParam(ORGANIZATION_SORTS);
+  const paging = usePageParam();
+  const organizations = useOrganizations({ search, ordering: sort.value }, paging);
   const create = useCreateOrganization();
   const canCreate = useCan(OrganizationAdminPermission.ORGANIZATION_MANAGE);
 
   function onSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const params = new URLSearchParams(searchParams);
-    if (draft.trim()) params.set("search", draft.trim());
-    else params.delete("search");
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname);
+    set({ search: draft.trim() || null });
   }
 
-  const rows = organizations.data?.pages.flatMap((page) => page.results) ?? [];
+  const columns: DataTableColumns<RowOf<typeof organizations>> = [
+    {
+      id: "organization",
+      sortKey: "name",
+      header: "Organization",
+      cell: (organization) => (
+        <Link
+          href={`/admin/organizations/${organization.id}`}
+          className="font-medium hover:underline"
+        >
+          {organization.name}
+        </Link>
+      ),
+    },
+    {
+      id: "created",
+      sortKey: "created_at",
+      header: "Created",
+      cellClassName: "text-muted-foreground",
+      cell: (organization) => formatDate(organization.created_at),
+    },
+    {
+      id: "updated",
+      sortKey: "updated_at",
+      header: "Last updated",
+      className: "hidden md:table-cell",
+      cellClassName: "text-muted-foreground",
+      cell: (organization) => formatDateTime(organization.updated_at),
+    },
+  ];
 
   return (
     <div className="space-y-4">
@@ -75,61 +96,21 @@ export function OrganizationsDirectory() {
         ) : null}
       </div>
 
-      {organizations.isPending ? (
-        <ListSkeleton />
-      ) : organizations.isError ? (
-        <ErrorState error={organizations.error} onRetry={() => void organizations.refetch()} />
-      ) : rows.length === 0 ? (
-        <EmptyState
-          icon={Building2}
-          title="No organizations found"
-          description={search ? "Try a different search." : undefined}
-        />
-      ) : (
-        <div className="rounded-xl border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Organization</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Last updated</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((organization) => (
-                <TableRow key={organization.id}>
-                  <TableCell>
-                    <Link
-                      href={`/admin/organizations/${organization.id}`}
-                      className="font-medium hover:underline"
-                    >
-                      {organization.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDate(organization.created_at)}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDateTime(organization.updated_at)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-
-      {organizations.hasNextPage ? (
-        <div className="flex justify-center">
-          <Button
-            variant="outline"
-            onClick={() => void organizations.fetchNextPage()}
-            disabled={organizations.isFetchingNextPage}
-          >
-            {organizations.isFetchingNextPage ? "Loading…" : "Load more"}
-          </Button>
-        </div>
-      ) : null}
+      <QueryDataTable
+        aria-label="Organizations"
+        query={organizations}
+        columns={columns}
+        sort={sort}
+        paging={paging}
+        rowKey={(organization) => organization.id}
+        empty={
+          <EmptyState
+            icon={Building2}
+            title="No organizations found"
+            description={search ? "Try a different search." : undefined}
+          />
+        }
+      />
 
       <FieldsDialog
         open={creating}

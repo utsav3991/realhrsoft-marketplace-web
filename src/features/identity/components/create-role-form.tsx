@@ -1,15 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
-import { fieldDescriptionIds, FormField } from "@/design-system/components/form-field";
-import { Alert, AlertDescription, AlertTitle } from "@/design-system/primitives/alert";
 import { Button } from "@/design-system/primitives/button";
 import {
   Card,
@@ -18,6 +16,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/design-system/primitives/card";
+import {
+  Form,
+  FormAlert,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/design-system/primitives/form";
 import { Input } from "@/design-system/primitives/input";
 import { Skeleton } from "@/design-system/primitives/skeleton";
 import { Textarea } from "@/design-system/primitives/textarea";
@@ -93,182 +101,179 @@ export function CreateRoleForm() {
   });
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-6">
-      {failure ? (
-        <Alert variant="destructive">
-          <AlertCircle aria-hidden />
-          <AlertTitle>The role was not created</AlertTitle>
-          <AlertDescription>{failure}</AlertDescription>
-        </Alert>
-      ) : null}
+    <Form {...form}>
+      <form onSubmit={onSubmit} noValidate className="space-y-6">
+        {failure ? <FormAlert title="The role was not created">{failure}</FormAlert> : null}
 
-      {canCreateOrganizationRoles ? (
+        {canCreateOrganizationRoles ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Where the role applies</CardTitle>
+              <CardDescription>
+                Fixed once created. A role holds permissions of one scope only, and neither scope
+                can stand in for the other.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Controller
+                control={form.control}
+                name="scope"
+                render={({ field }) => (
+                  <div
+                    role="radiogroup"
+                    aria-label="Role scope"
+                    className="grid gap-2 sm:grid-cols-2"
+                  >
+                    {SCOPES.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={field.value === option.value}
+                        disabled={isSubmitting}
+                        onClick={() => {
+                          if (field.value === option.value) return;
+                          field.onChange(option.value);
+                          form.setValue("permissions", []);
+                        }}
+                        className={cn(
+                          "focus-visible:border-ring focus-visible:ring-ring rounded-lg border p-4 text-left text-sm transition-colors outline-none focus-visible:ring-1",
+                          field.value === option.value
+                            ? "border-ring bg-accent border-2 p-[15px]"
+                            : "hover:bg-muted",
+                        )}
+                      >
+                        <span className="block font-medium">{option.label}</span>
+                        <span className="text-muted-foreground block">{option.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              />
+            </CardContent>
+          </Card>
+        ) : null}
+
         <Card>
           <CardHeader>
-            <CardTitle>Where the role applies</CardTitle>
-            <CardDescription>
-              Fixed once created. A role holds permissions of one scope only, and neither scope can
-              stand in for the other.
-            </CardDescription>
+            <CardTitle>Details</CardTitle>
           </CardHeader>
-          <CardContent>
-            <Controller
+          <CardContent className="grid gap-x-4 gap-y-5 sm:grid-cols-2">
+            <FormField
               control={form.control}
-              name="scope"
+              name="code"
               render={({ field }) => (
-                <div
-                  role="radiogroup"
-                  aria-label="Role scope"
-                  className="grid gap-2 sm:grid-cols-2"
-                >
-                  {SCOPES.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      role="radio"
-                      aria-checked={field.value === option.value}
-                      disabled={isSubmitting}
-                      onClick={() => {
-                        if (field.value === option.value) return;
-                        field.onChange(option.value);
-                        form.setValue("permissions", []);
-                      }}
-                      className={cn(
-                        "rounded-lg border p-3 text-left text-sm transition-colors",
-                        field.value === option.value
-                          ? "border-primary bg-accent"
-                          : "hover:bg-accent/60",
-                      )}
-                    >
-                      <span className="block font-medium">{option.label}</span>
-                      <span className="text-muted-foreground block">{option.description}</span>
-                    </button>
-                  ))}
-                </div>
+                <FormItem>
+                  <FormLabel>Code</FormLabel>
+                  <FormControl>
+                    <Input
+                      autoComplete="off"
+                      spellCheck={false}
+                      className="font-mono"
+                      placeholder="support_agent"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Permanent identifier. It cannot be changed later.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="displayName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Display name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Support agent" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem className="sm:col-span-2">
+                  <FormLabel optional>Description</FormLabel>
+                  <FormControl>
+                    <Textarea rows={2} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
             />
           </CardContent>
         </Card>
-      ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Details</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <FormField
-            id="code"
-            label="Code"
-            hint="Permanent identifier, for example support_agent. It cannot be changed later."
-            error={errors.code?.message}
-          >
-            <Input
-              id="code"
-              autoComplete="off"
-              spellCheck={false}
-              className="font-mono"
-              aria-invalid={errors.code ? true : undefined}
-              aria-describedby={fieldDescriptionIds("code", { hint: true, error: errors.code })}
-              {...form.register("code")}
-            />
-          </FormField>
-          <FormField id="display-name" label="Display name" error={errors.displayName?.message}>
-            <Input
-              id="display-name"
-              aria-invalid={errors.displayName ? true : undefined}
-              aria-describedby={fieldDescriptionIds("display-name", {
-                error: errors.displayName,
-              })}
-              {...form.register("displayName")}
-            />
-          </FormField>
-          <FormField
-            id="description"
-            label="Description"
-            hint="Optional."
-            error={errors.description?.message}
-            className="sm:col-span-2"
-          >
-            <Textarea
-              id="description"
-              rows={2}
-              aria-invalid={errors.description ? true : undefined}
-              aria-describedby={fieldDescriptionIds("description", {
-                hint: true,
-                error: errors.description,
-              })}
-              {...form.register("description")}
-            />
-          </FormField>
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Permissions</CardTitle>
+            <CardDescription>
+              {scope === "global"
+                ? "You can include only permissions you may delegate yourself."
+                : "Portal permissions, granted to verified members within one organization."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {catalogue.isPending ? (
+              <Skeleton className="h-64 w-full" />
+            ) : catalogue.isError ? (
+              <ErrorState error={catalogue.error} onRetry={() => void catalogue.refetch()} />
+            ) : (
+              <Controller
+                control={form.control}
+                name="permissions"
+                render={({ field }) => (
+                  <PermissionPicker
+                    catalogue={catalogue.data}
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={isSubmitting}
+                    scope={scope}
+                  />
+                )}
+              />
+            )}
+            {errors.permissions?.message ? (
+              <p className="text-destructive text-sm">{errors.permissions.message}</p>
+            ) : null}
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Permissions</CardTitle>
-          <CardDescription>
-            {scope === "global"
-              ? "You can include only permissions you may delegate yourself."
-              : "Portal permissions, granted to verified members within one organization."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {catalogue.isPending ? (
-            <Skeleton className="h-64 w-full" />
-          ) : catalogue.isError ? (
-            <ErrorState error={catalogue.error} onRetry={() => void catalogue.refetch()} />
-          ) : (
-            <Controller
+        <Card>
+          <CardContent>
+            <FormField
               control={form.control}
-              name="permissions"
+              name="reason"
               render={({ field }) => (
-                <PermissionPicker
-                  catalogue={catalogue.data}
-                  value={field.value}
-                  onChange={field.onChange}
-                  disabled={isSubmitting}
-                  scope={scope}
-                />
+                <FormItem>
+                  <FormLabel>Reason</FormLabel>
+                  <FormControl>
+                    <Textarea rows={3} {...field} />
+                  </FormControl>
+                  <FormDescription>Recorded in the audit log.</FormDescription>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-          )}
-          {errors.permissions?.message ? (
-            <p className="text-destructive text-sm">{errors.permissions.message}</p>
-          ) : null}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardContent>
-          <FormField
-            id="create-reason"
-            label="Reason"
-            hint="Recorded in the audit log."
-            error={errors.reason?.message}
-          >
-            <Textarea
-              id="create-reason"
-              rows={3}
-              aria-invalid={errors.reason ? true : undefined}
-              aria-describedby={fieldDescriptionIds("create-reason", {
-                hint: true,
-                error: errors.reason,
-              })}
-              {...form.register("reason")}
-            />
-          </FormField>
-        </CardContent>
-      </Card>
-
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Button asChild variant="outline">
-          <Link href="/admin/roles">Cancel</Link>
-        </Button>
-        <Button type="submit" disabled={isSubmitting || !catalogue.isSuccess}>
-          {isSubmitting ? <Loader2 className="animate-spin" aria-hidden /> : null}
-          Create role
-        </Button>
-      </div>
-    </form>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button asChild variant="outline">
+            <Link href="/admin/roles">Cancel</Link>
+          </Button>
+          <Button type="submit" disabled={isSubmitting || !catalogue.isSuccess}>
+            {isSubmitting ? <Loader2 className="animate-spin" aria-hidden /> : null}
+            Create role
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

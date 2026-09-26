@@ -2,10 +2,15 @@
 
 import {
   ArrowRight,
+  BriefcaseBusiness,
   Building2,
+  Gift,
   Handshake,
   KeyRound,
   ShieldCheck,
+  Tag,
+  Tags,
+  Ticket,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -20,8 +25,12 @@ import {
   CardTitle,
 } from "@/design-system/primitives/card";
 import {
+  BenefitAdminPermission,
   Can,
+  ClaimAdminPermission,
+  EmploymentAdminPermission,
   IdentityPermission,
+  OfferAdminPermission,
   OrganizationAdminPermission,
   PartnerAdminPermission,
   type PermissionCode,
@@ -70,6 +79,41 @@ const SECTIONS: readonly Section[] = [
     description: "Review partner registrations, verify or reject them, and register on behalf.",
     icon: Handshake,
     permission: PartnerAdminPermission.PARTNER_VIEW,
+  },
+  {
+    href: "/admin/offers",
+    title: "Offers",
+    description: "Review submitted offers, publish on a partner's behalf, suspend or feature them.",
+    icon: Tag,
+    permission: OfferAdminPermission.OFFER_VIEW,
+  },
+  {
+    href: "/admin/offer-categories",
+    title: "Offer categories",
+    description: "The categories offers are filed under; retire or reactivate them.",
+    icon: Tags,
+    permission: OfferAdminPermission.CATEGORY_VIEW,
+  },
+  {
+    href: "/admin/claims",
+    title: "Claims",
+    description: "Every claimed offer and its redemption; confirm one on a partner's behalf.",
+    icon: Ticket,
+    permission: ClaimAdminPermission.CLAIM_VIEW,
+  },
+  {
+    href: "/admin/company-benefits",
+    title: "Company benefits",
+    description: "Every employer's benefits for its own employees; suspend or reinstate them.",
+    icon: Gift,
+    permission: BenefitAdminPermission.BENEFIT_VIEW,
+  },
+  {
+    href: "/admin/employments",
+    title: "Employments",
+    description: "Record which organization employs each employee, opening the marketplace to them.",
+    icon: BriefcaseBusiness,
+    permission: EmploymentAdminPermission.EMPLOYMENT_VIEW,
   },
 ];
 

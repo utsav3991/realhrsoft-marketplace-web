@@ -34,3 +34,20 @@ export function fromDateTimeLocal(value: string): string | null {
 export function formatPersonName(firstName: string | null, lastName: string | null): string {
   return [firstName, lastName].filter(Boolean).join(" ") || "—";
 }
+
+const calendarFormats = {
+  day: new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeZone: "UTC" }),
+  short: new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", timeZone: "UTC" }),
+  month: new Intl.DateTimeFormat(undefined, { month: "short", year: "numeric", timeZone: "UTC" }),
+};
+
+/**
+ * Formats a calendar date from the API (YYYY-MM-DD, no time or zone). Read as UTC midnight
+ * and formatted in UTC, so the viewer's time zone never moves it to a neighbouring day.
+ */
+export function formatCalendarDate(
+  date: string,
+  style: keyof typeof calendarFormats = "day",
+): string {
+  return calendarFormats[style].format(new Date(`${date}T00:00:00Z`));
+}

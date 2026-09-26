@@ -1,13 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { fieldDescriptionIds, FormField } from "@/design-system/components/form-field";
-import { Alert, AlertDescription } from "@/design-system/primitives/alert";
+import { DateTimePicker } from "@/design-system/components/date-picker";
 import { Button } from "@/design-system/primitives/button";
 import {
   Dialog,
@@ -18,6 +17,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/design-system/primitives/dialog";
+import {
+  Form,
+  FormAlert,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/design-system/primitives/form";
 import { Input } from "@/design-system/primitives/input";
 import { Textarea } from "@/design-system/primitives/textarea";
 import { errorMessage, isUuid } from "@/shared/api";
@@ -94,7 +103,7 @@ export function FieldsDialog({
     resolver: zodResolver(schema),
     defaultValues: defaults,
   });
-  const { errors, isSubmitting } = form.formState;
+  const { isSubmitting } = form.formState;
 
   function handleOpenChange(next: boolean) {
     if (isSubmitting) return;
@@ -127,78 +136,80 @@ export function FieldsDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
-        <form onSubmit={onSubmit} noValidate className="grid gap-4">
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-          </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={onSubmit} noValidate className="grid gap-5">
+            <DialogHeader>
+              <DialogTitle>{title}</DialogTitle>
+              <DialogDescription>{description}</DialogDescription>
+            </DialogHeader>
 
-          {failure ? (
-            <Alert variant="destructive">
-              <AlertCircle aria-hidden />
-              <AlertDescription>{failure}</AlertDescription>
-            </Alert>
-          ) : null}
+            {failure ? <FormAlert>{failure}</FormAlert> : null}
 
-          {fields.map((field) => {
-            const id = `dialog-${field.name}`;
-            const error = errors[field.name];
-            return (
+            {fields.map((spec) => (
               <FormField
-                key={field.name}
-                id={id}
-                label={field.optional ? `${field.label} (optional)` : field.label}
-                hint={field.hint}
-                error={error?.message}
-              >
-                <Input
-                  id={id}
-                  type={field.kind === "datetime" ? "datetime-local" : "text"}
-                  autoComplete="off"
-                  spellCheck={field.kind === "uuid" ? false : undefined}
-                  className={field.kind === "uuid" ? "font-mono" : undefined}
-                  aria-invalid={error ? true : undefined}
-                  aria-describedby={fieldDescriptionIds(id, { hint: field.hint, error })}
-                  {...form.register(field.name)}
-                />
-              </FormField>
-            );
-          })}
+                key={spec.name}
+                control={form.control}
+                name={spec.name}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel optional={spec.optional}>{spec.label}</FormLabel>
+                    <FormControl>
+                      {spec.kind === "datetime" ? (
+                        <DateTimePicker
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          clearable={spec.optional}
+                          disabled={isSubmitting}
+                        />
+                      ) : (
+                        <Input
+                          autoComplete="off"
+                          spellCheck={spec.kind === "uuid" ? false : undefined}
+                          className={spec.kind === "uuid" ? "font-mono" : undefined}
+                          {...field}
+                        />
+                      )}
+                    </FormControl>
+                    {spec.hint ? <FormDescription>{spec.hint}</FormDescription> : null}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ))}
 
-          <FormField
-            id="dialog-reason"
-            label="Reason"
-            hint="Recorded in the audit log."
-            error={errors.reason?.message}
-          >
-            <Textarea
-              id="dialog-reason"
-              rows={3}
-              aria-invalid={errors.reason ? true : undefined}
-              aria-describedby={fieldDescriptionIds("dialog-reason", {
-                hint: true,
-                error: errors.reason,
-              })}
-              {...form.register("reason")}
+            <FormField
+              control={form.control}
+              name="reason"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Reason</FormLabel>
+                  <FormControl>
+                    <Textarea rows={3} {...field} />
+                  </FormControl>
+                  <FormDescription>Recorded in the audit log.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </FormField>
 
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline" disabled={isSubmitting}>
-                Cancel
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline" disabled={isSubmitting}>
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button
+                type="submit"
+                variant={destructive ? "destructive" : "default"}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? <Loader2 className="animate-spin" aria-hidden /> : null}
+                {confirmLabel}
               </Button>
-            </DialogClose>
-            <Button
-              type="submit"
-              variant={destructive ? "destructive" : "default"}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? <Loader2 className="animate-spin" aria-hidden /> : null}
-              {confirmLabel}
-            </Button>
-          </DialogFooter>
-        </form>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

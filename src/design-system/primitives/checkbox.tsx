@@ -9,16 +9,20 @@ import { cn } from "@/shared/lib/cn";
 export function Checkbox({ className, ...props }: ComponentProps<typeof CheckboxPrimitive.Root>) {
   return (
     <CheckboxPrimitive.Root
+      data-slot="checkbox"
       className={cn(
-        "peer border-input size-4 shrink-0 rounded-xs border transition-shadow outline-none disabled:cursor-not-allowed disabled:opacity-50",
+        "peer border-input bg-card size-4 shrink-0 rounded-sm border shadow-xs transition-shadow outline-none disabled:cursor-not-allowed disabled:opacity-50",
         "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
         "aria-invalid:border-destructive aria-invalid:ring-destructive/20",
-        "data-[state=checked]:border-ring data-[state=checked]:bg-ring data-[state=checked]:text-primary-foreground",
+        "data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
         className,
       )}
       {...props}
     >
-      <CheckboxPrimitive.Indicator className="grid place-content-center text-current">
+      <CheckboxPrimitive.Indicator
+        data-slot="checkbox-indicator"
+        className="grid place-content-center text-current transition-none"
+      >
         <Check className="size-3.5" aria-hidden />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>

@@ -1,13 +1,24 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useForm, type FieldPath } from "react-hook-form";
 
-import { fieldDescriptionIds, FormField } from "@/design-system/components/form-field";
-import { Alert, AlertDescription } from "@/design-system/primitives/alert";
+import { RichTextEditor } from "@/design-system/components/rich-text-editor";
 import { Button } from "@/design-system/primitives/button";
+import {
+  Form,
+  FormActions,
+  FormAlert,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormSection,
+} from "@/design-system/primitives/form";
 import { Input } from "@/design-system/primitives/input";
 import { Textarea } from "@/design-system/primitives/textarea";
 import { errorMessage } from "@/shared/api";
@@ -22,37 +33,50 @@ import {
 } from "../schemas/partner";
 
 interface FieldSpec {
-  name: FieldPath<ProfileValues>;
+  name: Exclude<FieldPath<ProfileValues>, "reason">;
   label: string;
+  optional?: boolean;
   hint?: string;
+  placeholder?: string;
   type?: "email" | "url" | "tel";
   autoComplete?: string;
   multiline?: boolean;
   wide?: boolean;
 }
 
-const FIELDS: readonly FieldSpec[] = [
+const BUSINESS_FIELDS: readonly FieldSpec[] = [
   { name: "businessName", label: "Business name", hint: "The trading name employees see." },
   {
     name: "category",
-    label: "Category (optional)",
-    hint: "Free text, such as Restaurant or Fitness.",
+    label: "Category",
+    optional: true,
+    placeholder: "Restaurant, Fitness, …",
+    hint: "Free text.",
   },
+  { name: "description", label: "About the business", optional: true, multiline: true },
   {
-    name: "description",
-    label: "About the business (optional)",
-    multiline: true,
+    name: "website",
+    label: "Website",
+    optional: true,
+    type: "url",
+    autoComplete: "url",
+    placeholder: "https://",
+    wide: true,
   },
+];
+
+const CONTACT_FIELDS: readonly FieldSpec[] = [
   { name: "contactName", label: "Contact person", autoComplete: "name" },
   { name: "contactEmail", label: "Contact email", type: "email", autoComplete: "email" },
   {
     name: "contactPhone",
-    label: "Contact phone (optional)",
+    label: "Contact phone",
+    optional: true,
     type: "tel",
     autoComplete: "tel",
-    hint: "International format, such as +9779801234567.",
+    placeholder: "+9779801234567",
+    hint: "International format.",
   },
-  { name: "website", label: "Website (optional)", type: "url", autoComplete: "url", wide: true },
 ];
 
 /**
@@ -82,7 +106,7 @@ export function ProfileForm({
     resolver: zodResolver(reasonRequired ? assistedProfileSchema : profileSchema),
     defaultValues,
   });
-  const { errors, isSubmitting } = form.formState;
+  const { isSubmitting } = form.formState;
 
   const submit = form.handleSubmit(async (values) => {
     setFailure(null);
@@ -93,79 +117,79 @@ export function ProfileForm({
     }
   });
 
-  const reasonHint = reasonRequired
-    ? "Recorded in the audit log."
-    : "Optional note, recorded in the audit log.";
+  const renderField = (spec: FieldSpec) => (
+    <FormField
+      key={spec.name}
+      control={form.control}
+      name={spec.name}
+      render={({ field }) => (
+        <FormItem className={cn((spec.multiline || spec.wide) && "sm:col-span-2")}>
+          <FormLabel optional={spec.optional}>{spec.label}</FormLabel>
+          <FormControl>
+            {spec.multiline ? (
+              <RichTextEditor
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                disabled={isSubmitting}
+              />
+            ) : (
+              <Input
+                type={spec.type}
+                autoComplete={spec.autoComplete}
+                placeholder={spec.placeholder}
+                {...field}
+              />
+            )}
+          </FormControl>
+          {spec.hint ? <FormDescription>{spec.hint}</FormDescription> : null}
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
 
   return (
-    <form onSubmit={submit} noValidate className="space-y-4">
-      {failure ? (
-        <Alert variant="destructive">
-          <AlertCircle aria-hidden />
-          <AlertDescription>{failure}</AlertDescription>
-        </Alert>
-      ) : null}
-      {children}
-      <div className="grid gap-4 sm:grid-cols-2">
-        {FIELDS.map((field) => {
-          const id = `partner-${field.name}`;
-          const error = errors[field.name];
-          const common = {
-            id,
-            disabled: isSubmitting,
-            autoComplete: field.autoComplete,
-            "aria-invalid": error ? true : undefined,
-            "aria-describedby": fieldDescriptionIds(id, { hint: field.hint, error }),
-            ...form.register(field.name),
-          };
-          return (
-            <FormField
-              key={field.name}
-              id={id}
-              label={field.label}
-              hint={field.hint}
-              error={error?.message}
-              className={cn((field.multiline || field.wide) && "sm:col-span-2")}
-            >
-              {field.multiline ? (
-                <Textarea rows={4} {...common} />
-              ) : (
-                <Input type={field.type} {...common} />
-              )}
-            </FormField>
-          );
-        })}
-        <FormField
-          id="partner-reason"
-          label={reasonRequired ? "Reason" : "Note (optional)"}
-          hint={reasonHint}
-          error={errors.reason?.message}
-          className="sm:col-span-2"
+    <Form {...form}>
+      <form onSubmit={submit} noValidate className="space-y-8">
+        {failure ? <FormAlert>{failure}</FormAlert> : null}
+        {children}
+        <FormSection title="Business" disabled={isSubmitting}>
+          {BUSINESS_FIELDS.map(renderField)}
+        </FormSection>
+        <FormSection
+          title="Contact"
+          description="Who Aayulogic contacts about this partnership."
+          disabled={isSubmitting}
         >
-          <Textarea
-            id="partner-reason"
-            rows={2}
-            disabled={isSubmitting}
-            aria-invalid={errors.reason ? true : undefined}
-            aria-describedby={fieldDescriptionIds("partner-reason", {
-              hint: true,
-              error: errors.reason,
-            })}
-            {...form.register("reason")}
-          />
-        </FormField>
-      </div>
-      <div className="flex justify-end gap-2">
-        {onCancel ? (
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-            Cancel
+          {CONTACT_FIELDS.map(renderField)}
+        </FormSection>
+        <FormField
+          control={form.control}
+          name="reason"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel optional={!reasonRequired}>{reasonRequired ? "Reason" : "Note"}</FormLabel>
+              <FormControl>
+                <Textarea rows={2} disabled={isSubmitting} {...field} />
+              </FormControl>
+              <FormDescription>Recorded in the audit log.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormActions>
+          {onCancel ? (
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+              Cancel
+            </Button>
+          ) : null}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="animate-spin" aria-hidden /> : null}
+            {submitLabel}
           </Button>
-        ) : null}
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? <Loader2 className="animate-spin" aria-hidden /> : null}
-          {submitLabel}
-        </Button>
-      </div>
-    </form>
+        </FormActions>
+      </form>
+    </Form>
   );
 }

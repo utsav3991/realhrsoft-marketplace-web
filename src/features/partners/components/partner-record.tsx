@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Check, Pencil, RotateCcw, X } from "lucide-react";
+import { ArrowLeft, Check, Pencil, Plus, RotateCcw, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -17,16 +17,18 @@ import {
 } from "@/design-system/primitives/card";
 import { Skeleton } from "@/design-system/primitives/skeleton";
 import { ApiError } from "@/shared/api";
-import { OrganizationAdminPermission, PartnerAdminPermission, useCan } from "@/shared/authorization";
+import {
+  OfferAdminPermission,
+  OrganizationAdminPermission,
+  PartnerAdminPermission,
+  useCan,
+} from "@/shared/authorization";
 import { ReasonDialog } from "@/shared/components/reason-dialog";
 import { StatusBadge } from "@/shared/components/status-badge";
 import { ErrorState } from "@/shared/feedback/states";
+import { usePageParam } from "@/shared/hooks/use-page-param";
 
-import {
-  usePartnerDecisions,
-  usePartner,
-  type Partner,
-} from "../api/queries";
+import { usePartnerDecisions, usePartner, type Partner, type PartnerSource } from "../api/queries";
 import {
   useRejectPartner,
   useResubmitPartner,
@@ -41,6 +43,7 @@ import {
   StatusCallout,
 } from "./partner-details";
 import { ProfileForm } from "./profile-form";
+import { SourceField } from "./source-field";
 
 type Decision = "verify" | "reject" | "resubmit";
 
@@ -90,6 +93,7 @@ function PartnerWorkspace({ partner }: { partner: Partner }) {
   const canUpdate = useCan(PartnerAdminPermission.PARTNER_UPDATE);
   const canViewDecisions = useCan(PartnerAdminPermission.PARTNER_DECISION_VIEW);
   const canViewOrganization = useCan(OrganizationAdminPermission.ORGANIZATION_VIEW);
+  const canPostOffer = useCan(OfferAdminPermission.OFFER_CREATE);
   const [deciding, setDeciding] = useState<Decision | null>(null);
   const [editing, setEditing] = useState(false);
 
@@ -128,6 +132,14 @@ function PartnerWorkspace({ partner }: { partner: Partner }) {
                 Verify
               </Button>
             ) : null}
+            {partner.status === "verified" && canPostOffer ? (
+              <Button asChild variant="outline">
+                <Link href={`/admin/offers/new?partner=${partner.id}`}>
+                  <Plus aria-hidden />
+                  Post offer
+                </Link>
+              </Button>
+            ) : null}
             {rejected && canResubmit ? (
               <Button variant="outline" onClick={() => setDeciding("resubmit")}>
                 <RotateCcw aria-hidden />
@@ -161,11 +173,13 @@ function PartnerWorkspace({ partner }: { partner: Partner }) {
 }
 
 function Decisions({ partnerId }: { partnerId: string }) {
-  return <DecisionHistoryCard decisions={usePartnerDecisions(partnerId)} />;
+  const paging = usePageParam("decisions_");
+  return <DecisionHistoryCard decisions={usePartnerDecisions(partnerId, paging)} paging={paging} />;
 }
 
 function AssistedEdit({ partner, onDone }: { partner: Partner; onDone: () => void }) {
   const update = useUpdatePartner(partner.id);
+  const [source, setSource] = useState<PartnerSource>(partner.source);
   return (
     <Card>
       <CardHeader>
@@ -186,11 +200,14 @@ function AssistedEdit({ partner, onDone }: { partner: Partner; onDone: () => voi
               ...profileBody(values),
               reason: values.reason,
               expected_version: partner.version,
+              source,
             });
             toast.success("Partner profile updated");
             onDone();
           }}
-        />
+        >
+          <SourceField value={source} onChange={setSource} />
+        </ProfileForm>
       </CardContent>
     </Card>
   );

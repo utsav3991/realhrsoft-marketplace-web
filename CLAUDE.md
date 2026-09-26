@@ -6,7 +6,7 @@ The active backend is `../realhrsoft-marketplace-rest-api` (Django/DRF). The Fas
 
 References below to ADRs in the paused repository preserve historical frontend conventions only. They do not make FastAPI the backend authority. Reconcile schema generation, base paths, cookies, current-actor fields and implemented endpoints against Django before claiming integration is complete. Retain existing frontend security and layering conventions unless an explicit integration decision changes them.
 
-**Integration status (2026-09-25).** `openapi/v1.json` is Django's schema (`yarn api:generate --pull` reads `/api/schema/?format=json`). Integrated: auth/session, current actor, users (incl. invite + `/set-password`), roles, permissions, organizations, portal memberships and partners (`features/partners`: admin review queue/assisted intake at `/admin/partners`, self-service registration and profile at `/partner`, one permission code per endpoint/action). The Partner portal opens for any membership (an organization with no capacity may register itself) and is listed for partner organizations and capacity-less ones. Offers, employer-benefits and commercial features were removed with the FastAPI contract; the Employer portal renders a "not available yet" state and opens only for Employer capacity, which Django does not provision yet. Rebuild those features from git history against Django endpoints when the slices land. `NEXT_PUBLIC_API_BASE_PATH` must equal Django's `{FORCE_SCRIPT_NAME}/api/v1` (README → API routing and cookies).
+**Integration status (2026-09-26).** `openapi/v1.json` is Django's schema (`yarn api:generate --pull` reads `/api/schema/?format=json`). Integrated: auth/session, current actor, users (incl. invite + `/set-password`), roles, permissions, organizations, portal memberships and partners (`features/partners`: admin review queue/assisted intake at `/admin/partners`, self-service registration and profile at `/partner`, one permission code per endpoint/action; administrators classify `source`) and offers (`features/offers`: review queue, publish-on-behalf, suspend/feature at `/admin/offers`, categories at `/admin/offer-categories`, portal authoring at `/partner/offers`; offers need a verified partner). The Partner portal opens for any membership (an organization with no capacity may register itself) and is listed for partner organizations and capacity-less ones. Slice 5 (claims) is integrated: the employee catalogue and My offers at `/marketplace` (`features/claims`; catalogue queries live in `features/offers`) open by **eligibility, not a permission code** (employee account + current employment; the API's 403 renders `MarketplaceErrorState`), claims send a per-attempt `Idempotency-Key`; partner claim verification at `/partner/claims` (`claims.partner_claim.view` looks up/lists, `.confirm` confirms; either opens the page); admin claims at `/admin/claims` (confirm on behalf needs `claims.claim.confirm` + reason) and interim employments at `/admin/employments` (`features/employments`, also a card on employee user pages; user creation offers `actor_type=employee`). Offer analytics is integrated (2026-09-26, `features/analytics`): `/partner/analytics` (`analytics.partner_offer_report.view`; totals only, no employer breakdown) and `/admin/reports` (`analytics.offer_report.view`; adds partner/offer/employer filters and the by-employer table). Period, interval, ordering and filters live in the URL; presets compute dates in `REPORT_TIME_ZONE` (Asia/Kathmandu, the backend TIME_ZONE); each metric has its own bar chart (different scales, no shared axis) with a table view; ads show "not available yet", never zero. Company Benefits (Slice 6) are integrated (2026-09-26, `features/employer-benefits`): the Employer portal opens for memberships whose organization has the Employer capacity (administrators turn it on with a reason on the organization page, `organizations.employer.manage`); `/employer/benefits` lists, creates, edits, publishes and retires own benefits (one `employer_benefits.own_benefit.*` code per action; no review; the audience is always "own employees" and is shown, never sent), `/employer/reports` is the benefit usage report (`analytics.benefit_report.view`; claims and distinct employees only, never mixed with offer metrics); `/admin/company-benefits` moderates (suspend/reinstate with reason, `employer_benefits.benefit.{view,suspend}`); employees use `/marketplace/company-benefits` by eligibility (claiming is the use; per-attempt `Idempotency-Key`; the list's 403 explains eligibility while the claim history stays readable for former employees) and every benefit carries a "Company benefit" badge to keep it apart from offers. Benefit edit forms send the version the edit started from, so a background refetch cannot turn a stale draft into an overwrite. Commercial features were removed with the FastAPI contract; rebuild them against Django endpoints when their slices land. `NEXT_PUBLIC_API_BASE_PATH` must equal Django's `{FORCE_SCRIPT_NAME}/api/v1` (README → API routing and cookies).
 
 One Next.js 16 application (App Router, React 19, TypeScript, Tailwind 4, Yarn 4) serving the
 four Marketplace experiences as route segments. The governing decision is **ADR-013**
@@ -22,8 +22,8 @@ src/
 ├── app/                 routes only: layouts, pages, thin route-local components
 │   ├── (auth)/login/
 │   ├── marketplace/     employee experience
-│   ├── partner/         Partner portal (registration, business profile, verification status)
-│   ├── employer/        Employer portal (placeholder until Django benefit slices exist)
+│   ├── partner/         Partner portal (registration, business profile, verification, offers)
+│   ├── employer/        Employer portal (Company Benefits and their usage report)
 │   └── admin/           Aayulogic Admin
 ├── features/<domain>/   api/ (queries + mutations), components/, schemas/, …
 ├── shared/
@@ -106,28 +106,48 @@ Don't add a global client store without an ADR.
 
 ## UI conventions
 
-**`DESIGN.md` is the visual spec** (adapted from the Meta commerce design language). Read it
-before building or restyling UI. `globals.css` and `design-system/primitives` implement it.
-Change the token or primitive and `DESIGN.md` together.
+**`DESIGN.md` is the visual spec** (it follows the SHMS frontend, `prabhu-group/shms-frontend`).
+Read it before building or restyling UI. `globals.css` and `design-system/primitives` implement
+it. Change the token or primitive and `DESIGN.md` together.
 
 - Tailwind utilities with the semantic tokens in `design-system/styles/globals.css`
-  (`bg-primary`, `text-muted-foreground`, …). No raw colors, palette colors (`blue-600`),
-  arbitrary hex values or inline styles.
-- **Pills:** every button, nav tab, badge and chip is `rounded-full`. Inputs, selects and menus
-  use `rounded-lg`. Cards, dialogs and alerts use `rounded-xl`. `rounded-3xl`/`4xl` is for
-  photographic marketplace cards only.
-- **Cobalt is scarce:** one `default` (primary) button per region (page header, form, dialog
+  (`bg-primary`, `text-muted-foreground`, `bg-success-soft`, …). No raw colors, palette colors
+  (`green-600`), arbitrary hex values or inline styles.
+- **Shapes:** buttons `rounded-lg`; inputs, selects and sidebar items `rounded-md`; menus and
+  alerts `rounded-xl`; cards, table cards and dialogs `rounded-2xl`; badges `rounded-full`.
+- **Lime is scarce:** one `default` (primary) button per region (page header, form, dialog
   footer). The rest are `outline`/`secondary`/`ghost`. The black `ink` button is only for
   promotional CTAs on marketplace browsing pages.
-- **Flat surfaces:** cards and tables have a hairline `border` and no shadow. Only floating
-  layers (menus, popovers, dialogs, toasts, sticky bars) get `shadow-panel`.
-- **Type:** weights 400/500/700 only (no `font-semibold`). Titles are `font-medium`. Buttons,
-  tabs, table headers and badges are bold. Page title is `text-2xl font-medium` via `PageHeader`.
+- **Ring surfaces:** cards, tables, controls and dialogs are `bg-card border shadow-ring` (a 1px
+  ring). Floating panels (menus, selects, popovers) get `shadow-panel`. No drop shadows on cards.
+- **Type:** Inter; body weight 600. Titles are `font-semibold tracking-[-0.03em]` (page title
+  via `PageHeader`); supporting copy `text-sm font-medium text-muted-foreground`; eyebrows use
+  the `kicker` utility.
+- **Theme:** light/dark is a class on `<html>` from `next-themes` (toggle in the top bar); style
+  dark mode through tokens, not `dark:` overrides. Its script gets the CSP nonce in `app/layout.tsx`.
+- **Chrome:** `PortalLayout` renders the shadcn sidebar (`primitives/sidebar.tsx`, collapsible to
+  icons, a sheet on mobile) and top bar; pages render inside its `max-w-[1600px]` container, so
+  don't add page-level max widths.
 - Put ink text (`text-warning-foreground`) on `warning` yellow. Never convey status by color
   alone.
 - Reuse `design-system/primitives` before creating a component. Add new primitives in the same
-  shadcn style (`components.json` points the shadcn CLI there), then restyle them to `DESIGN.md`
-  (shadcn defaults are square and shadowed).
+  shadcn style (`components.json` points the shadcn CLI there), then restyle them to `DESIGN.md`.
+- Lists render through `DataTable` (`design-system/components/data-table.tsx`) or, for a
+  paginated query, `QueryDataTable` (`shared/components/query-data-table.tsx`; type columns
+  with `DataTableColumns<RowOf<typeof query>>`). Never hand-assemble `Table` rows.
+- **Tables sort and page.** List hooks take a `Page` (`limit`/`offset`) and are one
+  `useQuery` per page with `keepPreviousData`; the component gets it from `usePageParam()`
+  (`?page=&page_size=`, a prefix such as `"decisions_"` for a second table on the page) and
+  passes `paging` to `QueryDataTable`. Server sorting: the feature exports its sortable keys
+  (`CLAIM_SORTS`), `useSortParam(KEYS)` reads `?ordering=`, columns set `sortKey`, and the hook
+  sends `ordering`. Tables holding every row give columns a `sortValue` too and are sorted and
+  paged in the browser. Change search params with `useUrlParams().set`, which sends tables back
+  to page 1 on any filter, search or sort change. Pickers use `FIRST_PAGE`. Partner and
+  organization filters are `PartnerFilter`/`OrganizationFilter` (hidden without the view
+  permission).
+- Motion is framer-motion via `design-system/components/motion.tsx` (`FadeIn`,
+  `Stagger`/`StaggerItem`) and `tw-animate-css` on overlays. Entry animations are skipped under
+  reduced motion; tests run with reduced motion (`vitest.setup.ts`).
 - Domain statuses render only through `StatusBadge` + `STATUS_DEFINITIONS`.
 - Every governance decision carries an audited reason: `ReasonDialog`, or `FieldsDialog` when
   it needs a few fields too. Owner actions without a reason use `ConfirmDialog`. Transitions

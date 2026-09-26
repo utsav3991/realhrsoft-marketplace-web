@@ -1,10 +1,13 @@
 "use client";
 
-import { ChevronsUpDown, LogOut, UserRound } from "lucide-react";
+import { Check, ChevronsUpDown, LogOut, Moon, Sun } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import { useTheme } from "next-themes";
+import { useSyncExternalStore, type ReactNode } from "react";
 
+import { FadeIn } from "@/design-system/components/motion";
+import { Avatar, AvatarFallback } from "@/design-system/primitives/avatar";
 import { Button } from "@/design-system/primitives/button";
 import {
   DropdownMenu,
@@ -14,8 +17,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/design-system/primitives/dropdown-menu";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from "@/design-system/primitives/sidebar";
+import { Switch } from "@/design-system/primitives/switch";
 import { useSession } from "@/shared/auth";
-import { cn } from "@/shared/lib/cn";
 
 import { OrganizationSwitcher } from "./organization-scope";
 import { PortalGate } from "./portal-gate";
@@ -33,106 +50,230 @@ function isActive(pathname: string, item: NavItem, portal: Portal): boolean {
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
-function PortalSwitcher({ current }: { current: Portal }) {
+/** Logo block and product name; the workspace switcher when the actor has several portals. */
+function SidebarBrand({ current }: { current: Portal }) {
   const { actor } = useSession();
+  const { isMobile } = useSidebar();
   const portals = accessiblePortals(actor);
-  const Icon = current.icon;
+
+  const brand = (
+    <>
+      <span className="bg-primary text-primary-foreground shadow-ring flex size-8 shrink-0 items-center justify-center rounded-lg">
+        <current.icon className="size-4" aria-hidden />
+      </span>
+      <span className="grid flex-1 text-left leading-tight">
+        <span className="truncate text-sm font-semibold">RealHRsoft Marketplace</span>
+        <span className="text-muted-foreground truncate text-xs">{current.label}</span>
+      </span>
+    </>
+  );
 
   if (portals.length < 2) {
     return (
-      <span className="flex items-center gap-2 text-sm font-medium">
-        <Icon className="text-primary size-4" aria-hidden />
-        {current.label}
-      </span>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg" asChild>
+            <Link href={current.basePath}>{brand}</Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
     );
   }
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" aria-label="Switch workspace">
-          <Icon className="text-primary" aria-hidden />
-          {current.label}
-          <ChevronsUpDown className="text-muted-foreground" aria-hidden />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
-        <DropdownMenuLabel>Switch workspace</DropdownMenuLabel>
-        {portals.map((portal) => (
-          <DropdownMenuItem key={portal.id} asChild>
-            <Link
-              href={portal.basePath}
-              aria-current={portal.id === current.id ? "page" : undefined}
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton
+              size="lg"
+              aria-label="Switch workspace"
+              className="data-[state=open]:bg-sidebar-accent"
             >
-              <portal.icon aria-hidden />
-              {portal.label}
-            </Link>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function AccountMenu() {
-  const { actor, logout } = useSession();
-  const router = useRouter();
-
-  async function signOut() {
-    await logout();
-    router.replace("/login");
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Account">
-          <UserRound aria-hidden />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel className="font-normal">
-          Signed in as <span className="font-mono">{actor?.actorType}</span>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => void signOut()}>
-          <LogOut aria-hidden />
-          Sign out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+              {brand}
+              <ChevronsUpDown className="text-muted-foreground ml-auto" aria-hidden />
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            side={isMobile ? "bottom" : "right"}
+            align="start"
+            sideOffset={8}
+            className="min-w-56"
+          >
+            <DropdownMenuLabel>Switch workspace</DropdownMenuLabel>
+            {portals.map((portal) => (
+              <DropdownMenuItem key={portal.id} asChild>
+                <Link
+                  href={portal.basePath}
+                  aria-current={portal.id === current.id ? "page" : undefined}
+                >
+                  <portal.icon aria-hidden />
+                  {portal.label}
+                  {portal.id === current.id ? <Check className="ml-auto" aria-hidden /> : null}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    </SidebarMenu>
   );
 }
 
 function PortalNavigation({ portal }: { portal: Portal }) {
   const { actor } = useSession();
+  const { isMobile, setOpenMobile } = useSidebar();
   const pathname = usePathname();
   const items = portal.navigation.filter((item) => showsNavItem(actor, item));
 
   return (
     <nav aria-label={`${portal.label} navigation`}>
-      <ul className="flex gap-1 overflow-x-auto md:flex-col">
+      <SidebarGroupLabel>{portal.label}</SidebarGroupLabel>
+      <SidebarMenu>
         {items.map((item) => {
           const active = isActive(pathname, item, portal);
           return (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold whitespace-nowrap transition-colors",
-                  active
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                )}
-              >
-                <item.icon className="size-4" aria-hidden />
-                {item.label}
-              </Link>
-            </li>
+            <SidebarMenuItem key={item.href}>
+              <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
+                <Link
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  onClick={() => {
+                    if (isMobile) setOpenMobile(false);
+                  }}
+                >
+                  <item.icon aria-hidden />
+                  <span>{item.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           );
         })}
-      </ul>
+      </SidebarMenu>
     </nav>
+  );
+}
+
+function useSignOut() {
+  const { logout } = useSession();
+  const router = useRouter();
+  return async () => {
+    await logout();
+    router.replace("/login");
+  };
+}
+
+/** Sidebar footer: who is signed in, and sign out. */
+function AccountMenu() {
+  const { actor } = useSession();
+  const { isMobile } = useSidebar();
+  const signOut = useSignOut();
+  const actorType = actor?.actorType ?? "user";
+  const initial = actorType.charAt(0).toUpperCase();
+  const roles = actor?.roles.join(", ") || "No roles";
+
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton
+              size="lg"
+              aria-label="Account"
+              className="data-[state=open]:bg-sidebar-accent"
+            >
+              <Avatar className="size-8 shrink-0 rounded-lg">
+                <AvatarFallback className="bg-primary/15 text-primary-deep rounded-lg text-xs font-bold">
+                  {initial}
+                </AvatarFallback>
+              </Avatar>
+              <span className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold capitalize">{actorType}</span>
+                <span className="text-muted-foreground truncate text-xs">{roles}</span>
+              </span>
+              <ChevronsUpDown className="ml-auto" aria-hidden />
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            side={isMobile ? "bottom" : "top"}
+            align="end"
+            sideOffset={8}
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56"
+          >
+            <DropdownMenuLabel className="font-medium">
+              Signed in as <span className="font-mono">{actorType}</span>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={() => void signOut()}
+            >
+              <LogOut aria-hidden />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  );
+}
+
+const subscribeNothing = () => () => {};
+
+/** Sun/moon switch. Renders a placeholder until mounted, since the theme is only known then. */
+function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const mounted = useSyncExternalStore(
+    subscribeNothing,
+    () => true,
+    () => false,
+  );
+  if (!mounted) return <div className="h-6 w-16" aria-hidden />;
+  const dark = resolvedTheme === "dark";
+  return (
+    <div className="flex items-center gap-2">
+      <Sun className="text-muted-foreground size-4" aria-hidden />
+      <Switch
+        checked={dark}
+        onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+        aria-label="Dark mode"
+      />
+      <Moon className="text-muted-foreground size-4" aria-hidden />
+    </div>
+  );
+}
+
+function TopBar({ portal }: { portal: Portal }) {
+  const signOut = useSignOut();
+  return (
+    <header className="bg-background/80 sticky top-0 z-10 flex min-h-14 items-center gap-2 border-b px-3 py-2 backdrop-blur sm:px-4">
+      <SidebarTrigger />
+      {portal.capacity ? <OrganizationSwitcher capacity={portal.capacity} /> : null}
+      <div className="ml-auto flex items-center gap-2">
+        <ThemeToggle />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => void signOut()}
+          aria-label="Sign out"
+          title="Sign out"
+          className="text-destructive hover:bg-danger-soft hover:text-destructive"
+        >
+          <LogOut aria-hidden />
+        </Button>
+      </div>
+    </header>
+  );
+}
+
+/** Page content eases in on each route change; the chrome around it stays put. */
+function PortalMain({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  return (
+    <main className="flex-1 overflow-x-hidden">
+      <div className="mx-auto w-full max-w-[1600px] px-4 py-8 sm:px-6 lg:px-10">
+        <FadeIn key={pathname}>{children}</FadeIn>
+      </div>
+    </main>
   );
 }
 
@@ -147,27 +288,23 @@ export function PortalLayout({
   const portal = getPortal(portalId);
   return (
     <PortalGate portal={portalId}>
-      <div className="flex min-h-dvh flex-col">
-        <header className="bg-background/95 sticky top-0 z-40 flex h-16 items-center justify-between gap-4 border-b px-4 backdrop-blur">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-sm font-bold">
-              RealHRsoft Marketplace
-            </Link>
-            <span className="text-border" aria-hidden>
-              /
-            </span>
-            <PortalSwitcher current={portal} />
-            {portal.capacity ? <OrganizationSwitcher capacity={portal.capacity} /> : null}
-          </div>
-          <AccountMenu />
-        </header>
-        <div className="flex flex-1 flex-col md:flex-row">
-          <aside className="bg-sidebar border-b p-3 md:w-60 md:shrink-0 md:border-r md:border-b-0">
+      <SidebarProvider>
+        <Sidebar collapsible="icon">
+          <SidebarHeader>
+            <SidebarBrand current={portal} />
+          </SidebarHeader>
+          <SidebarContent>
             <PortalNavigation portal={portal} />
-          </aside>
-          <main className="min-w-0 flex-1 p-4 md:p-8">{children}</main>
-        </div>
-      </div>
+          </SidebarContent>
+          <SidebarFooter>
+            <AccountMenu />
+          </SidebarFooter>
+        </Sidebar>
+        <SidebarInset>
+          <TopBar portal={portal} />
+          <PortalMain>{children}</PortalMain>
+        </SidebarInset>
+      </SidebarProvider>
     </PortalGate>
   );
 }

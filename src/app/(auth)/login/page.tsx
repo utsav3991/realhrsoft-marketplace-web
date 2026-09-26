@@ -1,31 +1,25 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/design-system/primitives/card";
 import { LoginForm } from "@/features/identity/components/login-form";
 
 export const metadata: Metadata = { title: "Sign in" };
 
 export default function LoginPage() {
   return (
-    <main className="bg-muted/40 flex min-h-dvh items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-xl">Sign in</CardTitle>
-          <CardDescription>RealHRsoft Marketplace</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Suspense>
-            <LoginForm />
-          </Suspense>
-        </CardContent>
-      </Card>
-    </main>
+    <div className="space-y-8">
+      <div className="space-y-3">
+        <p className="kicker text-muted-foreground">RealHRsoft Marketplace</p>
+        <h1 className="text-[clamp(1.75rem,3vw,2.25rem)] leading-[1.1] font-semibold tracking-[-0.03em]">
+          Welcome back
+        </h1>
+        <p className="text-muted-foreground text-sm font-medium">
+          Sign in to continue where you left off.
+        </p>
+      </div>
+      <Suspense>
+        <LoginForm />
+      </Suspense>
+    </div>
   );
 }

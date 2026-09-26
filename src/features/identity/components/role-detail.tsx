@@ -7,12 +7,21 @@ import { useState, type ReactNode } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import { DataTable } from "@/design-system/components/data-table";
 import { EmptyState } from "@/design-system/components/empty-state";
-import { fieldDescriptionIds, FormField } from "@/design-system/components/form-field";
 import { PageHeader } from "@/design-system/components/page-header";
 import { Alert, AlertDescription, AlertTitle } from "@/design-system/primitives/alert";
 import { Badge } from "@/design-system/primitives/badge";
 import { Button } from "@/design-system/primitives/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/design-system/primitives/form";
 import {
   Card,
   CardContent,
@@ -21,14 +30,6 @@ import {
   CardTitle,
 } from "@/design-system/primitives/card";
 import { Skeleton } from "@/design-system/primitives/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/design-system/primitives/table";
 import { Textarea } from "@/design-system/primitives/textarea";
 import { ApiError, errorMessage, type Schemas } from "@/shared/api";
 import { useSession } from "@/shared/auth";
@@ -36,6 +37,7 @@ import { IdentityPermission, useCan } from "@/shared/authorization";
 import { StatusBadge } from "@/shared/components/status-badge";
 import { ErrorState } from "@/shared/feedback/states";
 import { applyApiFieldErrors } from "@/shared/forms/api-field-errors";
+import { useSortParam } from "@/shared/hooks/use-sort-param";
 
 import { useReplaceRolePermissions } from "../api/mutations";
 import { usePermissions, useRole } from "../api/queries";
@@ -169,6 +171,7 @@ function PermissionsCard({ role }: { role: Role }) {
   const canViewCatalogue = useCan(IdentityPermission.PERMISSION_VIEW);
   const catalogue = usePermissions({ enabled: canViewCatalogue });
   const names = new Map(catalogue.data?.map((p) => [p.code, p.display_name]));
+  const sort = useSortParam(["permission", "delegation"] as const);
 
   return (
     <Card>
@@ -180,45 +183,46 @@ function PermissionsCard({ role }: { role: Role }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {role.permissions.length === 0 ? (
-          <EmptyState title="This role has no permissions" className="py-8" />
-        ) : (
-          <div className="rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Permission</TableHead>
-                  <TableHead>Delegation</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {role.permissions.map((permission) => (
-                  <TableRow key={permission.code}>
-                    <TableCell>
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-medium">
-                          {names.get(permission.code) ?? permission.code}
-                        </span>
-                        {names.has(permission.code) ? (
-                          <span className="text-muted-foreground font-mono text-xs">
-                            {permission.code}
-                          </span>
-                        ) : null}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {permission.delegable ? (
-                        <Badge intent="info">Can delegate</Badge>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+        <DataTable
+          aria-label="Role permissions"
+          className="rounded-lg"
+          rows={role.permissions}
+          rowKey={(permission) => permission.code}
+          sort={sort}
+          empty={<EmptyState title="This role has no permissions" className="py-8" />}
+          columns={[
+            {
+              id: "permission",
+              header: "Permission",
+              sortKey: "permission",
+              sortValue: (permission) => names.get(permission.code) ?? permission.code,
+              cell: (permission) => (
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium">
+                    {names.get(permission.code) ?? permission.code}
+                  </span>
+                  {names.has(permission.code) ? (
+                    <span className="text-muted-foreground font-mono text-xs">
+                      {permission.code}
+                    </span>
+                  ) : null}
+                </div>
+              ),
+            },
+            {
+              id: "delegation",
+              header: "Delegation",
+              sortKey: "delegation",
+              sortValue: (permission) => (permission.delegable ? 0 : 1),
+              cell: (permission) =>
+                permission.delegable ? (
+                  <Badge intent="info">Can delegate</Badge>
+                ) : (
+                  <span className="text-muted-foreground">—</span>
+                ),
+            },
+          ]}
+        />
       </CardContent>
     </Card>
   );
@@ -264,84 +268,83 @@ function EditPermissions({ role, onDone }: { role: Role; onDone: () => void }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={onSubmit} noValidate className="space-y-6">
-          {failure ? (
-            <Alert variant="destructive">
-              <AlertCircle aria-hidden />
-              <AlertTitle>
-                {failure.stale ? "This role changed while you were editing" : "Not saved"}
-              </AlertTitle>
-              <AlertDescription>
-                <p>{failure.message}</p>
-                {failure.stale ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2"
-                    onClick={onDone}
-                  >
-                    Discard my changes and reload
-                  </Button>
-                ) : null}
-              </AlertDescription>
-            </Alert>
-          ) : null}
+        <Form {...form}>
+          <form onSubmit={onSubmit} noValidate className="space-y-6">
+            {failure ? (
+              <Alert variant="destructive">
+                <AlertCircle aria-hidden />
+                <AlertTitle>
+                  {failure.stale ? "This role changed while you were editing" : "Not saved"}
+                </AlertTitle>
+                <AlertDescription>
+                  <p>{failure.message}</p>
+                  {failure.stale ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-2"
+                      onClick={onDone}
+                    >
+                      Discard my changes and reload
+                    </Button>
+                  ) : null}
+                </AlertDescription>
+              </Alert>
+            ) : null}
 
-          {catalogue.isPending ? (
-            <Skeleton className="h-64 w-full" />
-          ) : catalogue.isError ? (
-            <ErrorState error={catalogue.error} onRetry={() => void catalogue.refetch()} />
-          ) : (
-            <Controller
+            {catalogue.isPending ? (
+              <Skeleton className="h-64 w-full" />
+            ) : catalogue.isError ? (
+              <ErrorState error={catalogue.error} onRetry={() => void catalogue.refetch()} />
+            ) : (
+              <Controller
+                control={form.control}
+                name="permissions"
+                render={({ field }) => (
+                  <PermissionPicker
+                    catalogue={catalogue.data}
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={isSubmitting}
+                    scope={role.scope === "organization" ? "organization" : "global"}
+                  />
+                )}
+              />
+            )}
+            {errors.permissions?.message ? (
+              <p className="text-destructive text-sm">{errors.permissions.message}</p>
+            ) : null}
+
+            <FormField
               control={form.control}
-              name="permissions"
+              name="reason"
               render={({ field }) => (
-                <PermissionPicker
-                  catalogue={catalogue.data}
-                  value={field.value}
-                  onChange={field.onChange}
-                  disabled={isSubmitting}
-                  scope={role.scope === "organization" ? "organization" : "global"}
-                />
+                <FormItem>
+                  <FormLabel>Reason</FormLabel>
+                  <FormControl>
+                    <Textarea rows={3} {...field} />
+                  </FormControl>
+                  <FormDescription>Recorded in the audit log.</FormDescription>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-          )}
-          {errors.permissions?.message ? (
-            <p className="text-destructive text-sm">{errors.permissions.message}</p>
-          ) : null}
 
-          <FormField
-            id="edit-reason"
-            label="Reason"
-            hint="Recorded in the audit log."
-            error={errors.reason?.message}
-          >
-            <Textarea
-              id="edit-reason"
-              rows={3}
-              aria-invalid={errors.reason ? true : undefined}
-              aria-describedby={fieldDescriptionIds("edit-reason", {
-                hint: true,
-                error: errors.reason,
-              })}
-              {...form.register("reason")}
-            />
-          </FormField>
-
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button type="button" variant="outline" onClick={onDone} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting || !catalogue.isSuccess || failure?.stale === true}
-            >
-              {isSubmitting ? <Loader2 className="animate-spin" aria-hidden /> : null}
-              Save permissions
-            </Button>
-          </div>
-        </form>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" onClick={onDone} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting || !catalogue.isSuccess || failure?.stale === true}
+              >
+                {isSubmitting ? <Loader2 className="animate-spin" aria-hidden /> : null}
+                Save permissions
+              </Button>
+            </div>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

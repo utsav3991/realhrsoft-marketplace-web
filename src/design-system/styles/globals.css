@@ -1,77 +1,136 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+/* Theme class on <html> (next-themes), not the OS setting, so the header toggle wins. */
+@custom-variant dark (&:is(.dark *));
 
 /*
  * Design tokens. DESIGN.md is the spec; this file implements it. Components use the semantic
  * names (bg-primary, text-muted-foreground, …), never raw colors, so the four portals stay
- * visually related and themeable in one place.
+ * visually related and themeable in one place. The palette follows the SHMS frontend: a warm
+ * off-white canvas, near-black ink and one lime green for the committing action.
  */
 :root {
-  --background: #ffffff; /* canvas */
-  --foreground: #0a1317; /* ink-deep */
+  --radius: 0.5rem;
+  --background: #f6f7f1; /* canvas */
+  --foreground: #0e0f0c; /* ink */
   --card: #ffffff;
-  --card-foreground: #0a1317;
+  --card-foreground: #0e0f0c;
   --popover: #ffffff;
-  --popover-foreground: #0a1317;
-  --primary: #0064e0; /* cobalt: the one committing action per view */
-  --primary-deep: #0457cb; /* primary hover/pressed, active links */
-  --primary-foreground: #ffffff;
-  --ink: #000000; /* black pill: marketplace promotional CTAs */
-  --ink-pressed: #444950; /* charcoal */
+  --popover-foreground: #0e0f0c;
+  --primary: #9fe870; /* lime: the one committing action per view */
+  --primary-deep: #054d28; /* forest: links and primary text on light surfaces */
+  --primary-foreground: #163300;
+  --ink: #0e0f0c; /* black button: marketplace promotional CTAs */
+  --ink-pressed: #454745;
   --ink-foreground: #ffffff;
-  --secondary: #f1f4f7; /* surface-soft */
-  --secondary-foreground: #1c2a31;
-  --muted: #f1f4f7;
-  --muted-foreground: #5d6c7b; /* steel */
-  --accent: #dbeeff; /* primary-soft at ~15% on canvas */
-  --accent-foreground: #0457cb;
-  --destructive: #e41e3f; /* critical */
+  --secondary: rgba(22, 51, 0, 0.08);
+  --secondary-foreground: #0e0f0c;
+  --muted: #e8ebe6;
+  --muted-foreground: #6b6f69;
+  --accent: #e2f6d5; /* mint */
+  --accent-foreground: #163300;
+  --destructive: #d03238;
   --destructive-foreground: #ffffff;
-  --success: #237b3a; /* #31a24c darkened to pass AA with white text */
+  --success: #054d28;
   --success-foreground: #ffffff;
-  --warning: #f7b928;
-  --warning-foreground: #0a1317;
-  --border: #dee3e9; /* hairline-soft */
-  --input: #ced0d4; /* hairline */
-  --ring: #1876f2; /* focus and selected controls */
-  --sidebar: #ffffff;
+  --warning: #ffd11a;
+  --warning-foreground: #0e0f0c;
+  /* Soft status tints for badges: tinted fill, deep text of the same hue. */
+  --neutral-soft: rgba(14, 15, 12, 0.07);
+  --neutral-soft-foreground: #0e0f0c;
+  --info-soft: #dbeafe;
+  --info-soft-foreground: #1e40af;
+  --success-soft: #d1fae5;
+  --success-soft-foreground: #065f46;
+  --warning-soft: #fff1b2;
+  --warning-soft-foreground: #574100;
+  --danger-soft: #fee2e2;
+  --danger-soft-foreground: #991b1b;
+  --border: rgba(14, 15, 12, 0.12);
+  --input: rgba(14, 15, 12, 0.14);
+  --ring: #9fe870;
+  --chart-1: #9fe870;
+  --chart-2: #054d28;
+  --chart-3: #ffd11a;
+  --chart-4: #38c8ff;
+  --chart-5: #ffc091;
+  --sidebar: #fbfcf7;
+  --sidebar-foreground: #0e0f0c;
+  --sidebar-primary: #9fe870;
+  --sidebar-primary-foreground: #163300;
+  --sidebar-accent: rgba(14, 15, 12, 0.06);
+  --sidebar-accent-foreground: #0e0f0c;
+  --sidebar-border: rgba(14, 15, 12, 0.08);
+  --sidebar-ring: #9fe870;
+  --surface-soft: #eef3e7; /* hover fill for list rows and menu results */
+  --text-soft: #454745; /* body copy */
+  --ring-shadow: rgba(14, 15, 12, 0.12) 0px 0px 0px 1px;
+  --canvas-glow: rgba(159, 232, 112, 0.12);
+  --canvas-sheen: rgba(255, 255, 255, 0.55);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a1317;
-    --foreground: #f1f4f7;
-    --card: #111c21;
-    --card-foreground: #f1f4f7;
-    --popover: #111c21;
-    --popover-foreground: #f1f4f7;
-    --primary: #0091ff; /* primary-soft */
-    --primary-deep: #3aa7ff;
-    --primary-foreground: #0a1317;
-    --ink: #ffffff;
-    --ink-pressed: #dee3e9;
-    --ink-foreground: #0a1317;
-    --secondary: #1c2a31;
-    --secondary-foreground: #f1f4f7;
-    --muted: #1c2a31;
-    --muted-foreground: #9aa8b5;
-    --accent: #0f2e4d;
-    --accent-foreground: #9fd0ff;
-    --destructive: #ff5c75;
-    --destructive-foreground: #0a1317;
-    --success: #45bd62;
-    --success-foreground: #0a1317;
-    --warning: #f7b928;
-    --warning-foreground: #0a1317;
-    --border: #26343b;
-    --input: #34434b;
-    --ring: #0091ff;
-    --sidebar: #0a1317;
-  }
+.dark {
+  --background: #0e0f0c;
+  --foreground: #f3f6eb;
+  --card: #161813;
+  --card-foreground: #f3f6eb;
+  --popover: #161813;
+  --popover-foreground: #f3f6eb;
+  --primary: #9fe870;
+  --primary-deep: #cdffad;
+  --primary-foreground: #163300;
+  --ink: #f3f6eb;
+  --ink-pressed: #cfd5c8;
+  --ink-foreground: #0e0f0c;
+  --secondary: rgba(159, 232, 112, 0.12);
+  --secondary-foreground: #f3f6eb;
+  --muted: #1d211a;
+  --muted-foreground: #a3ab9d;
+  --accent: #22301a;
+  --accent-foreground: #e2f6d5;
+  --destructive: #ff6a70;
+  --destructive-foreground: #0e0f0c;
+  --success: #b8f28f;
+  --success-foreground: #0e0f0c;
+  --warning: #ffd11a;
+  --warning-foreground: #0e0f0c;
+  --neutral-soft: rgba(255, 255, 255, 0.08);
+  --neutral-soft-foreground: #f3f6eb;
+  --info-soft: #1e2f4d;
+  --info-soft-foreground: #93c5fd;
+  --success-soft: #1d3420;
+  --success-soft-foreground: #b8f28f;
+  --warning-soft: #3a3008;
+  --warning-soft-foreground: #ffe27a;
+  --danger-soft: #40171b;
+  --danger-soft-foreground: #ff9298;
+  --border: rgba(243, 246, 235, 0.12);
+  --input: rgba(243, 246, 235, 0.14);
+  --ring: #9fe870;
+  --chart-1: #9fe870;
+  --chart-2: #cdffad;
+  --chart-3: #ffd11a;
+  --chart-4: #38c8ff;
+  --chart-5: #ffc091;
+  --sidebar: #12140f;
+  --sidebar-foreground: #f3f6eb;
+  --sidebar-primary: #9fe870;
+  --sidebar-primary-foreground: #163300;
+  --sidebar-accent: rgba(243, 246, 235, 0.08);
+  --sidebar-accent-foreground: #f3f6eb;
+  --sidebar-border: rgba(243, 246, 235, 0.08);
+  --sidebar-ring: #9fe870;
+  --surface-soft: #171a14;
+  --text-soft: #cfd5c8;
+  --ring-shadow: rgba(243, 246, 235, 0.12) 0px 0px 0px 1px;
+  --canvas-glow: rgba(159, 232, 112, 0.1);
+  --canvas-sheen: rgba(255, 255, 255, 0.02);
 }
 
 @theme inline {
-  --font-sans:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --font-mono: var(--font-code), ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -96,36 +155,119 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-neutral-soft: var(--neutral-soft);
+  --color-neutral-soft-foreground: var(--neutral-soft-foreground);
+  --color-info-soft: var(--info-soft);
+  --color-info-soft-foreground: var(--info-soft-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-success-soft-foreground: var(--success-soft-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-soft-foreground: var(--warning-soft-foreground);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-soft-foreground: var(--danger-soft-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
   --color-sidebar: var(--sidebar);
-  /* DESIGN.md rounded scale: controls lg, cards xl, callouts 2xl, showcase 3xl/4xl, pills full. */
-  --radius-xs: 2px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 16px;
-  --radius-2xl: 24px;
-  --radius-3xl: 32px;
-  --radius-4xl: 40px;
-  /* The only elevation: sticky panels and floating layers. Cards stay flat. */
-  --shadow-panel: 0 1px 4px 0 rgb(20 22 26 / 0.3);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-surface-soft: var(--surface-soft);
+  --color-text-soft: var(--text-soft);
+  /* shadcn radius scale off --radius (8px): controls md/lg, cards and dialogs 2xl. */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  /* A 1px ring instead of a drop shadow: cards, controls and dialogs. */
+  --shadow-ring: var(--ring-shadow);
+  /* Floating layers (menus, popovers, toasts) lift a little more. */
+  --shadow-panel: var(--ring-shadow), 0 12px 32px -12px rgb(14 15 12 / 0.18);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    font-feature-settings: "calt" 1;
+  }
+  html {
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-background text-foreground antialiased;
-    /* Body roles run fractionally snug (-0.16px at 16px). */
-    letter-spacing: -0.01em;
+    font-weight: 600;
+    line-height: 1.44;
+    background-image:
+      radial-gradient(circle at top left, var(--canvas-glow), transparent 26%),
+      linear-gradient(180deg, var(--canvas-sheen), transparent 24%);
   }
   h1,
   h2,
   h3,
-  h4 {
-    @apply font-medium;
+  h4,
+  h5,
+  h6 {
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--foreground);
+  }
+  ::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+}
+
+/* Small uppercase label above a title (PageHeader eyebrow, section kickers). */
+@utility kicker {
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* DESIGN.md → Rich text: Markdown content from RichTextEditor, edited and rendered. */
+@layer components {
+  .rich-text {
+    @apply space-y-2 break-words;
+  }
+  .rich-text ul {
+    @apply list-disc space-y-1 pl-5;
+  }
+  .rich-text ol {
+    @apply list-decimal space-y-1 pl-5;
+  }
+  .rich-text li > p {
+    @apply m-0;
+  }
+  .rich-text strong {
+    @apply font-bold;
+  }
+  .rich-text a {
+    @apply text-primary hover:text-primary-deep underline underline-offset-4;
+  }
+  .rich-text p.is-editor-empty:first-child::before {
+    @apply text-muted-foreground pointer-events-none float-left h-0;
+    content: attr(data-placeholder);
+  }
+}
+
+/* DESIGN.md → Motion: honour reduced motion for CSS (tw-animate-css) animations too. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

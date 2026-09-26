@@ -14,6 +14,13 @@ import {
 import { OwnPartnerProfile, PartnerDashboard } from "./own-partner";
 import { PartnerRecord } from "./partner-record";
 
+// Tables keep their page and sort in the URL.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  usePathname: () => "/",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 const PARTNER_ID = "0b0b5e3c-3c3f-4bd6-9a55-8f3b7f0a8f2e";
 const ORG = "4a293c96-2952-43ac-bf39-bdfda7531c48";
 
@@ -39,6 +46,7 @@ const pending: Schemas["Partner"] = {
   website: "",
   status: "pending",
   intake_path: "self_service",
+  source: "partner_organization",
   registered_by: "9d31c4aa-1f99-4c90-b748-e00893786136",
   submitted_at: "2026-09-25T10:00:00Z",
   version: 1,
@@ -144,9 +152,7 @@ describe("<PartnerRecord>", () => {
     await user.type(screen.getByLabelText("Reason"), "Documents checked");
     await user.click(screen.getByRole("button", { name: "Verify partner" }));
 
-    await waitFor(() =>
-      expect(fetchMock.mock.calls.some(([r]) => r.method === "POST")).toBe(true),
-    );
+    await waitFor(() => expect(fetchMock.mock.calls.some(([r]) => r.method === "POST")).toBe(true));
     const [request] = fetchMock.mock.calls.find(([r]) => r.method === "POST")!;
     expect(new URL(request.url).pathname).toBe(`/api/v1/admin/partners/${PARTNER_ID}/verify`);
     expect(await request.json()).toEqual({ reason: "Documents checked", expected_version: 1 });

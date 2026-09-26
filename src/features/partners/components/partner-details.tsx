@@ -1,12 +1,12 @@
 "use client";
 
-import type { UseInfiniteQueryResult, InfiniteData } from "@tanstack/react-query";
 import { CheckCircle2, Clock, History, XCircle } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { RichText } from "@/design-system/components/rich-text-editor";
+import { type DataTableColumns } from "@/design-system/components/data-table";
 import { EmptyState } from "@/design-system/components/empty-state";
 import { Alert, AlertDescription, AlertTitle } from "@/design-system/primitives/alert";
-import { Button } from "@/design-system/primitives/button";
 import {
   Card,
   CardContent,
@@ -14,25 +14,30 @@ import {
   CardHeader,
   CardTitle,
 } from "@/design-system/primitives/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/design-system/primitives/table";
 import { Detail, DetailList } from "@/shared/components/details";
+import { QueryDataTable, type ResultsQuery } from "@/shared/components/query-data-table";
+import type { PageState } from "@/shared/hooks/use-page-param";
 import { StatusBadge } from "@/shared/components/status-badge";
-import { ListSkeleton } from "@/shared/feedback/list-skeleton";
-import { ErrorState } from "@/shared/feedback/states";
 import { formatDateTime } from "@/shared/lib/format";
 
-import type { IntakePath, Partner, PartnerDecision } from "../api/queries";
+import type { IntakePath, Partner, PartnerDecision, PartnerSource } from "../api/queries";
 
 export const INTAKE_LABEL: Record<IntakePath, string> = {
   self_service: "Self-service",
   assisted: "Assisted by Aayulogic",
+};
+
+/** What kind of business the partner is; set by Aayulogic, independent of the intake path. */
+export const SOURCE_LABEL: Record<PartnerSource, string> = {
+  partner_organization: "Partner organization",
+  external: "External partner",
+  realhrsoft: "RealHRsoft partner",
+};
+
+export const SOURCE_HINT: Record<PartnerSource, string> = {
+  partner_organization: "A business whose members use the Partner portal.",
+  external: "No portal login; Aayulogic posts offers for it.",
+  realhrsoft: "An organization that is also a RealHRsoft client.",
 };
 
 const empty = (value: string | undefined) => value || "—";
@@ -72,7 +77,7 @@ export function PartnerProfileCard({ partner, action }: { partner: Partner; acti
           <Detail label="Contact email">{partner.contact_email}</Detail>
           <Detail label="Contact phone">{empty(partner.contact_phone)}</Detail>
           <Detail label="About" className="sm:col-span-2 lg:col-span-3">
-            <span className="whitespace-pre-line">{empty(partner.description)}</span>
+            {partner.description ? <RichText value={partner.description} /> : "—"}
           </Detail>
         </DetailList>
       </CardContent>
@@ -93,6 +98,7 @@ export function RegistrationCard({ partner }: { partner: Partner }) {
             <StatusBadge domain="partner" status={partner.status} />
           </Detail>
           <Detail label="Intake">{INTAKE_LABEL[partner.intake_path]}</Detail>
+          <Detail label="Partner type">{SOURCE_LABEL[partner.source]}</Detail>
           <Detail label="Submitted for review">{formatDateTime(partner.submitted_at)}</Detail>
           <Detail label="Organization">{partner.organization_name}</Detail>
           <Detail label="Version">{partner.version}</Detail>
@@ -123,9 +129,7 @@ export function StatusCallout({
         <XCircle aria-hidden />
         <AlertTitle>Registration rejected</AlertTitle>
         <AlertDescription className="space-y-3">
-          <p className="whitespace-pre-line">
-            {decision?.reason ?? "No feedback was recorded."}
-          </p>
+          <p className="whitespace-pre-line">{decision?.reason ?? "No feedback was recorded."}</p>
           <p>
             {audience === "applicant"
               ? "Update the business profile to address this feedback, then resubmit it for review."
@@ -164,15 +168,40 @@ export function StatusCallout({
   );
 }
 
-type DecisionPages = InfiniteData<{ count: number; results: PartnerDecision[] }>;
+const DECISION_COLUMNS: DataTableColumns<PartnerDecision> = [
+  {
+    id: "outcome",
+    header: "Outcome",
+    cell: (decision) => <StatusBadge domain="partner" status={decision.outcome} />,
+  },
+  {
+    id: "reason",
+    header: "Reason",
+    cellClassName: "max-w-md whitespace-pre-line",
+    cell: (decision) => decision.reason,
+  },
+  {
+    id: "version",
+    header: "Version",
+    cellClassName: "text-muted-foreground",
+    cell: (decision) => decision.partner_version,
+  },
+  {
+    id: "decided",
+    header: "Decided",
+    cellClassName: "text-muted-foreground",
+    cell: (decision) => formatDateTime(decision.decided_at),
+  },
+];
 
 /** Every verify/reject decision, newest first, with the version it was made on. */
 export function DecisionHistoryCard({
   decisions,
+  paging,
 }: {
-  decisions: UseInfiniteQueryResult<DecisionPages>;
+  decisions: ResultsQuery<PartnerDecision>;
+  paging: PageState;
 }) {
-  const rows = decisions.data?.pages.flatMap((page) => page.results) ?? [];
   return (
     <Card>
       <CardHeader>
@@ -180,53 +209,16 @@ export function DecisionHistoryCard({
         <CardDescription>Every verification decision, newest first.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {decisions.isPending ? (
-          <ListSkeleton rows={2} />
-        ) : decisions.isError ? (
-          <ErrorState error={decisions.error} onRetry={() => void decisions.refetch()} />
-        ) : rows.length === 0 ? (
-          <EmptyState icon={History} title="No decisions yet" className="py-8" />
-        ) : (
-          <div className="rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Outcome</TableHead>
-                  <TableHead>Reason</TableHead>
-                  <TableHead>Version</TableHead>
-                  <TableHead>Decided</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((decision) => (
-                  <TableRow key={decision.id}>
-                    <TableCell>
-                      <StatusBadge domain="partner" status={decision.outcome} />
-                    </TableCell>
-                    <TableCell className="max-w-md whitespace-pre-line">{decision.reason}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {decision.partner_version}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatDateTime(decision.decided_at)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-        {decisions.hasNextPage ? (
-          <div className="flex justify-center">
-            <Button
-              variant="outline"
-              onClick={() => void decisions.fetchNextPage()}
-              disabled={decisions.isFetchingNextPage}
-            >
-              {decisions.isFetchingNextPage ? "Loading…" : "Load more"}
-            </Button>
-          </div>
-        ) : null}
+        <QueryDataTable
+          aria-label="Decision history"
+          query={decisions}
+          paging={paging}
+          columns={DECISION_COLUMNS}
+          rowKey={(decision) => decision.id}
+          skeletonRows={2}
+          className="rounded-lg"
+          empty={<EmptyState icon={History} title="No decisions yet" className="py-8" />}
+        />
       </CardContent>
     </Card>
   );

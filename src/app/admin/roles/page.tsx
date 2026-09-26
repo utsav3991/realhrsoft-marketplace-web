@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { PageHeader } from "@/design-system/components/page-header";
 import { RolesList } from "@/features/identity/components/roles-list";
@@ -18,7 +19,9 @@ export default function AdminRolesPage() {
           description="Named bundles of permissions, granted to users platform-wide."
           actions={<NewRoleAction />}
         />
-        <RolesList />
+        <Suspense>
+          <RolesList />
+        </Suspense>
       </div>
     </RequirePermission>
   );

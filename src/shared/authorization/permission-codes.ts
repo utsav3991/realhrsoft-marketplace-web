@@ -26,6 +26,8 @@ export const OrganizationAdminPermission = {
   ORGANIZATION_VIEW: "organizations.organization.view",
   ORGANIZATION_MANAGE: "organizations.organization.manage",
   MEMBERSHIP_MANAGE: "organizations.membership.manage",
+  /** Turns an organization's Employer capacity on or off (/admin/organizations/{id}/employer). */
+  EMPLOYER_MANAGE: "organizations.employer.manage",
 } as const;
 
 /**
@@ -51,7 +53,98 @@ export const PartnerPermission = {
   PROFILE_DECISION_VIEW: "partners.profile_decision.view",
 } as const;
 
-// Employer organization codes arrive with the Django slice that enforces them.
+/**
+ * Global: Aayulogic administration of offer categories (/admin/offer-categories) and of every
+ * partner's offers (/admin/offers), including publishing on a partner's behalf.
+ */
+export const OfferAdminPermission = {
+  CATEGORY_VIEW: "offers.category.view",
+  CATEGORY_CREATE: "offers.category.create",
+  CATEGORY_UPDATE: "offers.category.update",
+  CATEGORY_RETIRE: "offers.category.retire",
+  CATEGORY_REACTIVATE: "offers.category.reactivate",
+  OFFER_VIEW: "offers.offer.view",
+  OFFER_CREATE: "offers.offer.create",
+  OFFER_UPDATE: "offers.offer.update",
+  OFFER_SUBMIT: "offers.offer.submit",
+  OFFER_PUBLISH: "offers.offer.publish",
+  OFFER_APPROVE: "offers.offer.approve",
+  OFFER_REJECT: "offers.offer.reject",
+  OFFER_REQUEST_CHANGES: "offers.offer.request_changes",
+  OFFER_WITHDRAW: "offers.offer.withdraw",
+  OFFER_SUSPEND: "offers.offer.suspend",
+  OFFER_REINSTATE: "offers.offer.reinstate",
+  OFFER_FEATURE: "offers.offer.feature",
+  OFFER_DECISION_VIEW: "offers.offer_decision.view",
+} as const;
+
+/** Organization: the selected partner organization's own offers (/partner/offers). */
+export const PartnerOfferPermission = {
+  OFFER_VIEW: "offers.partner_offer.view",
+  OFFER_CREATE: "offers.partner_offer.create",
+  OFFER_UPDATE: "offers.partner_offer.update",
+  OFFER_SUBMIT: "offers.partner_offer.submit",
+  OFFER_WITHDRAW: "offers.partner_offer.withdraw",
+  OFFER_DECISION_VIEW: "offers.partner_offer_decision.view",
+} as const;
+
+/**
+ * Global: interim employee eligibility (/admin/employments). An employee may use the
+ * marketplace only while an administrator-recorded employment is current.
+ */
+export const EmploymentAdminPermission = {
+  EMPLOYMENT_VIEW: "employee_access.employment.view",
+  EMPLOYMENT_CREATE: "employee_access.employment.create",
+  EMPLOYMENT_END: "employee_access.employment.end",
+} as const;
+
+/** Global: every employee's claims (/admin/claims), and confirming one on a partner's behalf. */
+export const ClaimAdminPermission = {
+  CLAIM_VIEW: "claims.claim.view",
+  CLAIM_CONFIRM: "claims.claim.confirm",
+} as const;
+
+/**
+ * Organization: claims of the selected partner organization's offers (/partner/claims), looked
+ * up by the reference the employee shows. Employees need no code to claim: eligibility is theirs.
+ */
+export const PartnerClaimPermission = {
+  CLAIM_VIEW: "claims.partner_claim.view",
+  CLAIM_CONFIRM: "claims.partner_claim.confirm",
+} as const;
+
+/** Global: marketplace-wide offer performance (/admin/reports), incl. the employer breakdown. */
+export const AnalyticsAdminPermission = {
+  OFFER_REPORT_VIEW: "analytics.offer_report.view",
+} as const;
+
+/** Organization: the selected partner's own offer performance (/partner/analytics), as totals. */
+export const PartnerAnalyticsPermission = {
+  OFFER_REPORT_VIEW: "analytics.partner_offer_report.view",
+} as const;
+
+/** Global: moderation of every employer's Company Benefits (/admin/company-benefits). */
+export const BenefitAdminPermission = {
+  BENEFIT_VIEW: "employer_benefits.benefit.view",
+  BENEFIT_SUSPEND: "employer_benefits.benefit.suspend",
+} as const;
+
+/**
+ * Organization: the selected employer's own Company Benefits (/employer/benefits). Every code
+ * also needs the organization's Employer capacity; employees need no code to claim.
+ */
+export const EmployerBenefitPermission = {
+  BENEFIT_VIEW: "employer_benefits.own_benefit.view",
+  BENEFIT_CREATE: "employer_benefits.own_benefit.create",
+  BENEFIT_UPDATE: "employer_benefits.own_benefit.update",
+  BENEFIT_PUBLISH: "employer_benefits.own_benefit.publish",
+  BENEFIT_RETIRE: "employer_benefits.own_benefit.retire",
+} as const;
+
+/** Organization: the selected employer's benefit usage (/employer/reports), as counts. */
+export const EmployerAnalyticsPermission = {
+  BENEFIT_REPORT_VIEW: "analytics.benefit_report.view",
+} as const;
 
 type ValueOf<T> = T[keyof T];
 
@@ -59,8 +152,19 @@ export type IdentityPermissionCode = ValueOf<typeof IdentityPermission>;
 export type GlobalPermissionCode =
   | IdentityPermissionCode
   | ValueOf<typeof OrganizationAdminPermission>
-  | ValueOf<typeof PartnerAdminPermission>;
-export type OrganizationPermissionCode = ValueOf<typeof PartnerPermission>;
+  | ValueOf<typeof PartnerAdminPermission>
+  | ValueOf<typeof OfferAdminPermission>
+  | ValueOf<typeof EmploymentAdminPermission>
+  | ValueOf<typeof ClaimAdminPermission>
+  | ValueOf<typeof AnalyticsAdminPermission>
+  | ValueOf<typeof BenefitAdminPermission>;
+export type OrganizationPermissionCode =
+  | ValueOf<typeof PartnerPermission>
+  | ValueOf<typeof PartnerOfferPermission>
+  | ValueOf<typeof PartnerClaimPermission>
+  | ValueOf<typeof PartnerAnalyticsPermission>
+  | ValueOf<typeof EmployerBenefitPermission>
+  | ValueOf<typeof EmployerAnalyticsPermission>;
 export type PermissionCode = GlobalPermissionCode | OrganizationPermissionCode;
 
 /** Every administrative global code: holding any of them opens the admin console. */
@@ -68,4 +172,9 @@ export const GLOBAL_PERMISSIONS: readonly GlobalPermissionCode[] = [
   ...Object.values(IdentityPermission),
   ...Object.values(OrganizationAdminPermission),
   ...Object.values(PartnerAdminPermission),
+  ...Object.values(OfferAdminPermission),
+  ...Object.values(EmploymentAdminPermission),
+  ...Object.values(ClaimAdminPermission),
+  ...Object.values(AnalyticsAdminPermission),
+  ...Object.values(BenefitAdminPermission),
 ];

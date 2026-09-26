@@ -1,11 +1,17 @@
 import {
   BadgeCheck,
+  ChartColumn,
+  BriefcaseBusiness,
   Building2,
+  Gift,
   Handshake,
   KeyRound,
   LayoutDashboard,
   ShieldCheck,
   Store,
+  Tag,
+  Tags,
+  Ticket,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -14,10 +20,20 @@ import type { Capacity, CurrentActor } from "@/shared/auth";
 
 import type { OrganizationFilter } from "./organization-scope";
 import {
+  AnalyticsAdminPermission,
+  BenefitAdminPermission,
+  ClaimAdminPermission,
+  EmployerAnalyticsPermission,
+  EmployerBenefitPermission,
+  EmploymentAdminPermission,
   GLOBAL_PERMISSIONS,
   IdentityPermission,
+  OfferAdminPermission,
   OrganizationAdminPermission,
   PartnerAdminPermission,
+  PartnerAnalyticsPermission,
+  PartnerClaimPermission,
+  PartnerOfferPermission,
   PartnerPermission,
   canAny,
   type PermissionCode,
@@ -93,6 +109,42 @@ export const PORTALS: readonly Portal[] = [
         icon: Handshake,
         anyOf: [PartnerAdminPermission.PARTNER_VIEW],
       },
+      {
+        href: "/admin/offers",
+        label: "Offers",
+        icon: Tag,
+        anyOf: [OfferAdminPermission.OFFER_VIEW],
+      },
+      {
+        href: "/admin/offer-categories",
+        label: "Offer categories",
+        icon: Tags,
+        anyOf: [OfferAdminPermission.CATEGORY_VIEW],
+      },
+      {
+        href: "/admin/claims",
+        label: "Claims",
+        icon: Ticket,
+        anyOf: [ClaimAdminPermission.CLAIM_VIEW],
+      },
+      {
+        href: "/admin/company-benefits",
+        label: "Company benefits",
+        icon: Gift,
+        anyOf: [BenefitAdminPermission.BENEFIT_VIEW],
+      },
+      {
+        href: "/admin/employments",
+        label: "Employments",
+        icon: BriefcaseBusiness,
+        anyOf: [EmploymentAdminPermission.EMPLOYMENT_VIEW],
+      },
+      {
+        href: "/admin/reports",
+        label: "Reports",
+        icon: ChartColumn,
+        anyOf: [AnalyticsAdminPermission.OFFER_REPORT_VIEW],
+      },
     ],
   },
   {
@@ -115,6 +167,28 @@ export const PORTALS: readonly Portal[] = [
         anyOf: [PartnerPermission.PROFILE_VIEW],
         inOrganization: true,
       },
+      {
+        href: "/partner/offers",
+        label: "Offers",
+        icon: Tag,
+        anyOf: [PartnerOfferPermission.OFFER_VIEW],
+        inOrganization: true,
+      },
+      {
+        href: "/partner/claims",
+        label: "Claims",
+        icon: Ticket,
+        // A member who may only confirm can still redeem a reference the employee shows.
+        anyOf: [PartnerClaimPermission.CLAIM_VIEW, PartnerClaimPermission.CLAIM_CONFIRM],
+        inOrganization: true,
+      },
+      {
+        href: "/partner/analytics",
+        label: "Analytics",
+        icon: ChartColumn,
+        anyOf: [PartnerAnalyticsPermission.OFFER_REPORT_VIEW],
+        inOrganization: true,
+      },
     ],
   },
   {
@@ -122,19 +196,40 @@ export const PORTALS: readonly Portal[] = [
     label: "Employer Portal",
     icon: Building2,
     basePath: "/employer",
-    // The Django backend provisions no Employer capacity yet, so no membership qualifies.
+    // Opens for organizations whose Employer capacity an administrator turned on.
     canAccess: (actor) => hasCapacity(actor, "employer"),
     capacity: "employer",
-    navigation: [{ href: "/employer", label: "Overview", icon: LayoutDashboard }],
+    navigation: [
+      {
+        href: "/employer/benefits",
+        label: "Company benefits",
+        icon: Gift,
+        anyOf: [EmployerBenefitPermission.BENEFIT_VIEW],
+        inOrganization: true,
+      },
+      {
+        href: "/employer/reports",
+        label: "Reports",
+        icon: ChartColumn,
+        anyOf: [EmployerAnalyticsPermission.BENEFIT_REPORT_VIEW],
+        inOrganization: true,
+      },
+    ],
   },
   {
     id: "marketplace",
     label: "Marketplace",
     icon: Store,
     basePath: "/marketplace",
-    // Browsing is open to every signed-in actor; claiming and eligibility are API decisions.
+    // Open to every signed-in actor. Eligibility (an employee account with a current
+    // employment) is not a permission code; the API decides it and answers 403 otherwise.
     canAccess: () => true,
-    navigation: [{ href: "/marketplace", label: "Discover", icon: Store }],
+    navigation: [
+      { href: "/marketplace", label: "Discover", icon: Store },
+      { href: "/marketplace/claims", label: "My offers", icon: Ticket },
+      // Separate from offers (EMP-02): the employer's own benefits, not partner offers.
+      { href: "/marketplace/company-benefits", label: "Company benefits", icon: Gift },
+    ],
   },
 ];
 

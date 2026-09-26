@@ -32,6 +32,25 @@ export function useUpdateOrganization(organizationId: string) {
   });
 }
 
+/** Turns the Employer capacity on or off, with an audited reason (organizations.employer.manage). */
+export function useSetEmployerCapacity(organizationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schemas["EmployerCapacity"]) =>
+      unwrap(
+        api.PUT("/admin/organizations/{organization_id}/employer", {
+          params: { path: { organization_id: pathId(organizationId) } },
+          body,
+        }),
+      ),
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: organizationKeys.detail(organizationId) }),
+        queryClient.invalidateQueries({ queryKey: organizationKeys.lists() }),
+      ]),
+  });
+}
+
 function useInvalidateMemberships(organizationId: string) {
   const queryClient = useQueryClient();
   return () =>

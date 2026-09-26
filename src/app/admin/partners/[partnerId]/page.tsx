@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 import { PartnerRecord } from "@/features/partners/components/partner-record";
 import { isUuid } from "@/shared/api";
@@ -17,7 +18,9 @@ export default async function AdminPartnerPage({
   if (!isUuid(partnerId)) notFound();
   return (
     <RequirePermission anyOf={[PartnerAdminPermission.PARTNER_VIEW]}>
-      <PartnerRecord partnerId={partnerId} />
+      <Suspense>
+        <PartnerRecord partnerId={partnerId} />
+      </Suspense>
     </RequirePermission>
   );
 }

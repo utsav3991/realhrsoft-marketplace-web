@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 import { RoleDetail } from "@/features/identity/components/role-detail";
 import { isUuid } from "@/shared/api";
@@ -13,7 +14,9 @@ export default async function AdminRolePage({ params }: { params: Promise<{ role
   if (!isUuid(roleId)) notFound();
   return (
     <RequirePermission anyOf={[IdentityPermission.ROLE_VIEW]}>
-      <RoleDetail roleId={roleId} />
+      <Suspense>
+        <RoleDetail roleId={roleId} />
+      </Suspense>
     </RequirePermission>
   );
 }

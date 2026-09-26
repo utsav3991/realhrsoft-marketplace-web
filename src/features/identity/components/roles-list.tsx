@@ -3,78 +3,81 @@
 import { ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
+import { DataTable, type DataTableColumns } from "@/design-system/components/data-table";
 import { EmptyState } from "@/design-system/components/empty-state";
 import { Badge } from "@/design-system/primitives/badge";
-import { Skeleton } from "@/design-system/primitives/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/design-system/primitives/table";
+import type { Schemas } from "@/shared/api";
 import { StatusBadge } from "@/shared/components/status-badge";
 import { ErrorState } from "@/shared/feedback/states";
+import { useSortParam } from "@/shared/hooks/use-sort-param";
 
 import { useRoles } from "../api/queries";
 
+const COLUMNS: DataTableColumns<Schemas["Role"]> = [
+  {
+    id: "role",
+    header: "Role",
+    sortKey: "name",
+    sortValue: (role) => role.display_name,
+    cell: (role) => (
+      <div className="flex flex-col gap-0.5">
+        <span className="flex flex-wrap items-center gap-2">
+          <Link href={`/admin/roles/${role.id}`} className="font-medium hover:underline">
+            {role.display_name}
+          </Link>
+          {role.is_system ? <Badge intent="info">System</Badge> : null}
+          {role.scope === "organization" ? <Badge intent="outline">Organization</Badge> : null}
+        </span>
+        <span className="text-muted-foreground font-mono text-xs">{role.code}</span>
+      </div>
+    ),
+  },
+  {
+    id: "status",
+    header: "Status",
+    cell: (role) => <StatusBadge domain="role" status={role.status} />,
+  },
+  {
+    id: "permissions",
+    header: "Permissions",
+    sortKey: "permissions",
+    sortValue: (role) => role.permissions.length,
+    className: "text-right",
+    cellClassName: "tabular-nums",
+    cell: (role) => role.permissions.length,
+  },
+  {
+    id: "holders",
+    header: "Holders",
+    sortKey: "holders",
+    sortValue: (role) => role.active_assignments,
+    className: "text-right",
+    cellClassName: "tabular-nums",
+    cell: (role) => role.active_assignments,
+  },
+];
+
+const SORTS = ["name", "permissions", "holders"] as const;
+
 export function RolesList() {
   const roles = useRoles();
-
-  if (roles.isPending) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 4 }, (_, index) => (
-          <Skeleton key={index} className="h-12 w-full" />
-        ))}
-      </div>
-    );
-  }
-  if (roles.isError) {
-    return <ErrorState error={roles.error} onRetry={() => void roles.refetch()} />;
-  }
-  if (roles.data.length === 0) {
-    return <EmptyState icon={ShieldCheck} title="No roles defined" />;
-  }
+  const sort = useSortParam(SORTS);
 
   return (
-    <div className="rounded-xl border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Permissions</TableHead>
-            <TableHead className="text-right">Holders</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {roles.data.map((role) => (
-            <TableRow key={role.id}>
-              <TableCell>
-                <div className="flex flex-col gap-0.5">
-                  <span className="flex flex-wrap items-center gap-2">
-                    <Link href={`/admin/roles/${role.id}`} className="font-medium hover:underline">
-                      {role.display_name}
-                    </Link>
-                    {role.is_system ? <Badge intent="info">System</Badge> : null}
-                    {role.scope === "organization" ? (
-                      <Badge intent="outline">Organization</Badge>
-                    ) : null}
-                  </span>
-                  <span className="text-muted-foreground font-mono text-xs">{role.code}</span>
-                </div>
-              </TableCell>
-              <TableCell>
-                <StatusBadge domain="role" status={role.status} />
-              </TableCell>
-              <TableCell className="text-right tabular-nums">{role.permissions.length}</TableCell>
-              <TableCell className="text-right tabular-nums">{role.active_assignments}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <DataTable
+      aria-label="Roles"
+      columns={COLUMNS}
+      rows={roles.data ?? []}
+      rowKey={(role) => role.id}
+      sort={sort}
+      loading={roles.isPending}
+      skeletonRows={4}
+      error={
+        roles.isError ? (
+          <ErrorState error={roles.error} onRetry={() => void roles.refetch()} />
+        ) : undefined
+      }
+      empty={<EmptyState icon={ShieldCheck} title="No roles defined" />}
+    />
   );
 }

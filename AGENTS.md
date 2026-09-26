@@ -32,9 +32,10 @@ Portal access comes from `/auth/me` permissions (`src/shared/navigation/portals.
    enforces this.
 6. **Client-side data fetching.** Server Components render static chrome only.
 7. **Tailwind with design tokens, per `DESIGN.md`.** No inline styles, no raw or palette colors.
-   Reuse `design-system/primitives`. Buttons, tabs and badges are `rounded-full`. Use one cobalt
-   `default` button per region, and the `ink` variant only for marketplace promos. Cards are flat
-   (`border`, no shadow), and only floating layers get `shadow-panel`. No `font-semibold`.
+   Reuse `design-system/primitives` (styled after the SHMS frontend). Use one lime `default`
+   button per region, and the `ink` variant only for marketplace promos. Cards, tables, controls
+   and dialogs sit on `shadow-ring`; only floating panels get `shadow-panel`. Portal chrome is the
+   sidebar + top bar in `PortalLayout`.
 8. **TypeScript strict.** No `any`, no unexplained `@ts-expect-error`.
 
 ## Key commands

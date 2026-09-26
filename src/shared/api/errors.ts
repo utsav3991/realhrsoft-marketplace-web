@@ -11,6 +11,8 @@ export interface ProblemDetails {
   request_id?: string | null;
   detail?: string;
   errors?: { loc: (string | number)[]; msg: string }[];
+  /** Operation-specific members, e.g. `claim_id` on ALREADY_CLAIMED. */
+  [extension: string]: unknown;
 }
 
 export type ApiErrorCode =
@@ -33,6 +35,8 @@ export class ApiError extends Error {
   readonly requestId: string | undefined;
   /** Field name → message, from 422 validation errors (request body fields only). */
   readonly fieldErrors: Readonly<Record<string, string>>;
+  /** Problem Details members beyond the standard ones, e.g. `claim_id` on ALREADY_CLAIMED. */
+  readonly extensions: Readonly<Record<string, unknown>>;
 
   constructor(init: {
     status: number;
@@ -41,6 +45,7 @@ export class ApiError extends Error {
     detail?: string;
     requestId?: string;
     fieldErrors?: Record<string, string>;
+    extensions?: Record<string, unknown>;
   }) {
     super(init.detail ?? init.title);
     this.name = "ApiError";
@@ -50,6 +55,7 @@ export class ApiError extends Error {
     this.detail = init.detail;
     this.requestId = init.requestId;
     this.fieldErrors = init.fieldErrors ?? {};
+    this.extensions = init.extensions ?? {};
   }
 
   get isUnauthenticated(): boolean {
@@ -85,6 +91,23 @@ function fieldErrorsOf(problem: ProblemDetails): Record<string, string> {
   return fields;
 }
 
+const STANDARD_MEMBERS = new Set([
+  "type",
+  "title",
+  "status",
+  "code",
+  "instance",
+  "request_id",
+  "detail",
+  "errors",
+]);
+
+function extensionsOf(problem: ProblemDetails): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(problem).filter(([name]) => !STANDARD_MEMBERS.has(name)),
+  );
+}
+
 /** The single path from any failed API interaction to the error type the UI understands. */
 export function normalizeApiError(body: unknown, response?: Response): ApiError {
   if (isProblemDetails(body)) {
@@ -95,6 +118,7 @@ export function normalizeApiError(body: unknown, response?: Response): ApiError 
       detail: body.detail,
       requestId: body.request_id ?? response?.headers.get("x-request-id") ?? undefined,
       fieldErrors: fieldErrorsOf(body),
+      extensions: extensionsOf(body),
     });
   }
   if (response) {

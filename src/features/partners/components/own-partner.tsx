@@ -23,6 +23,7 @@ import { PartnerPermission, useCanInOrganization } from "@/shared/authorization"
 import { ConfirmDialog } from "@/shared/components/confirm-dialog";
 import { StatusBadge } from "@/shared/components/status-badge";
 import { ErrorState } from "@/shared/feedback/states";
+import { usePageParam } from "@/shared/hooks/use-page-param";
 
 import {
   useRegisterOwnPartner,
@@ -150,8 +151,8 @@ export function OwnPartnerRegistration() {
       <CardHeader>
         <CardTitle>Business details</CardTitle>
         <CardDescription>
-          Submitted for Aayulogic review as soon as you register. You can still correct the
-          details while the review is pending.
+          Submitted for Aayulogic review as soon as you register. You can still correct the details
+          while the review is pending.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -272,5 +273,11 @@ function ProfileWorkspace({
 }
 
 function OwnDecisions({ organizationId }: { organizationId: string }) {
-  return <DecisionHistoryCard decisions={useOwnPartnerDecisions(organizationId)} />;
+  const paging = usePageParam("decisions_");
+  return (
+    <DecisionHistoryCard
+      decisions={useOwnPartnerDecisions(organizationId, paging)}
+      paging={paging}
+    />
+  );
 }

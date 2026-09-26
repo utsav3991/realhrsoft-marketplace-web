@@ -9,6 +9,13 @@ import { IdentityPermission, type PermissionCode } from "@/shared/authorization"
 
 import { UserDetail } from "./user-detail";
 
+// Tables keep their page and sort in the URL.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  usePathname: () => "/",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 const USER_ID = "7d8f4c1e-0000-4000-8000-000000000001";
 
 const user: Schemas["UserDetail"] = {

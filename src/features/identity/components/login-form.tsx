@@ -1,15 +1,22 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { Alert, AlertDescription, AlertTitle } from "@/design-system/primitives/alert";
 import { Button } from "@/design-system/primitives/button";
+import {
+  Form,
+  FormAlert,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/design-system/primitives/form";
 import { Input } from "@/design-system/primitives/input";
-import { Label } from "@/design-system/primitives/label";
 import { ApiError, errorMessage } from "@/shared/api";
 import { useSession } from "@/shared/auth";
 import { defaultPortalPath } from "@/shared/navigation/portals";
@@ -35,7 +42,7 @@ export function LoginForm() {
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
-  const { errors, isSubmitting } = form.formState;
+  const { isSubmitting } = form.formState;
 
   // Already signed in (or just signed in): continue to the requested page.
   useEffect(() => {
@@ -60,53 +67,48 @@ export function LoginForm() {
   const busy = isSubmitting || status === "authenticated";
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-4">
-      {failure ? (
-        <Alert variant="destructive">
-          <AlertCircle aria-hidden />
-          <AlertTitle>Sign-in failed</AlertTitle>
-          <AlertDescription>{failure}</AlertDescription>
-        </Alert>
-      ) : null}
+    <Form {...form}>
+      <form onSubmit={onSubmit} noValidate className="space-y-5">
+        {failure ? <FormAlert title="Sign-in failed">{failure}</FormAlert> : null}
 
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          autoComplete="username"
-          aria-invalid={errors.email ? true : undefined}
-          aria-describedby={errors.email ? "email-error" : undefined}
-          {...form.register("email")}
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  autoComplete="username"
+                  placeholder="you@company.com"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {errors.email ? (
-          <p id="email-error" className="text-destructive text-sm">
-            {errors.email.message}
-          </p>
-        ) : null}
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          aria-invalid={errors.password ? true : undefined}
-          aria-describedby={errors.password ? "password-error" : undefined}
-          {...form.register("password")}
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input type="password" autoComplete="current-password" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {errors.password ? (
-          <p id="password-error" className="text-destructive text-sm">
-            {errors.password.message}
-          </p>
-        ) : null}
-      </div>
 
-      <Button type="submit" className="w-full" disabled={busy}>
-        {busy ? <Loader2 className="animate-spin" aria-hidden /> : null}
-        Sign in
-      </Button>
-    </form>
+        <Button type="submit" className="w-full" disabled={busy}>
+          {busy ? <Loader2 className="animate-spin" aria-hidden /> : null}
+          Sign in
+        </Button>
+      </form>
+    </Form>
   );
 }

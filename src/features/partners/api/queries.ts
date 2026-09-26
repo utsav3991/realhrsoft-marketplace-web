@@ -1,22 +1,30 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-import { api, nextOffset, PAGE_SIZE, pathId, unwrap, type Schemas } from "@/shared/api";
+import type { SortOrdering } from "@/design-system/components/data-table";
+import { api, pathId, unwrap, type Page, type Schemas } from "@/shared/api";
 
 export type Partner = Schemas["Partner"];
 export type PartnerDecision = Schemas["PartnerDecision"];
 export type PartnerStatus = Partner["status"];
 export type IntakePath = Partner["intake_path"];
+export type PartnerSource = Partner["source"];
+
+/** Partner columns the API sorts by (`ordering`). */
+export const PARTNER_SORTS = ["business_name", "organization_name", "submitted_at"] as const;
+export type PartnerOrdering = SortOrdering<(typeof PARTNER_SORTS)[number]>;
 
 export interface PartnerFilters {
   search: string;
   status: PartnerStatus | null;
   intakePath: IntakePath | null;
+  source: PartnerSource | null;
+  ordering: PartnerOrdering | null;
 }
 
 export const partnerKeys = {
   all: ["partners"] as const,
   lists: () => [...partnerKeys.all, "list"] as const,
-  list: (filters: PartnerFilters) => [...partnerKeys.lists(), filters] as const,
+  list: (filters: PartnerFilters, page: Page) => [...partnerKeys.lists(), filters, page] as const,
   detail: (id: string) => [...partnerKeys.all, "detail", id] as const,
   decisions: (id: string) => [...partnerKeys.all, "decisions", id] as const,
   // The selected organization's own registration (portal).
@@ -26,11 +34,10 @@ export const partnerKeys = {
 };
 
 /** The review queue and partner directory (Aayulogic administration). */
-export function usePartners(filters: PartnerFilters) {
-  return useInfiniteQuery({
-    queryKey: partnerKeys.list(filters),
-    initialPageParam: 0,
-    queryFn: ({ pageParam, signal }) =>
+export function usePartners(filters: PartnerFilters, page: Page) {
+  return useQuery({
+    queryKey: partnerKeys.list(filters, page),
+    queryFn: ({ signal }) =>
       unwrap(
         api.GET("/admin/partners", {
           params: {
@@ -38,20 +45,23 @@ export function usePartners(filters: PartnerFilters) {
               search: filters.search || undefined,
               status: filters.status ?? undefined,
               intake_path: filters.intakePath ?? undefined,
-              offset: pageParam,
-              limit: PAGE_SIZE,
+              source: filters.source ?? undefined,
+              ordering: filters.ordering ? [filters.ordering] : undefined,
+              offset: page.offset,
+              limit: page.limit,
             },
           },
           signal,
         }),
       ),
-    getNextPageParam: nextOffset,
+    placeholderData: keepPreviousData,
   });
 }
 
-export function usePartner(partnerId: string) {
+export function usePartner(partnerId: string, { enabled = true } = {}) {
   return useQuery({
     queryKey: partnerKeys.detail(partnerId),
+    enabled,
     queryFn: ({ signal }) =>
       unwrap(
         api.GET("/admin/partners/{partner_id}", {
@@ -63,21 +73,20 @@ export function usePartner(partnerId: string) {
 }
 
 /** Every verify/reject decision on a partner, newest first. */
-export function usePartnerDecisions(partnerId: string) {
-  return useInfiniteQuery({
-    queryKey: partnerKeys.decisions(partnerId),
-    initialPageParam: 0,
-    queryFn: ({ pageParam, signal }) =>
+export function usePartnerDecisions(partnerId: string, page: Page) {
+  return useQuery({
+    queryKey: [...partnerKeys.decisions(partnerId), page],
+    queryFn: ({ signal }) =>
       unwrap(
         api.GET("/admin/partners/{partner_id}/decisions", {
           params: {
             path: { partner_id: pathId(partnerId) },
-            query: { offset: pageParam, limit: PAGE_SIZE },
+            query: { offset: page.offset, limit: page.limit },
           },
           signal,
         }),
       ),
-    getNextPageParam: nextOffset,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -96,20 +105,19 @@ export function useOwnPartner(organizationId: string, { enabled = true } = {}) {
   });
 }
 
-export function useOwnPartnerDecisions(organizationId: string) {
-  return useInfiniteQuery({
-    queryKey: partnerKeys.ownDecisions(organizationId),
-    initialPageParam: 0,
-    queryFn: ({ pageParam, signal }) =>
+export function useOwnPartnerDecisions(organizationId: string, page: Page) {
+  return useQuery({
+    queryKey: [...partnerKeys.ownDecisions(organizationId), page],
+    queryFn: ({ signal }) =>
       unwrap(
         api.GET("/partner/me/decisions", {
           params: {
             header: { "X-Organization-ID": organizationId },
-            query: { offset: pageParam, limit: PAGE_SIZE },
+            query: { offset: page.offset, limit: page.limit },
           },
           signal,
         }),
       ),
-    getNextPageParam: nextOffset,
+    placeholderData: keepPreviousData,
   });
 }

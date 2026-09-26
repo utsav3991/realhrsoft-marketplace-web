@@ -6,7 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
-import { FormField } from "@/design-system/components/form-field";
+import { Field, fieldDescriptionIds } from "@/design-system/components/field";
 import { Button } from "@/design-system/primitives/button";
 import {
   Card,
@@ -21,8 +21,10 @@ import { isUuid } from "@/shared/api";
 import { OrganizationAdminPermission, useCan } from "@/shared/authorization";
 
 import { useRegisterPartner } from "../api/mutations";
+import type { PartnerSource } from "../api/queries";
 import { EMPTY_PROFILE, profileBody } from "../schemas/partner";
 import { ProfileForm } from "./profile-form";
+import { SourceField } from "./source-field";
 
 /**
  * Assisted intake: Aayulogic registers an existing organization as a pending partner on its
@@ -86,20 +88,22 @@ function ChooseOrganization() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={onSubmit} noValidate className="flex flex-wrap items-end gap-2">
-          <FormField id="organization-id" label="Organization ID" error={error} className="grow">
+        <form onSubmit={onSubmit} noValidate className="flex flex-wrap items-start gap-2">
+          <Field id="organization-id" label="Organization ID" error={error} className="grow">
             <Input
               id="organization-id"
               className="font-mono"
               autoComplete="off"
               spellCheck={false}
               aria-invalid={error ? true : undefined}
-              aria-describedby={error ? "organization-id-error" : undefined}
+              aria-describedby={fieldDescriptionIds("organization-id", { error })}
               value={value}
               onChange={(event) => setValue(event.target.value)}
             />
-          </FormField>
-          <Button type="submit">Continue</Button>
+          </Field>
+          <Button type="submit" className="mt-5.5">
+            Continue
+          </Button>
         </form>
       </CardContent>
     </Card>
@@ -119,6 +123,7 @@ function RegistrationForm({ organizationId }: { organizationId: string }) {
   const router = useRouter();
   const register = useRegisterPartner();
   const canViewOrganization = useCan(OrganizationAdminPermission.ORGANIZATION_VIEW);
+  const [source, setSource] = useState<PartnerSource>("partner_organization");
 
   return (
     <Card>
@@ -147,11 +152,14 @@ function RegistrationForm({ organizationId }: { organizationId: string }) {
               ...profileBody(values),
               reason: values.reason,
               organization_id: organizationId,
+              source,
             });
             toast.success(`Registered ${partner.business_name}`);
             router.push(`/admin/partners/${partner.id}`);
           }}
-        />
+        >
+          <SourceField value={source} onChange={setSource} />
+        </ProfileForm>
       </CardContent>
     </Card>
   );

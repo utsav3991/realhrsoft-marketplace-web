@@ -19,6 +19,18 @@ describe("normalizeApiError", () => {
       detail: "Role was modified",
       requestId: "req-1",
     });
+    expect(error.extensions).toEqual({});
+  });
+
+  it("keeps operation-specific members as extensions", () => {
+    const error = normalizeApiError({
+      type: "about:blank",
+      title: "Conflict",
+      status: 409,
+      code: "ALREADY_CLAIMED",
+      claim_id: "0b7c1f0e-6b1a-4a57-9a55-2f4d9b8f1c11",
+    });
+    expect(error.extensions).toEqual({ claim_id: "0b7c1f0e-6b1a-4a57-9a55-2f4d9b8f1c11" });
   });
 
   it("turns body validation errors into field errors", () => {

@@ -2,9 +2,9 @@
 
 import { Handshake, Plus, Search } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
+import { type DataTableColumns } from "@/design-system/components/data-table";
 import { EmptyState } from "@/design-system/components/empty-state";
 import { Button } from "@/design-system/primitives/button";
 import { Input } from "@/design-system/primitives/input";
@@ -15,22 +15,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/design-system/primitives/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/design-system/primitives/table";
 import { PartnerAdminPermission, useCan } from "@/shared/authorization";
+import { QueryDataTable, type RowOf } from "@/shared/components/query-data-table";
+import { useSortParam } from "@/shared/hooks/use-sort-param";
 import { StatusBadge } from "@/shared/components/status-badge";
-import { ListSkeleton } from "@/shared/feedback/list-skeleton";
-import { ErrorState } from "@/shared/feedback/states";
 import { formatDateTime } from "@/shared/lib/format";
+import { usePageParam } from "@/shared/hooks/use-page-param";
+import { useUrlParams } from "@/shared/hooks/use-url-params";
 
-import { usePartners, type IntakePath, type PartnerStatus } from "../api/queries";
-import { INTAKE_LABEL } from "./partner-details";
+import {
+  PARTNER_SORTS,
+  usePartners,
+  type IntakePath,
+  type PartnerSource,
+  type PartnerStatus,
+} from "../api/queries";
+import { INTAKE_LABEL, SOURCE_LABEL } from "./partner-details";
 
 const ALL = "all";
 const STATUSES: readonly { value: PartnerStatus; label: string }[] = [
@@ -39,6 +39,7 @@ const STATUSES: readonly { value: PartnerStatus; label: string }[] = [
   { value: "rejected", label: "Rejected" },
 ];
 const INTAKE_PATHS = Object.keys(INTAKE_LABEL) as IntakePath[];
+const SOURCES = Object.keys(SOURCE_LABEL) as PartnerSource[];
 
 function oneOf<T extends string>(value: string | null, allowed: readonly T[]): T | null {
   return allowed.find((candidate) => candidate === value) ?? null;
@@ -46,25 +47,25 @@ function oneOf<T extends string>(value: string | null, allowed: readonly T[]): T
 
 /** Filters and search live in the URL, so the review queue can be shared and reloaded. */
 export function PartnersDirectory() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const { searchParams, set } = useUrlParams();
   const search = searchParams.get("search") ?? "";
   const status = oneOf(
     searchParams.get("status"),
     STATUSES.map((s) => s.value),
   );
   const intakePath = oneOf(searchParams.get("intake_path"), INTAKE_PATHS);
+  const source = oneOf(searchParams.get("source"), SOURCES);
   const [draft, setDraft] = useState(search);
-  const partners = usePartners({ search, status, intakePath });
+  const sort = useSortParam(PARTNER_SORTS);
+  const paging = usePageParam();
+  const partners = usePartners(
+    { search, status, intakePath, source, ordering: sort.value },
+    paging,
+  );
   const canCreate = useCan(PartnerAdminPermission.PARTNER_CREATE);
 
   function setParam(name: string, value: string | null) {
-    const params = new URLSearchParams(searchParams);
-    if (value) params.set(name, value);
-    else params.delete(name);
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname);
+    set({ [name]: value });
   }
 
   function onSearch(event: FormEvent<HTMLFormElement>) {
@@ -72,8 +73,52 @@ export function PartnersDirectory() {
     setParam("search", draft.trim() || null);
   }
 
-  const rows = partners.data?.pages.flatMap((page) => page.results) ?? [];
-  const filtered = Boolean(search || status || intakePath);
+  const columns: DataTableColumns<RowOf<typeof partners>> = [
+    {
+      id: "business",
+      sortKey: "business_name",
+      header: "Business",
+      cell: (partner) => (
+        <Link href={`/admin/partners/${partner.id}`} className="font-medium hover:underline">
+          {partner.business_name}
+        </Link>
+      ),
+    },
+    {
+      id: "organization",
+      sortKey: "organization_name",
+      header: "Organization",
+      className: "hidden md:table-cell",
+      cellClassName: "text-muted-foreground",
+      cell: (partner) => partner.organization_name,
+    },
+    {
+      id: "status",
+      header: "Status",
+      cell: (partner) => <StatusBadge domain="partner" status={partner.status} />,
+    },
+    {
+      id: "type",
+      header: "Type",
+      cellClassName: "text-muted-foreground",
+      cell: (partner) => SOURCE_LABEL[partner.source],
+    },
+    {
+      id: "intake",
+      header: "Intake",
+      className: "hidden lg:table-cell",
+      cellClassName: "text-muted-foreground",
+      cell: (partner) => INTAKE_LABEL[partner.intake_path],
+    },
+    {
+      id: "submitted",
+      sortKey: "submitted_at",
+      header: "Submitted",
+      cellClassName: "text-muted-foreground",
+      cell: (partner) => formatDateTime(partner.submitted_at),
+    },
+  ];
+  const filtered = Boolean(search || status || intakePath || source);
 
   return (
     <div className="space-y-4">
@@ -124,6 +169,22 @@ export function PartnersDirectory() {
               ))}
             </SelectContent>
           </Select>
+          <Select
+            value={source ?? ALL}
+            onValueChange={(value) => setParam("source", value === ALL ? null : value)}
+          >
+            <SelectTrigger className="w-52" aria-label="Filter by partner type">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Any partner type</SelectItem>
+              {SOURCES.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {SOURCE_LABEL[option]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         {canCreate ? (
           <Button asChild>
@@ -135,69 +196,21 @@ export function PartnersDirectory() {
         ) : null}
       </div>
 
-      {partners.isPending ? (
-        <ListSkeleton />
-      ) : partners.isError ? (
-        <ErrorState error={partners.error} onRetry={() => void partners.refetch()} />
-      ) : rows.length === 0 ? (
-        <EmptyState
-          icon={Handshake}
-          title={status === "pending" ? "Nothing awaiting review" : "No partners found"}
-          description={filtered ? "Try different filters." : undefined}
-        />
-      ) : (
-        <div className="rounded-xl border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Business</TableHead>
-                <TableHead>Organization</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Intake</TableHead>
-                <TableHead>Submitted</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((partner) => (
-                <TableRow key={partner.id}>
-                  <TableCell>
-                    <Link
-                      href={`/admin/partners/${partner.id}`}
-                      className="font-medium hover:underline"
-                    >
-                      {partner.business_name}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {partner.organization_name}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge domain="partner" status={partner.status} />
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {INTAKE_LABEL[partner.intake_path]}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDateTime(partner.submitted_at)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-
-      {partners.hasNextPage ? (
-        <div className="flex justify-center">
-          <Button
-            variant="outline"
-            onClick={() => void partners.fetchNextPage()}
-            disabled={partners.isFetchingNextPage}
-          >
-            {partners.isFetchingNextPage ? "Loading…" : "Load more"}
-          </Button>
-        </div>
-      ) : null}
+      <QueryDataTable
+        aria-label="Partners"
+        query={partners}
+        columns={columns}
+        sort={sort}
+        paging={paging}
+        rowKey={(partner) => partner.id}
+        empty={
+          <EmptyState
+            icon={Handshake}
+            title={status === "pending" ? "Nothing awaiting review" : "No partners found"}
+            description={filtered ? "Try different filters." : undefined}
+          />
+        }
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { DataTable } from "@/design-system/components/data-table";
 import { EmptyState } from "@/design-system/components/empty-state";
 import { PageHeader } from "@/design-system/components/page-header";
 import { Button } from "@/design-system/primitives/button";
@@ -16,14 +17,6 @@ import {
   CardTitle,
 } from "@/design-system/primitives/card";
 import { Skeleton } from "@/design-system/primitives/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/design-system/primitives/table";
 import { ApiError, type Schemas } from "@/shared/api";
 import { useSession } from "@/shared/auth";
 import { Can, IdentityPermission, useCan } from "@/shared/authorization";
@@ -35,6 +28,7 @@ import { useDisableUser, useReactivateUser, useRevokeRole } from "../api/mutatio
 import { useUser } from "../api/queries";
 import { AssignRoleDialog } from "./assign-role-dialog";
 import { ReasonDialog } from "@/shared/components/reason-dialog";
+import { useSortParam } from "@/shared/hooks/use-sort-param";
 
 type User = Schemas["UserDetail"];
 type Grant = Schemas["Grant"];
@@ -50,7 +44,14 @@ function BackToUsers() {
   );
 }
 
-export function UserDetail({ userId }: { userId: string }) {
+export function UserDetail({
+  userId,
+  renderExtra,
+}: {
+  userId: string;
+  /** Cards other features add below the account, e.g. an employee's employment. */
+  renderExtra?: (user: User) => ReactNode;
+}) {
   const user = useUser(userId);
 
   if (user.isPending) {
@@ -75,10 +76,10 @@ export function UserDetail({ userId }: { userId: string }) {
       </div>
     );
   }
-  return <LoadedUser user={user.data} />;
+  return <LoadedUser user={user.data} extra={renderExtra?.(user.data)} />;
 }
 
-function LoadedUser({ user }: { user: User }) {
+function LoadedUser({ user, extra }: { user: User; extra?: ReactNode }) {
   const { actor } = useSession();
   // The backend refuses every change to your own account; don't offer them.
   const isSelf = actor?.id === user.id;
@@ -114,6 +115,7 @@ function LoadedUser({ user }: { user: User }) {
       </Card>
 
       <GrantsCard user={user} isSelf={isSelf} />
+      {extra}
     </div>
   );
 }
@@ -203,6 +205,7 @@ function GrantsCard({ user, isSelf }: { user: User; isSelf: boolean }) {
   const mayRevoke = (grant: Grant) =>
     !isSelf && (grant.organization_id ? canManageOrganizationRoles : canRevoke);
   const showRevoke = user.grants.some(mayRevoke);
+  const sort = useSortParam(["role", "scope", "granted"] as const, "grants_ordering");
 
   return (
     <Card>
@@ -223,75 +226,79 @@ function GrantsCard({ user, isSelf }: { user: User; isSelf: boolean }) {
         ) : null}
       </CardHeader>
       <CardContent>
-        {user.grants.length === 0 ? (
-          <EmptyState icon={KeyRound} title="No roles granted" className="py-8" />
-        ) : (
-          <div className="rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Scope</TableHead>
-                  <TableHead>Granted</TableHead>
-                  <TableHead>Granted by</TableHead>
-                  {showRevoke ? (
-                    <TableHead>
-                      <span className="sr-only">Actions</span>
-                    </TableHead>
-                  ) : null}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {user.grants.map((grant) => (
-                  <TableRow key={grant.assignment_id}>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        {canListRoles ? (
-                          <Link
-                            href={`/admin/roles/${grant.role_id}`}
-                            className="font-medium hover:underline"
-                          >
-                            {grant.role_display_name}
-                          </Link>
-                        ) : (
-                          <span className="font-medium">{grant.role_display_name}</span>
-                        )}
-                        <span className="text-muted-foreground font-mono text-xs">
-                          {grant.role_code}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {grant.organization_id ? (
-                        <span className="flex flex-col">
-                          Organization
-                          <span className="font-mono text-xs">{grant.organization_id}</span>
-                        </span>
-                      ) : (
-                        "Platform-wide"
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatDateTime(grant.granted_at)}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground font-mono text-xs">
-                      {grant.granted_by ?? "System"}
-                    </TableCell>
-                    {showRevoke ? (
-                      <TableCell className="text-right">
-                        {mayRevoke(grant) ? (
-                          <Button variant="ghost" size="sm" onClick={() => setRevoking(grant)}>
-                            Revoke
-                          </Button>
-                        ) : null}
-                      </TableCell>
-                    ) : null}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+        <DataTable
+          aria-label="Role grants"
+          className="rounded-lg"
+          rows={user.grants}
+          rowKey={(grant) => grant.assignment_id}
+          sort={sort}
+          empty={<EmptyState icon={KeyRound} title="No roles granted" className="py-8" />}
+          columns={[
+            {
+              id: "role",
+              header: "Role",
+              sortKey: "role",
+              sortValue: (grant) => grant.role_display_name,
+              cell: (grant) => (
+                <div className="flex flex-col">
+                  {canListRoles ? (
+                    <Link
+                      href={`/admin/roles/${grant.role_id}`}
+                      className="font-medium hover:underline"
+                    >
+                      {grant.role_display_name}
+                    </Link>
+                  ) : (
+                    <span className="font-medium">{grant.role_display_name}</span>
+                  )}
+                  <span className="text-muted-foreground font-mono text-xs">{grant.role_code}</span>
+                </div>
+              ),
+            },
+            {
+              id: "scope",
+              header: "Scope",
+              sortKey: "scope",
+              sortValue: (grant) => (grant.organization_id ? 1 : 0),
+              cellClassName: "text-muted-foreground",
+              cell: (grant) =>
+                grant.organization_id ? (
+                  <span className="flex flex-col">
+                    Organization
+                    <span className="font-mono text-xs">{grant.organization_id}</span>
+                  </span>
+                ) : (
+                  "Platform-wide"
+                ),
+            },
+            {
+              id: "granted",
+              header: "Granted",
+              sortKey: "granted",
+              sortValue: (grant) => grant.granted_at,
+              cellClassName: "text-muted-foreground",
+              cell: (grant) => formatDateTime(grant.granted_at),
+            },
+            {
+              id: "granted-by",
+              header: "Granted by",
+              className: "hidden md:table-cell",
+              cellClassName: "text-muted-foreground font-mono text-xs",
+              cell: (grant) => grant.granted_by ?? "System",
+            },
+            showRevoke && {
+              id: "actions",
+              header: <span className="sr-only">Actions</span>,
+              className: "text-right",
+              cell: (grant) =>
+                mayRevoke(grant) ? (
+                  <Button variant="ghost" size="sm" onClick={() => setRevoking(grant)}>
+                    Revoke
+                  </Button>
+                ) : null,
+            },
+          ]}
+        />
       </CardContent>
 
       {showAssign ? (

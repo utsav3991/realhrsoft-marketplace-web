@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { PageHeader } from "@/design-system/components/page-header";
 import { OwnPartnerProfile } from "@/features/partners/components/own-partner";
@@ -17,7 +18,9 @@ export default function PartnerProfilePage() {
       />
       <RequireOrganization capacity="any">
         <RequirePermission anyOf={[PartnerPermission.PROFILE_VIEW]} inOrganization>
-          <OwnPartnerProfile />
+          <Suspense>
+            <OwnPartnerProfile />
+          </Suspense>
         </RequirePermission>
       </RequireOrganization>
     </div>

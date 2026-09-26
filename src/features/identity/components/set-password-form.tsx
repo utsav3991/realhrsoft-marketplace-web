@@ -8,8 +8,16 @@ import { useForm } from "react-hook-form";
 
 import { Alert, AlertDescription, AlertTitle } from "@/design-system/primitives/alert";
 import { Button } from "@/design-system/primitives/button";
+import {
+  Form,
+  FormAlert,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/design-system/primitives/form";
 import { Input } from "@/design-system/primitives/input";
-import { Label } from "@/design-system/primitives/label";
 import { Skeleton } from "@/design-system/primitives/skeleton";
 import { errorMessage } from "@/shared/api";
 import { applyApiFieldErrors } from "@/shared/forms/api-field-errors";
@@ -40,7 +48,7 @@ export function SetPasswordForm({ uidb64, token }: { uidb64: string; token: stri
     resolver: zodResolver(setPasswordSchema),
     defaultValues: { password: "", confirm_password: "" },
   });
-  const { errors, isSubmitting } = form.formState;
+  const { isSubmitting } = form.formState;
 
   if (link.isPending) return <Skeleton className="h-40 w-full" />;
   if (link.isError || !link.data.valid) {
@@ -84,41 +92,32 @@ export function SetPasswordForm({ uidb64, token }: { uidb64: string; token: stri
   });
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-4">
-      {failure ? (
-        <Alert variant="destructive">
-          <AlertCircle aria-hidden />
-          <AlertTitle>Password not set</AlertTitle>
-          <AlertDescription>{failure}</AlertDescription>
-        </Alert>
-      ) : null}
+    <Form {...form}>
+      <form onSubmit={onSubmit} noValidate className="space-y-5">
+        {failure ? <FormAlert title="Password not set">{failure}</FormAlert> : null}
 
-      {FIELDS.map((field) => {
-        const error = errors[field.name];
-        return (
-          <div key={field.name} className="space-y-2">
-            <Label htmlFor={field.name}>{field.label}</Label>
-            <Input
-              id={field.name}
-              type="password"
-              autoComplete={field.autoComplete}
-              aria-invalid={error ? true : undefined}
-              aria-describedby={error ? `${field.name}-error` : undefined}
-              {...form.register(field.name)}
-            />
-            {error ? (
-              <p id={`${field.name}-error`} className="text-destructive text-sm">
-                {error.message}
-              </p>
-            ) : null}
-          </div>
-        );
-      })}
+        {FIELDS.map((spec) => (
+          <FormField
+            key={spec.name}
+            control={form.control}
+            name={spec.name}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{spec.label}</FormLabel>
+                <FormControl>
+                  <Input type="password" autoComplete={spec.autoComplete} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ))}
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? <Loader2 className="animate-spin" aria-hidden /> : null}
-        Set password
-      </Button>
-    </form>
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? <Loader2 className="animate-spin" aria-hidden /> : null}
+          Set password
+        </Button>
+      </form>
+    </Form>
   );
 }

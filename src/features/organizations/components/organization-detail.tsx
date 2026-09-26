@@ -1,12 +1,14 @@
 "use client";
 
-import { ArrowLeft, Handshake, Pencil, Plus, Users } from "lucide-react";
+import { ArrowLeft, Building2, Gift, Handshake, Pencil, Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { type DataTableColumns } from "@/design-system/components/data-table";
 import { EmptyState } from "@/design-system/components/empty-state";
 import { PageHeader } from "@/design-system/components/page-header";
+import { Badge } from "@/design-system/primitives/badge";
 import { Button } from "@/design-system/primitives/button";
 import {
   Card,
@@ -16,16 +18,9 @@ import {
   CardTitle,
 } from "@/design-system/primitives/card";
 import { Skeleton } from "@/design-system/primitives/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/design-system/primitives/table";
 import { ApiError, type Schemas } from "@/shared/api";
 import {
+  BenefitAdminPermission,
   IdentityPermission,
   OrganizationAdminPermission,
   PartnerAdminPermission,
@@ -34,13 +29,20 @@ import {
 import { Detail, DetailList } from "@/shared/components/details";
 import { FieldsDialog } from "@/shared/components/fields-dialog";
 import { ReasonDialog } from "@/shared/components/reason-dialog";
+import { QueryDataTable } from "@/shared/components/query-data-table";
 import { StatusBadge } from "@/shared/components/status-badge";
-import { ListSkeleton } from "@/shared/feedback/list-skeleton";
 import { ErrorState } from "@/shared/feedback/states";
 import { formatDateTime } from "@/shared/lib/format";
+import { usePageParam } from "@/shared/hooks/use-page-param";
+import { useSortParam } from "@/shared/hooks/use-sort-param";
 
-import { useEndMembership, useUpdateOrganization, useVerifyMembership } from "../api/mutations";
-import { useMemberships, useOrganization } from "../api/queries";
+import {
+  useEndMembership,
+  useSetEmployerCapacity,
+  useUpdateOrganization,
+  useVerifyMembership,
+} from "../api/mutations";
+import { MEMBERSHIP_SORTS, useMemberships, useOrganization } from "../api/queries";
 
 type Organization = Schemas["Organization"];
 type Membership = Schemas["PortalMembership"];
@@ -94,6 +96,7 @@ export function OrganizationDetail({ organizationId }: { organizationId: string 
       <BackToOrganizations />
       <PageHeader title={organization.data.name} />
       <IdentityCard organization={organization.data} />
+      <EmployerCard organization={organization.data} />
       <MembershipsCard organizationId={organizationId} />
     </div>
   );
@@ -111,8 +114,8 @@ function IdentityCard({ organization }: { organization: Organization }) {
         <div className="space-y-1.5">
           <CardTitle>Organization</CardTitle>
           <CardDescription>
-            Identity only. A partner registration is a separate record; Employer capacity is not
-            provisioned yet.
+            Identity only. A partner registration and the Employer capacity are separate and
+            independent.
           </CardDescription>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -168,8 +171,83 @@ function IdentityCard({ organization }: { organization: Organization }) {
   );
 }
 
+/** EMR-01: the Employer capacity, independent of partner status and set by an administrator. */
+function EmployerCard({ organization }: { organization: Organization }) {
+  const [changing, setChanging] = useState(false);
+  const setCapacity = useSetEmployerCapacity(organization.id);
+  const canManage = useCan(OrganizationAdminPermission.EMPLOYER_MANAGE);
+  const canViewBenefits = useCan(BenefitAdminPermission.BENEFIT_VIEW);
+  const enabling = !organization.is_employer;
+
+  return (
+    <Card>
+      <CardHeader className="flex-row items-start justify-between gap-4">
+        <div className="space-y-1.5">
+          <CardTitle>Employer</CardTitle>
+          <CardDescription>
+            Lets members with the Company Benefit permissions publish benefits to this
+            organization&apos;s own employees.
+          </CardDescription>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {canViewBenefits && organization.is_employer ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/admin/company-benefits?organization_id=${organization.id}`}>
+                <Gift aria-hidden />
+                Benefits
+              </Link>
+            </Button>
+          ) : null}
+          {canManage ? (
+            <Button variant="outline" size="sm" onClick={() => setChanging(true)}>
+              <Building2 aria-hidden />
+              {enabling ? "Turn on" : "Turn off"}
+            </Button>
+          ) : null}
+        </div>
+      </CardHeader>
+      <CardContent>
+        <DetailList>
+          <Detail label="Employer capacity">
+            {organization.is_employer ? (
+              <Badge intent="success">On</Badge>
+            ) : (
+              <Badge intent="outline">Off</Badge>
+            )}
+          </Detail>
+          {organization.employer_enabled_at ? (
+            <Detail label="Turned on">{formatDateTime(organization.employer_enabled_at)}</Detail>
+          ) : null}
+        </DetailList>
+      </CardContent>
+      <ReasonDialog
+        open={changing}
+        onOpenChange={setChanging}
+        title={enabling ? "Turn on the Employer capacity?" : "Turn off the Employer capacity?"}
+        description={
+          enabling
+            ? "Members with the Company Benefit permissions can then create and publish benefits for this organization's employees. Benefits it had before become visible again in their stored states."
+            : "Its employees stop seeing its benefits at once and members can no longer manage them. Benefits and claims are kept and return if you turn it on again."
+        }
+        confirmLabel={enabling ? "Turn on" : "Turn off"}
+        destructive={!enabling}
+        onConfirm={async (reason) => {
+          await setCapacity.mutateAsync({
+            enabled: enabling,
+            reason,
+            expected_version: organization.version,
+          });
+          toast.success(enabling ? "Employer capacity turned on" : "Employer capacity turned off");
+        }}
+      />
+    </Card>
+  );
+}
+
 function MembershipsCard({ organizationId }: { organizationId: string }) {
-  const memberships = useMemberships(organizationId);
+  const sort = useSortParam(MEMBERSHIP_SORTS);
+  const paging = usePageParam();
+  const memberships = useMemberships(organizationId, sort.value, paging);
   const verify = useVerifyMembership(organizationId);
   const end = useEndMembership(organizationId);
   const canManage = useCan(OrganizationAdminPermission.MEMBERSHIP_MANAGE);
@@ -177,17 +255,53 @@ function MembershipsCard({ organizationId }: { organizationId: string }) {
   const [verifying, setVerifying] = useState(false);
   const [ending, setEnding] = useState<Membership | null>(null);
 
-  const rows = memberships.data?.pages.flatMap((page) => page.results) ?? [];
-
-  function userLink(userId: string) {
-    return canViewUsers ? (
-      <Link href={`/admin/users/${userId}`} className="hover:underline">
-        {userId}
-      </Link>
-    ) : (
-      userId
-    );
-  }
+  const columns: DataTableColumns<Membership> = [
+    {
+      id: "user",
+      header: "User",
+      cellClassName: "font-mono text-xs",
+      cell: (membership) =>
+        canViewUsers ? (
+          <Link href={`/admin/users/${membership.user_id}`} className="hover:underline">
+            {membership.user_id}
+          </Link>
+        ) : (
+          membership.user_id
+        ),
+    },
+    {
+      id: "status",
+      header: "Status",
+      cell: (membership) => (
+        <StatusBadge domain="membership" status={membership.ended_at ? "ended" : "current"} />
+      ),
+    },
+    {
+      id: "verified",
+      sortKey: "verified_at",
+      header: "Verified",
+      cellClassName: "text-muted-foreground",
+      cell: (membership) => formatDateTime(membership.verified_at),
+    },
+    {
+      id: "ended",
+      sortKey: "ended_at",
+      header: "Ended",
+      cellClassName: "text-muted-foreground",
+      cell: (membership) => (membership.ended_at ? formatDateTime(membership.ended_at) : "—"),
+    },
+    canManage && {
+      id: "actions",
+      header: <span className="sr-only">Actions</span>,
+      className: "text-right",
+      cell: (membership) =>
+        membership.ended_at ? null : (
+          <Button variant="ghost" size="sm" onClick={() => setEnding(membership)}>
+            End
+          </Button>
+        ),
+    },
+  ];
 
   return (
     <Card>
@@ -207,73 +321,17 @@ function MembershipsCard({ organizationId }: { organizationId: string }) {
         ) : null}
       </CardHeader>
       <CardContent className="space-y-4">
-        {memberships.isPending ? (
-          <ListSkeleton rows={3} />
-        ) : memberships.isError ? (
-          <ErrorState error={memberships.error} onRetry={() => void memberships.refetch()} />
-        ) : rows.length === 0 ? (
-          <EmptyState icon={Users} title="No members yet" className="py-8" />
-        ) : (
-          <div className="rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Verified</TableHead>
-                  <TableHead>Ended</TableHead>
-                  {canManage ? (
-                    <TableHead>
-                      <span className="sr-only">Actions</span>
-                    </TableHead>
-                  ) : null}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((membership) => (
-                  <TableRow key={membership.id}>
-                    <TableCell className="font-mono text-xs">
-                      {userLink(membership.user_id)}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge
-                        domain="membership"
-                        status={membership.ended_at ? "ended" : "current"}
-                      />
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatDateTime(membership.verified_at)}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {membership.ended_at ? formatDateTime(membership.ended_at) : "—"}
-                    </TableCell>
-                    {canManage ? (
-                      <TableCell className="text-right">
-                        {membership.ended_at ? null : (
-                          <Button variant="ghost" size="sm" onClick={() => setEnding(membership)}>
-                            End
-                          </Button>
-                        )}
-                      </TableCell>
-                    ) : null}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-
-        {memberships.hasNextPage ? (
-          <div className="flex justify-center">
-            <Button
-              variant="outline"
-              onClick={() => void memberships.fetchNextPage()}
-              disabled={memberships.isFetchingNextPage}
-            >
-              {memberships.isFetchingNextPage ? "Loading…" : "Load more"}
-            </Button>
-          </div>
-        ) : null}
+        <QueryDataTable
+          aria-label="Portal members"
+          query={memberships}
+          sort={sort}
+          paging={paging}
+          columns={columns}
+          rowKey={(membership) => membership.id}
+          skeletonRows={3}
+          className="rounded-lg"
+          empty={<EmptyState icon={Users} title="No members yet" className="py-8" />}
+        />
       </CardContent>
 
       <FieldsDialog

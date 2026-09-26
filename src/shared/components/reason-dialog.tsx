@@ -1,12 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 
-import { fieldDescriptionIds, FormField } from "@/design-system/components/form-field";
-import { Alert, AlertDescription } from "@/design-system/primitives/alert";
 import { Button } from "@/design-system/primitives/button";
 import {
   Dialog,
@@ -17,11 +15,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/design-system/primitives/dialog";
+import {
+  Form,
+  FormAlert,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/design-system/primitives/form";
 import { Textarea } from "@/design-system/primitives/textarea";
 import { errorMessage } from "@/shared/api";
 import { applyApiFieldErrors } from "@/shared/forms/api-field-errors";
 
-import { reasonFormSchema, type ReasonValues } from "@/shared/forms/reason";
+import { noteFormSchema, reasonFormSchema, type ReasonValues } from "@/shared/forms/reason";
 
 interface ReasonDialogProps {
   open: boolean;
@@ -30,6 +38,8 @@ interface ReasonDialogProps {
   description: ReactNode;
   confirmLabel: string;
   destructive?: boolean;
+  /** The reason becomes an optional note (the API accepts an empty one). */
+  optional?: boolean;
   /** Resolves on success (the dialog closes) or throws an ApiError (shown in the dialog). */
   onConfirm: (reason: string) => Promise<unknown>;
 }
@@ -42,14 +52,15 @@ export function ReasonDialog({
   description,
   confirmLabel,
   destructive = false,
+  optional = false,
   onConfirm,
 }: ReasonDialogProps) {
   const [failure, setFailure] = useState<string | null>(null);
   const form = useForm<ReasonValues>({
-    resolver: zodResolver(reasonFormSchema),
+    resolver: zodResolver(optional ? noteFormSchema : reasonFormSchema),
     defaultValues: { reason: "" },
   });
-  const { errors, isSubmitting } = form.formState;
+  const { isSubmitting } = form.formState;
 
   function handleOpenChange(next: boolean) {
     if (isSubmitting) return;
@@ -73,53 +84,47 @@ export function ReasonDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
-        <form onSubmit={onSubmit} noValidate className="grid gap-4">
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-          </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={onSubmit} noValidate className="grid gap-5">
+            <DialogHeader>
+              <DialogTitle>{title}</DialogTitle>
+              <DialogDescription>{description}</DialogDescription>
+            </DialogHeader>
 
-          {failure ? (
-            <Alert variant="destructive">
-              <AlertCircle aria-hidden />
-              <AlertDescription>{failure}</AlertDescription>
-            </Alert>
-          ) : null}
+            {failure ? <FormAlert>{failure}</FormAlert> : null}
 
-          <FormField
-            id="reason"
-            label="Reason"
-            hint="Recorded in the audit log."
-            error={errors.reason?.message}
-          >
-            <Textarea
-              id="reason"
-              rows={3}
-              aria-invalid={errors.reason ? true : undefined}
-              aria-describedby={fieldDescriptionIds("reason", {
-                hint: true,
-                error: errors.reason,
-              })}
-              {...form.register("reason")}
+            <FormField
+              control={form.control}
+              name="reason"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel optional={optional}>{optional ? "Note" : "Reason"}</FormLabel>
+                  <FormControl>
+                    <Textarea rows={3} {...field} />
+                  </FormControl>
+                  <FormDescription>Recorded in the audit log.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </FormField>
 
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline" disabled={isSubmitting}>
-                Cancel
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline" disabled={isSubmitting}>
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button
+                type="submit"
+                variant={destructive ? "destructive" : "default"}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? <Loader2 className="animate-spin" aria-hidden /> : null}
+                {confirmLabel}
               </Button>
-            </DialogClose>
-            <Button
-              type="submit"
-              variant={destructive ? "destructive" : "default"}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? <Loader2 className="animate-spin" aria-hidden /> : null}
-              {confirmLabel}
-            </Button>
-          </DialogFooter>
-        </form>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

@@ -1,0 +1,219 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { api, pathId, unwrap, type Schemas } from "@/shared/api";
+
+import { offerKeys, organizationHeader } from "./queries";
+
+// --- Categories (Aayulogic administration) ---------------------------------------------
+
+function useInvalidateCategories() {
+  const queryClient = useQueryClient();
+  return () => queryClient.invalidateQueries({ queryKey: offerKeys.categories() });
+}
+
+export function useCreateCategory() {
+  return useMutation({
+    mutationFn: (body: Schemas["CategoryInput"]) =>
+      unwrap(api.POST("/admin/offer-categories", { body })),
+    onSuccess: useInvalidateCategories(),
+  });
+}
+
+/** Refetch on failure too: a 409 means the loaded version is stale. */
+export function useUpdateCategory(categoryId: string) {
+  return useMutation({
+    mutationFn: (body: Schemas["CategoryUpdate"]) =>
+      unwrap(
+        api.PUT("/admin/offer-categories/{category_id}", {
+          params: { path: { category_id: pathId(categoryId) } },
+          body,
+        }),
+      ),
+    onSettled: useInvalidateCategories(),
+  });
+}
+
+export function useRetireCategory(categoryId: string) {
+  return useMutation({
+    mutationFn: (body: Schemas["ExpectedVersionReason"]) =>
+      unwrap(
+        api.POST("/admin/offer-categories/{category_id}/retire", {
+          params: { path: { category_id: pathId(categoryId) } },
+          body,
+        }),
+      ),
+    onSettled: useInvalidateCategories(),
+  });
+}
+
+export function useReactivateCategory(categoryId: string) {
+  return useMutation({
+    mutationFn: (body: Schemas["ExpectedVersionReason"]) =>
+      unwrap(
+        api.POST("/admin/offer-categories/{category_id}/reactivate", {
+          params: { path: { category_id: pathId(categoryId) } },
+          body,
+        }),
+      ),
+    onSettled: useInvalidateCategories(),
+  });
+}
+
+// --- Offers (Aayulogic administration) -------------------------------------------------
+
+/** Posts an offer for a verified partner: save as draft, submit, or publish directly. */
+export function useCreateOffer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schemas["AdminOfferCreate"]) =>
+      unwrap(api.POST("/admin/offers", { body })),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: offerKeys.lists() }),
+  });
+}
+
+function useInvalidateOffer(offerId: string) {
+  const queryClient = useQueryClient();
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: offerKeys.detail(offerId) }),
+      queryClient.invalidateQueries({ queryKey: offerKeys.decisions(offerId) }),
+      queryClient.invalidateQueries({ queryKey: offerKeys.lists() }),
+    ]);
+}
+
+export function useUpdateOffer(offerId: string) {
+  return useMutation({
+    mutationFn: (body: Schemas["AdminOfferUpdate"]) =>
+      unwrap(
+        api.PUT("/admin/offers/{offer_id}", {
+          params: { path: { offer_id: pathId(offerId) } },
+          body,
+        }),
+      ),
+    onSettled: useInvalidateOffer(offerId),
+  });
+}
+
+/** Actions whose body is the loaded version plus an optional audit note. */
+type OptionalReasonAction = "submit" | "publish" | "approve";
+/** Actions whose body carries a required audited reason. */
+type RequiredReasonAction = "reject" | "request-changes" | "withdraw" | "suspend" | "reinstate";
+export type OfferAction = OptionalReasonAction | RequiredReasonAction;
+
+// Literal paths keep every call visible to the contract-coverage test.
+function postOfferAction(
+  action: OfferAction,
+  offerId: string,
+  body: Schemas["ExpectedVersion"] | Schemas["ExpectedVersionReason"],
+) {
+  const params = { path: { offer_id: pathId(offerId) } };
+  switch (action) {
+    case "submit":
+      return api.POST("/admin/offers/{offer_id}/submit", { params, body });
+    case "publish":
+      return api.POST("/admin/offers/{offer_id}/publish", { params, body });
+    case "approve":
+      return api.POST("/admin/offers/{offer_id}/approve", { params, body });
+    case "reject":
+      return api.POST("/admin/offers/{offer_id}/reject", { params, body });
+    case "request-changes":
+      return api.POST("/admin/offers/{offer_id}/request-changes", { params, body });
+    case "withdraw":
+      return api.POST("/admin/offers/{offer_id}/withdraw", { params, body });
+    case "suspend":
+      return api.POST("/admin/offers/{offer_id}/suspend", { params, body });
+    case "reinstate":
+      return api.POST("/admin/offers/{offer_id}/reinstate", { params, body });
+  }
+}
+
+/** Every administrator state change on one offer. */
+export function useOfferAction(offerId: string) {
+  return useMutation({
+    mutationFn: ({ action, ...body }: Schemas["ExpectedVersion"] & { action: OfferAction }) =>
+      unwrap(postOfferAction(action, offerId, body)),
+    onSettled: useInvalidateOffer(offerId),
+  });
+}
+
+export function useFeatureOffer(offerId: string) {
+  return useMutation({
+    mutationFn: (body: Schemas["FeatureInput"]) =>
+      unwrap(
+        api.POST("/admin/offers/{offer_id}/feature", {
+          params: { path: { offer_id: pathId(offerId) } },
+          body,
+        }),
+      ),
+    onSettled: useInvalidateOffer(offerId),
+  });
+}
+
+// --- Partner portal (the selected organization) ----------------------------------------
+
+export function useCreateOwnOffer(organizationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schemas["OfferInput"]) =>
+      unwrap(
+        api.POST("/partner/offers", {
+          params: { header: organizationHeader(organizationId) },
+          body,
+        }),
+      ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: offerKeys.own(organizationId) }),
+  });
+}
+
+function useInvalidateOwnOffers(organizationId: string) {
+  const queryClient = useQueryClient();
+  return () => queryClient.invalidateQueries({ queryKey: offerKeys.own(organizationId) });
+}
+
+export function useUpdateOwnOffer(organizationId: string, offerId: string) {
+  return useMutation({
+    mutationFn: (body: Schemas["OfferUpdate"]) =>
+      unwrap(
+        api.PUT("/partner/offers/{offer_id}", {
+          params: {
+            header: organizationHeader(organizationId),
+            path: { offer_id: pathId(offerId) },
+          },
+          body,
+        }),
+      ),
+    onSettled: useInvalidateOwnOffers(organizationId),
+  });
+}
+
+export function useSubmitOwnOffer(organizationId: string, offerId: string) {
+  return useMutation({
+    mutationFn: (body: Schemas["ExpectedVersion"]) =>
+      unwrap(
+        api.POST("/partner/offers/{offer_id}/submit", {
+          params: {
+            header: organizationHeader(organizationId),
+            path: { offer_id: pathId(offerId) },
+          },
+          body,
+        }),
+      ),
+    onSettled: useInvalidateOwnOffers(organizationId),
+  });
+}
+
+export function useWithdrawOwnOffer(organizationId: string, offerId: string) {
+  return useMutation({
+    mutationFn: (body: Schemas["ExpectedVersion"]) =>
+      unwrap(
+        api.POST("/partner/offers/{offer_id}/withdraw", {
+          params: {
+            header: organizationHeader(organizationId),
+            path: { offer_id: pathId(offerId) },
+          },
+          body,
+        }),
+      ),
+    onSettled: useInvalidateOwnOffers(organizationId),
+  });
+}
