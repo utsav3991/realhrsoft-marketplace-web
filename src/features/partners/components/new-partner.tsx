@@ -17,6 +17,7 @@ import {
 } from "@/design-system/primitives/card";
 import { Input } from "@/design-system/primitives/input";
 import { useOrganization } from "@/features/organizations/api/queries";
+import { OrganizationFilter } from "@/features/organizations/components/organization-filter";
 import { isUuid } from "@/shared/api";
 import { OrganizationAdminPermission, useCan } from "@/shared/authorization";
 
@@ -28,7 +29,7 @@ import { SourceField } from "./source-field";
 
 /**
  * Assisted intake: Aayulogic registers an existing organization as a pending partner on its
- * behalf. The organization comes from ?organization= (linked from its page) or is entered here.
+ * behalf. The organization comes from ?organization= (linked from its page) or is picked here.
  */
 export function NewPartner() {
   const searchParams = useSearchParams();
@@ -56,6 +57,39 @@ function ChooseOrganization() {
   const router = useRouter();
   const pathname = usePathname();
   const canBrowse = useCan(OrganizationAdminPermission.ORGANIZATION_VIEW);
+
+  function choose(organizationId: string) {
+    router.replace(`${pathname}?organization=${encodeURIComponent(organizationId)}`);
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Which organization is registering?</CardTitle>
+        <CardDescription>
+          Partners are registered for an existing organization, once per organization.
+          {canBrowse ? " Search for it by name." : " Paste its ID."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {canBrowse ? (
+          <OrganizationFilter
+            allLabel="Select an organization"
+            value={null}
+            onChange={(organizationId) => {
+              if (organizationId) choose(organizationId);
+            }}
+          />
+        ) : (
+          <OrganizationIdForm onChoose={choose} />
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Pastes an organization ID when the actor may not browse organizations; the API checks it. */
+function OrganizationIdForm({ onChoose }: { onChoose: (organizationId: string) => void }) {
   const [value, setValue] = useState("");
   const [error, setError] = useState<string>();
 
@@ -66,47 +100,27 @@ function ChooseOrganization() {
       setError("Enter a valid organization ID");
       return;
     }
-    router.replace(`${pathname}?organization=${encodeURIComponent(id)}`);
+    onChoose(id);
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Which organization is registering?</CardTitle>
-        <CardDescription>
-          Partners are registered for an existing organization, once per organization.
-          {canBrowse ? (
-            <>
-              {" "}
-              Open it from{" "}
-              <Link href="/admin/organizations" className="text-primary hover:underline">
-                Organizations
-              </Link>{" "}
-              and choose Register as partner, or paste its ID.
-            </>
-          ) : null}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={onSubmit} noValidate className="flex flex-wrap items-start gap-2">
-          <Field id="organization-id" label="Organization ID" error={error} className="grow">
-            <Input
-              id="organization-id"
-              className="font-mono"
-              autoComplete="off"
-              spellCheck={false}
-              aria-invalid={error ? true : undefined}
-              aria-describedby={fieldDescriptionIds("organization-id", { error })}
-              value={value}
-              onChange={(event) => setValue(event.target.value)}
-            />
-          </Field>
-          <Button type="submit" className="mt-5.5">
-            Continue
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+    <form onSubmit={onSubmit} noValidate className="flex flex-wrap items-start gap-2">
+      <Field id="organization-id" label="Organization ID" error={error} className="grow">
+        <Input
+          id="organization-id"
+          className="font-mono"
+          autoComplete="off"
+          spellCheck={false}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={fieldDescriptionIds("organization-id", { error })}
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+        />
+      </Field>
+      <Button type="submit" className="mt-5.5">
+        Continue
+      </Button>
+    </form>
   );
 }
 
