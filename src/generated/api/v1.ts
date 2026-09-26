@@ -958,6 +958,130 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/redemption-blocks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List emergency redemption blocks
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires redemptions.block.view. Newest first. Filter by active and scope. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_admin_redemption_blocks_list"];
+        put?: never;
+        /**
+         * Activate an emergency redemption block
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires redemptions.block.activate and an audited reason. Immediately stops every voucher of one marketplace offer or of one partner from showing a QR, being validated or being confirmed, administrators included; a confirmation racing the block either committed first or is refused. Unlike offer suspension it affects vouchers already issued. Vouchers are not revoked: clearing the block makes the unused ones usable again until they expire. One active block per offer or partner (REDEMPTION_BLOCK_ACTIVE). A retry with the same key replays the result (also 201).
+         */
+        post: operations["v1_admin_redemption_blocks_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/redemption-blocks/{block_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read an emergency redemption block
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires redemptions.block.view.
+         */
+        get: operations["v1_admin_redemption_blocks_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/redemption-blocks/{block_id}/clear": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clear an emergency redemption block
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires redemptions.block.clear and an audited reason. Unused, unexpired vouchers in its scope become usable again; revoked ones stay revoked. REDEMPTION_BLOCK_CLEARED if already cleared. A retry with the same key replays the result.
+         */
+        post: operations["v1_admin_redemption_blocks_clear_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/redemptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all receipts
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires redemptions.redemption.view. Every confirmed use with its owner, confirming actor and correction. Ordered by confirmed_at then id, newest first. Filter by offer_id, partner_id, source, confirmed_from, confirmed_before and reversed. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_admin_redemptions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/redemptions/{redemption_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a receipt
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires redemptions.redemption.view.
+         */
+        get: operations["v1_admin_redemptions_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/redemptions/{redemption_id}/reverse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reverse a confirmed use
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires redemptions.redemption.reverse and an audited reason. Records a correction of the use (e.g. confirmed for the wrong customer): the receipt and its original time are kept, the voucher becomes reversed and can never be used again, and no payment is refunded. Once per receipt (REDEMPTION_ALREADY_REVERSED). The owner is notified. A retry with the same key replays the result.
+         */
+        post: operations["v1_admin_redemptions_reverse_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/roles": {
         parameters: {
             query?: never;
@@ -1110,6 +1234,86 @@ export interface paths {
         put?: never;
         /** @description Authorized, per-actor data is never cached. */
         post: operations["v1_admin_users_roles_revoke_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/vouchers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all vouchers
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires redemptions.voucher.view. Every voucher with its owner, status, receipt and revocation, newest first. Filter by status, offer_id, partner_id and beneficiary_id. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_admin_vouchers_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/vouchers/{voucher_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a voucher
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires redemptions.voucher.view.
+         */
+        get: operations["v1_admin_vouchers_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/vouchers/{voucher_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm a voucher's use on the partner's behalf
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires redemptions.voucher.confirm and an audited reason, e.g. when the partner has no portal access. Same transaction and one-use guarantee as the partner's confirmation (source admin_assisted). It may assist a partner that is not verified, but never bypasses expiry, revocation, prior use or an emergency block. 201 for a new receipt, 200 replaying the same Idempotency-Key.
+         */
+        post: operations["v1_admin_vouchers_confirm_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/vouchers/{voucher_id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revoke an unused voucher
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires redemptions.voucher.revoke and an audited reason. Only a voucher that was never used (an expired one may be revoked). It becomes revoked at once: its QR stops scanning and it can never be confirmed. The claim stays accepted and the owner cannot claim the offer again; nothing is refunded. The owner is notified. A retry with the same key replays the result.
+         */
+        post: operations["v1_admin_vouchers_revoke_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1599,6 +1803,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/marketplace/vouchers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my vouchers
+         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Your vouchers from accepted marketplace claims, newest first; still readable after your employment ends. Filter by status and offer_id. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_marketplace_vouchers_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/vouchers/{voucher_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read one of my vouchers
+         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Refresh this after showing the QR to see status used and the receipt. 404 for another person's voucher.
+         */
+        get: operations["v1_marketplace_vouchers_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/vouchers/{voucher_id}/credential": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Show my voucher's QR
+         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Issues a fresh QR for the partner's cashier to scan and replaces any earlier one at once (only the newest QR scans; a scan the cashier already made stays confirmable). Only an available voucher that no emergency block covers (409 otherwise). The QR is a bearer secret for 5 minutes (capped by valid_until): whoever shows it can use it, so do not share screenshots. It is returned once and never stored; if lost, request another. Do not auto-refresh aggressively: throttled per user (429). The 10-character reference on the voucher is the typed fallback when scanning fails.
+         */
+        post: operations["v1_marketplace_vouchers_credential_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/partner/analytics/offers": {
         parameters: {
             query?: never;
@@ -2015,6 +2279,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/partner/redemptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my partner's receipts
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires redemptions.partner_redemption.view in the selected partner organization. Every confirmed use of your partner's vouchers, including later-reversed ones (see reversed_at), without the owner's identity. Ordered by confirmed_at then id, newest first, so pages are stable. Filter by offer_id, source, confirmed_from, confirmed_before and reversed. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_partner_redemptions_list"];
+        put?: never;
+        /**
+         * Confirm a voucher's use
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires redemptions.partner_voucher.confirm in the selected partner organization, whose registration must be verified. Records that you applied the benefit and returns the receipt: send scan_reference from validate, or voucher_reference when the QR cannot be scanned. Rechecks under locks your current authority, the voucher being available now (not used, revoked or expired), no emergency block and, for a scan, that it has not expired. Then, in one transaction, the voucher becomes used, the scan and QR are consumed, and the receipt, audit record and owner notification event are stored. A voucher is used at most once: of two cashiers racing, one gets the receipt and the other VOUCHER_ALREADY_USED (without the other receipt). 201 for a new receipt; 200 replaying the same Idempotency-Key, even after the scan or voucher expired, so a lost response is recovered by retrying with the same key and body (or GET operations/{key}).
+         */
+        post: operations["v1_partner_redemptions_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/redemptions/{redemption_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a receipt of my partner
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires redemptions.partner_redemption.view in the selected partner organization. 404 for another partner's receipt.
+         */
+        get: operations["v1_partner_redemptions_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/redemptions/operations/{idempotency_key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recover my confirmation's receipt by its key
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires redemptions.partner_voucher.confirm in the selected partner organization. After a lost or unknown confirmation response, returns the receipt your own confirmation with this key recorded, even if the scan or QR has since expired. 404 means that attempt did not commit: scan again and confirm with a new key. Only your own confirmations.
+         */
+        get: operations["v1_partner_redemptions_operations_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/voucher-scans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate a scanned voucher QR
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires redemptions.partner_voucher.validate in the selected partner organization, whose registration must be verified. Checks that the QR is current and belongs to an available voucher of your own partner that no emergency block covers, then returns the benefit to apply and a scan reference valid for 10 minutes (capped by the voucher's end). It does NOT use, reserve or hold the voucher: two scans can both succeed and only the first confirmation wins, so apply the benefit only after confirming. The owner's identity is never returned. Another partner's QR is CREDENTIAL_INVALID. Rejected attempts are recorded without the QR. Throttled per user (429). Nothing is audited as use.
+         */
+        post: operations["v1_partner_voucher_scans_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/auth/password-setup/{uidb64}/{token}/": {
         parameters: {
             query?: never;
@@ -2067,6 +2415,16 @@ export interface components {
          * @enum {string}
          */
         ActorTypeEnum: "marketplace_staff" | "employee";
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        AdminConfirmInput: {
+            /** @description Required, 1-500 characters; audited. */
+            reason: string;
+            /**
+             * @description Optional: the partner's bill reference, if known.
+             * @default
+             */
+            sale_reference: string;
+        };
         /** @description A version's common terms. PUT semantics: omitted optional fields are cleared. */
         AdminOfferCreate: {
             /** @description Required, 1-150 chars. */
@@ -2431,7 +2789,7 @@ export interface components {
             /** @description Required lifetime uses per employee, 1-1000. */
             max_claims_per_beneficiary: number;
             /**
-             * @description save (default) keeps an unpublished benefit as a draft; publish makes it available to your employees now. Saving a live benefit always publishes the change.
+             * @description save (default) keeps an unpublished benefit as a draft; publish makes it available  to your employees now.Saving a live benefit always publishes the change.
              *
              *     * `save` - save
              *     * `publish` - publish
@@ -2559,7 +2917,7 @@ export interface components {
             /** @description Required lifetime uses per employee, 1-1000. */
             max_claims_per_beneficiary: number;
             /**
-             * @description save (default) keeps an unpublished benefit as a draft; publish makes it available to your employees now. Saving a live benefit always publishes the change.
+             * @description save (default) keeps an unpublished benefit as a draft; publish makes it available  to your employees now.Saving a live benefit always publishes the change.
              *
              *     * `save` - save
              *     * `publish` - publish
@@ -2649,6 +3007,62 @@ export interface components {
              * @default
              */
             item: string;
+        };
+        /** @description An emergency redemption block over one offer or one partner. */
+        Block: {
+            /**
+             * Format: uuid
+             * @description Block UUID.
+             */
+            id: string;
+            /**
+             * @description offer or partner.
+             *
+             *     * `offer` - Offer
+             *     * `partner` - Partner
+             */
+            scope: components["schemas"]["RedemptionBlockScopeEnum"];
+            /**
+             * Format: uuid
+             * @description scope=offer.
+             */
+            offer_id?: string | null;
+            /**
+             * Format: uuid
+             * @description scope=partner.
+             */
+            partner_id?: string | null;
+            /** @description True until cleared: the scope's vouchers cannot be shown, validated or confirmed. */
+            readonly active: boolean;
+            /** @description Why it was activated. */
+            reason: string;
+            /** Format: date-time */
+            activated_at: string;
+            /** @description Administrator UUID. */
+            activated_by: string;
+            /** Format: date-time */
+            cleared_at?: string | null;
+            /** @description Administrator UUID, or null while active. */
+            cleared_by: string | null;
+            /** @description Why it was cleared, or empty. */
+            clear_reason: string;
+        };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        BlockCreate: {
+            /**
+             * @description offer: one marketplace offer's vouchers. partner: every voucher of the partner.
+             *
+             *     * `offer` - Offer
+             *     * `partner` - Partner
+             */
+            scope: components["schemas"]["RedemptionBlockScopeEnum"];
+            /**
+             * Format: uuid
+             * @description The offer's UUID (scope=offer) or the partner's UUID (scope=partner).
+             */
+            target_id: string;
+            /** @description Required, 1-500 characters; audited. */
+            reason: string;
         };
         /** @description The category on an employee catalogue card. */
         CatalogueCategory: {
@@ -2961,6 +3375,24 @@ export interface components {
             /** Format: date-time */
             readonly updated_at: string;
         };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        ConfirmInput: {
+            /**
+             * @description From validate: the normal QR path. Send this or voucher_reference.
+             * @default
+             */
+            scan_reference: string;
+            /**
+             * @description The 10-character code shown under the owner's QR, typed when it cannot be scanned (case-insensitive). Send this or scan_reference.
+             * @default
+             */
+            voucher_reference: string;
+            /**
+             * @description Optional: your bill or POS reference, recorded as you report it.
+             * @default
+             */
+            sale_reference: string;
+        };
         CreateOrganization: {
             /** @description Required nonblank display name; surrounding whitespace is trimmed. */
             name: string;
@@ -2973,9 +3405,15 @@ export interface components {
             description?: string | null;
             permissions: components["schemas"]["PermissionGrant"][];
             /** @default global */
-            scope: components["schemas"]["ScopeEnum"];
+            scope: components["schemas"]["CreateRoleRequestScopeEnum"];
             reason: string;
         };
+        /**
+         * @description * `global` - global
+         *     * `organization` - organization
+         * @enum {string}
+         */
+        CreateRoleRequestScopeEnum: "global" | "organization";
         CreateUserRequest: {
             /** Format: email */
             email: string;
@@ -2995,6 +3433,21 @@ export interface components {
         CreatedResponse: {
             /** Format: uuid */
             id: string;
+        };
+        /** @description A freshly issued voucher QR. Returned once; never stored in plain form. */
+        Credential: {
+            /**
+             * Format: uuid
+             * @description Voucher UUID.
+             */
+            voucher_id: string;
+            /** @description Render this exact string as the QR code (realhrsoft:v1:<token>). It is a bearer secret until expires_at: keep it in memory only, never in URLs, storage, logs or analytics. Shown once; request a new one if lost. */
+            qr_payload: string;
+            /**
+             * Format: date-time
+             * @description The QR stops scanning then (5 minutes, capped by the voucher's valid_until). Requesting a new QR replaces this one immediately.
+             */
+            expires_at: string;
         };
         CurrentActor: {
             actor_id: string;
@@ -3984,6 +4437,112 @@ export interface components {
             /** @description Employer benefit: the recorded use, else null. */
             readonly benefit_usage: components["schemas"]["BenefitUsage"] | null;
         };
+        /** @description A voucher with its offer context. Narrowed per audience. */
+        OwnVoucher: {
+            /**
+             * Format: uuid
+             * @description Voucher UUID.
+             */
+            id: string;
+            /** @description available: usable now. not_yet_valid: before valid_from. expired: unused past valid_until. used: a partner confirmed use (see redemption). revoked: withdrawn by Aayulogic. reversed: its use was corrected; it is not usable again. */
+            readonly status: components["schemas"]["VoucherStatusEnum"];
+            /** @description Short code a cashier can type when the QR cannot be scanned. */
+            reference: string;
+            /**
+             * Format: date-time
+             * @description Usable from.
+             */
+            valid_from: string;
+            /**
+             * Format: date-time
+             * @description Expires then (the accepted version's end); no late confirmation.
+             */
+            valid_until: string;
+            /** @description How to apply the benefit at the partner, frozen at acceptance. */
+            presentation: components["schemas"]["Presentation"];
+            /**
+             * Format: date-time
+             * @description Use time, or null.
+             */
+            used_at: string | null;
+            /** @description The receipt once used, or null. */
+            readonly redemption: components["schemas"]["ReceiptSummary"] | null;
+            /**
+             * Format: uuid
+             * @description Claim UUID.
+             */
+            claim_id: string;
+            /**
+             * Format: uuid
+             * @description Offer UUID.
+             */
+            offer_id: string;
+            /** @description Where the voucher is used. */
+            partner: string;
+            /** @description Title of the accepted offer version. */
+            title: string;
+            headline: string;
+            /** @description The benefit envelope frozen at acceptance (same shape as an offer version's benefit: type, description, percent/amount/currency/item). */
+            benefit: unknown;
+            /**
+             * Format: date-time
+             * @description When Aayulogic revoked it, or null.
+             */
+            revoked_at: string | null;
+        };
+        /** @description A voucher with its offer context. Narrowed per audience. */
+        OwnVoucherListItem: {
+            /**
+             * Format: uuid
+             * @description Voucher UUID.
+             */
+            id: string;
+            /** @description available: usable now. not_yet_valid: before valid_from. expired: unused past valid_until. used: a partner confirmed use (see redemption). revoked: withdrawn by Aayulogic. reversed: its use was corrected; it is not usable again. */
+            readonly status: components["schemas"]["VoucherStatusEnum"];
+            /** @description Short code a cashier can type when the QR cannot be scanned. */
+            reference: string;
+            /**
+             * Format: date-time
+             * @description Usable from.
+             */
+            valid_from: string;
+            /**
+             * Format: date-time
+             * @description Expires then (the accepted version's end); no late confirmation.
+             */
+            valid_until: string;
+            /** @description How to apply the benefit at the partner, frozen at acceptance. */
+            presentation: components["schemas"]["Presentation"];
+            /**
+             * Format: date-time
+             * @description Use time, or null.
+             */
+            used_at: string | null;
+            /** @description The receipt once used, or null. */
+            readonly redemption: components["schemas"]["ReceiptSummary"] | null;
+            /**
+             * Format: uuid
+             * @description Claim UUID.
+             */
+            claim_id: string;
+            /**
+             * Format: uuid
+             * @description Offer UUID.
+             */
+            offer_id: string;
+            /** @description Where the voucher is used. */
+            partner: string;
+            /** @description Title of the accepted offer version. */
+            title: string;
+            headline: string;
+            /** @description The benefit envelope frozen at acceptance (same shape as an offer version's benefit: type, description, percent/amount/currency/item). */
+            benefit: unknown;
+            /**
+             * Format: date-time
+             * @description When Aayulogic revoked it, or null.
+             */
+            revoked_at: string | null;
+        };
         PaginatedAdminOfferReportList: {
             /** @example 123 */
             count: number;
@@ -4013,6 +4572,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["BenefitReportRow"][];
+        };
+        PaginatedBlockList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["Block"][];
         };
         PaginatedClaimList: {
             /** @example 123 */
@@ -4179,6 +4753,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["OwnClaimListItem"][];
         };
+        PaginatedOwnVoucherListItemList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["OwnVoucherListItem"][];
+        };
         PaginatedPartnerClaimListItemList: {
             /** @example 123 */
             count: number;
@@ -4238,6 +4827,51 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["PartnerOfferReport"][];
+        };
+        PaginatedPartnerRedemptionListItemList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["PartnerRedemptionListItem"][];
+        };
+        PaginatedRedemptionList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["Redemption"][];
+        };
+        PaginatedVoucherList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["Voucher"][];
         };
         /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
         Partner: {
@@ -4337,7 +4971,7 @@ export interface components {
             /** @description The final decision, or null while requested. */
             decision: components["schemas"]["ClaimDecision"] | null;
             /** @description Marketplace: the issued voucher once accepted, else null. */
-            readonly voucher: components["schemas"]["VoucherSummary"] | null;
+            readonly voucher: components["schemas"]["PartnerVoucher"] | null;
         };
         /** @description A claim with its accepted terms and fulfilment. Narrowed per audience. */
         PartnerClaimListItem: {
@@ -4376,7 +5010,7 @@ export interface components {
             /** @description The final decision, or null while requested. */
             decision: components["schemas"]["ClaimDecision"] | null;
             /** @description Marketplace: the issued voucher once accepted, else null. */
-            readonly voucher: components["schemas"]["VoucherSummary"] | null;
+            readonly voucher: components["schemas"]["PartnerVoucher"] | null;
         };
         /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
         PartnerDecision: {
@@ -4491,6 +5125,108 @@ export interface components {
             reason: string;
             /** @description Required current version from the latest GET; stale versions return 409. */
             expected_version: number;
+        };
+        /** @description A receipt: one confirmed use of one voucher. Narrowed per audience. */
+        PartnerRedemption: {
+            /**
+             * Format: uuid
+             * @description Receipt UUID.
+             */
+            id: string;
+            /**
+             * Format: uuid
+             * @description Voucher UUID.
+             */
+            voucher_id: string;
+            /** Format: uuid */
+            offer_id: string;
+            /** @description Offer version title. */
+            title: string;
+            partner: string;
+            /**
+             * @description partner_scan (QR), partner_manual (typed reference) or admin_assisted.
+             *
+             *     * `partner_scan` - Partner scanned the QR
+             *     * `partner_manual` - Partner entered the reference
+             *     * `admin_assisted` - Administrator on behalf
+             */
+            source: components["schemas"]["RedemptionSourceEnum"];
+            /**
+             * Format: date-time
+             * @description When use was confirmed.
+             */
+            confirmed_at: string;
+            /** @description Partner-reported bill reference, or empty. Not a verified sale. */
+            sale_reference: string;
+            /**
+             * Format: date-time
+             * @description When the use was corrected, or null. The receipt is kept.
+             */
+            reversed_at: string | null;
+            /** @description Why the use was corrected, or null. */
+            reversal_reason: string | null;
+        };
+        /** @description A receipt: one confirmed use of one voucher. Narrowed per audience. */
+        PartnerRedemptionListItem: {
+            /**
+             * Format: uuid
+             * @description Receipt UUID.
+             */
+            id: string;
+            /**
+             * Format: uuid
+             * @description Voucher UUID.
+             */
+            voucher_id: string;
+            /** Format: uuid */
+            offer_id: string;
+            /** @description Offer version title. */
+            title: string;
+            partner: string;
+            /**
+             * @description partner_scan (QR), partner_manual (typed reference) or admin_assisted.
+             *
+             *     * `partner_scan` - Partner scanned the QR
+             *     * `partner_manual` - Partner entered the reference
+             *     * `admin_assisted` - Administrator on behalf
+             */
+            source: components["schemas"]["RedemptionSourceEnum"];
+            /**
+             * Format: date-time
+             * @description When use was confirmed.
+             */
+            confirmed_at: string;
+            /** @description Partner-reported bill reference, or empty. Not a verified sale. */
+            sale_reference: string;
+            /**
+             * Format: date-time
+             * @description When the use was corrected, or null. The receipt is kept.
+             */
+            reversed_at: string | null;
+            /** @description Why the use was corrected, or null. */
+            reversal_reason: string | null;
+        };
+        /** @description Partners see voucher state, never the owner's presentation details or reference. */
+        PartnerVoucher: {
+            /**
+             * Format: uuid
+             * @description Voucher UUID.
+             */
+            id: string;
+            /** @description available: usable now. not_yet_valid: before valid_from. expired: unused past valid_until. used: a partner confirmed use (see redemption). revoked: withdrawn by Aayulogic. reversed: its use was corrected; it is not usable again. */
+            readonly status: components["schemas"]["VoucherStatusEnum"];
+            /**
+             * Format: date-time
+             * @description Expires then (the accepted version's end); no late confirmation.
+             */
+            valid_until: string;
+            /**
+             * Format: date-time
+             * @description Use time, or null.
+             */
+            used_at: string | null;
+            /** @description The receipt once used, or null. */
+            readonly redemption: components["schemas"]["ReceiptSummary"] | null;
         };
         PasswordSetupLinkResponse: {
             valid: boolean;
@@ -4626,6 +5362,11 @@ export interface components {
             /** @description Validation message; submitted values are never echoed. */
             msg: string;
         };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        ReasonInput: {
+            /** @description Required, 1-500 characters; audited. */
+            reason: string;
+        };
         ReasonRequest: {
             reason: string;
         };
@@ -4643,7 +5384,7 @@ export interface components {
              *     * `partner_manual` - Partner entered the reference
              *     * `admin_assisted` - Administrator on behalf
              */
-            source: components["schemas"]["ReceiptSummarySourceEnum"];
+            source: components["schemas"]["RedemptionSourceEnum"];
             /** Format: date-time */
             confirmed_at: string;
             /**
@@ -4652,13 +5393,75 @@ export interface components {
              */
             readonly reversed_at: string | null;
         };
+        /** @description A receipt: one confirmed use of one voucher. Narrowed per audience. */
+        Redemption: {
+            /**
+             * Format: uuid
+             * @description Receipt UUID.
+             */
+            id: string;
+            /**
+             * Format: uuid
+             * @description Voucher UUID.
+             */
+            voucher_id: string;
+            /** Format: uuid */
+            offer_id: string;
+            /** @description Offer version title. */
+            title: string;
+            partner: string;
+            /**
+             * @description partner_scan (QR), partner_manual (typed reference) or admin_assisted.
+             *
+             *     * `partner_scan` - Partner scanned the QR
+             *     * `partner_manual` - Partner entered the reference
+             *     * `admin_assisted` - Administrator on behalf
+             */
+            source: components["schemas"]["RedemptionSourceEnum"];
+            /**
+             * Format: date-time
+             * @description When use was confirmed.
+             */
+            confirmed_at: string;
+            /** @description Partner-reported bill reference, or empty. Not a verified sale. */
+            sale_reference: string;
+            /**
+             * Format: date-time
+             * @description When the use was corrected, or null. The receipt is kept.
+             */
+            reversed_at: string | null;
+            /** @description Why the use was corrected, or null. */
+            reversal_reason: string | null;
+            /** @description Administrators only: UUID of the cashier or administrator. */
+            confirmed_by: string;
+            /** @description Administrators only: reason for an admin_assisted confirmation. */
+            reason: string;
+            /** @description Administrators only: who reversed it, or null. */
+            reversed_by: string | null;
+            /**
+             * Format: uuid
+             * @description Administrators only.
+             */
+            beneficiary_id: string;
+            /**
+             * Format: email
+             * @description Administrators only.
+             */
+            beneficiary_email: string;
+        };
+        /**
+         * @description * `offer` - Offer
+         *     * `partner` - Partner
+         * @enum {string}
+         */
+        RedemptionBlockScopeEnum: "offer" | "partner";
         /**
          * @description * `partner_scan` - Partner scanned the QR
          *     * `partner_manual` - Partner entered the reference
          *     * `admin_assisted` - Administrator on behalf
          * @enum {string}
          */
-        ReceiptSummarySourceEnum: "partner_scan" | "partner_manual" | "admin_assisted";
+        RedemptionSourceEnum: "partner_scan" | "partner_manual" | "admin_assisted";
         /** @description Reject body/query keys the serializer does not declare as writable (422). */
         RejectInput: {
             /** @description Required, 1-500 characters; shown to the claimant, so keep it safe and free of internal details. */
@@ -4699,12 +5502,40 @@ export interface components {
         RoleVersionResponse: {
             version: number;
         };
-        /**
-         * @description * `global` - global
-         *     * `organization` - organization
-         * @enum {string}
-         */
-        ScopeEnum: "global" | "organization";
+        /** @description A validated scan: the benefit to apply and the proof to confirm with. */
+        Scan: {
+            /** @description Short-lived secret proving this scan. Send it to confirm use. Keep it in memory only; it cannot be shown again. */
+            scan_reference: string;
+            /**
+             * Format: date-time
+             * @description Confirm before this (10 minutes, capped by the voucher's end).
+             */
+            expires_at: string;
+            /** @description The benefit to apply. The owner's identity is never included. */
+            readonly voucher: components["schemas"]["ScannedVoucher"];
+        };
+        /** @description A voucher with its offer context. Narrowed per audience. */
+        ScannedVoucher: {
+            /**
+             * Format: uuid
+             * @description Voucher UUID.
+             */
+            id: string;
+            /** @description available: usable now. not_yet_valid: before valid_from. expired: unused past valid_until. used: a partner confirmed use (see redemption). revoked: withdrawn by Aayulogic. reversed: its use was corrected; it is not usable again. */
+            readonly status: components["schemas"]["VoucherStatusEnum"];
+            /**
+             * Format: date-time
+             * @description Expires then (the accepted version's end); no late confirmation.
+             */
+            valid_until: string;
+            /** @description How to apply the benefit at the partner, frozen at acceptance. */
+            presentation: components["schemas"]["Presentation"];
+            /** @description Title of the accepted offer version. */
+            title: string;
+            headline: string;
+            /** @description The benefit envelope frozen at acceptance (same shape as an offer version's benefit: type, description, percent/amount/currency/item). */
+            benefit: unknown;
+        };
         /**
          * @description A Serializer that takes an additional `fields` argument that
          *     controls which fields should be displayed.
@@ -4807,6 +5638,11 @@ export interface components {
             actor_type: string;
             readonly status: string;
         };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        ValidateInput: {
+            /** @description The scanned QR text exactly as read (realhrsoft:v1:<token>), or the bare token. Never a URL to follow. */
+            token: string;
+        };
         ValidationLocation: {
             /** @description Field location beginning with body or query. */
             loc: string[];
@@ -4848,6 +5684,71 @@ export interface components {
              * @description The working version you reviewed; 409 if it is no longer the offer's working version.
              */
             version_id: string;
+        };
+        /** @description A voucher with its offer context. Narrowed per audience. */
+        Voucher: {
+            /**
+             * Format: uuid
+             * @description Voucher UUID.
+             */
+            id: string;
+            /** @description available: usable now. not_yet_valid: before valid_from. expired: unused past valid_until. used: a partner confirmed use (see redemption). revoked: withdrawn by Aayulogic. reversed: its use was corrected; it is not usable again. */
+            readonly status: components["schemas"]["VoucherStatusEnum"];
+            /** @description Short code a cashier can type when the QR cannot be scanned. */
+            reference: string;
+            /**
+             * Format: date-time
+             * @description Usable from.
+             */
+            valid_from: string;
+            /**
+             * Format: date-time
+             * @description Expires then (the accepted version's end); no late confirmation.
+             */
+            valid_until: string;
+            /** @description How to apply the benefit at the partner, frozen at acceptance. */
+            presentation: components["schemas"]["Presentation"];
+            /**
+             * Format: date-time
+             * @description Use time, or null.
+             */
+            used_at: string | null;
+            /** @description The receipt once used, or null. */
+            readonly redemption: components["schemas"]["ReceiptSummary"] | null;
+            /**
+             * Format: uuid
+             * @description Claim UUID.
+             */
+            claim_id: string;
+            /**
+             * Format: uuid
+             * @description Offer UUID.
+             */
+            offer_id: string;
+            /** @description Where the voucher is used. */
+            partner: string;
+            /** @description Title of the accepted offer version. */
+            title: string;
+            headline: string;
+            /** @description The benefit envelope frozen at acceptance (same shape as an offer version's benefit: type, description, percent/amount/currency/item). */
+            benefit: unknown;
+            /**
+             * Format: date-time
+             * @description When Aayulogic revoked it, or null.
+             */
+            revoked_at: string | null;
+            /** @description Administrators only: why it was revoked, or null. */
+            revocation_reason: string | null;
+            /**
+             * Format: uuid
+             * @description Administrators only: the owner.
+             */
+            beneficiary_id: string;
+            /**
+             * Format: email
+             * @description Administrators only: the owner.
+             */
+            beneficiary_email: string;
         };
         /** @enum {string} */
         VoucherStatusEnum: "reversed" | "used" | "revoked" | "expired" | "not_yet_valid" | "available";
@@ -9262,6 +10163,490 @@ export interface operations {
             };
         };
     };
+    v1_admin_redemption_blocks_list: {
+        parameters: {
+            query?: {
+                /** @description true: only active blocks; false: only cleared ones. */
+                active?: boolean;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description offer or partner.
+                 *
+                 *     * `offer` - Offer
+                 *     * `partner` - Partner
+                 */
+                scope?: "offer" | "partner";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBlockList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters, or a missing or non-UUID Idempotency-Key or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_redemption_blocks_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required client-generated UUID, stored before sending and reused on every retry of the same attempt. A retry replays the original result; a new key is a new attempt. Never generate a new key after an unknown outcome. */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BlockCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["BlockCreate"];
+                "multipart/form-data": components["schemas"]["BlockCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Block"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Voucher, receipt or block not found or not visible to you (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description CREDENTIAL_INVALID: unknown, expired or replaced QR, or another partner's. SCAN_INVALID / SCAN_EXPIRED: the scan reference is unknown here or past expires_at; scan again. SCAN_LIMIT_REACHED: too many open scans of this voucher. VOUCHER_ALREADY_USED: used (or its use reversed); do not apply the benefit. VOUCHER_EXPIRED, VOUCHER_NOT_YET_VALID, VOUCHER_REVOKED. REDEMPTION_BLOCKED: an emergency block covers the offer or partner. REDEMPTION_ALREADY_REVERSED. REDEMPTION_BLOCK_ACTIVE (block_id names it) / REDEMPTION_BLOCK_CLEARED. IDEMPOTENCY_KEY_REUSED: the key was used for a different request. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters, or a missing or non-UUID Idempotency-Key or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Too many requests; retry after Retry-After seconds (RATE_LIMITED). */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_redemption_blocks_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                block_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Block"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Voucher, receipt or block not found or not visible to you (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_redemption_blocks_clear_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required client-generated UUID, stored before sending and reused on every retry of the same attempt. A retry replays the original result; a new key is a new attempt. Never generate a new key after an unknown outcome. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                block_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReasonInput"];
+                "multipart/form-data": components["schemas"]["ReasonInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Block"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Voucher, receipt or block not found or not visible to you (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description CREDENTIAL_INVALID: unknown, expired or replaced QR, or another partner's. SCAN_INVALID / SCAN_EXPIRED: the scan reference is unknown here or past expires_at; scan again. SCAN_LIMIT_REACHED: too many open scans of this voucher. VOUCHER_ALREADY_USED: used (or its use reversed); do not apply the benefit. VOUCHER_EXPIRED, VOUCHER_NOT_YET_VALID, VOUCHER_REVOKED. REDEMPTION_BLOCKED: an emergency block covers the offer or partner. REDEMPTION_ALREADY_REVERSED. REDEMPTION_BLOCK_ACTIVE (block_id names it) / REDEMPTION_BLOCK_CLEARED. IDEMPOTENCY_KEY_REUSED: the key was used for a different request. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters, or a missing or non-UUID Idempotency-Key or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_redemptions_list: {
+        parameters: {
+            query?: {
+                /** @description Confirmed before this ISO 8601 time. */
+                confirmed_before?: string;
+                /** @description Confirmed at or after this ISO 8601 time. */
+                confirmed_from?: string;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description One offer. */
+                offer_id?: string;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /** @description One partner. */
+                partner_id?: string;
+                /** @description true: only corrected uses; false: only uncorrected ones. */
+                reversed?: boolean;
+                /**
+                 * @description partner_scan, partner_manual or admin_assisted.
+                 *
+                 *     * `partner_scan` - Partner scanned the QR
+                 *     * `partner_manual` - Partner entered the reference
+                 *     * `admin_assisted` - Administrator on behalf
+                 */
+                source?: "admin_assisted" | "partner_manual" | "partner_scan";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedRedemptionList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters, or a missing or non-UUID Idempotency-Key or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_redemptions_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                redemption_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Redemption"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Voucher, receipt or block not found or not visible to you (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_redemptions_reverse_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required client-generated UUID, stored before sending and reused on every retry of the same attempt. A retry replays the original result; a new key is a new attempt. Never generate a new key after an unknown outcome. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                redemption_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReasonInput"];
+                "multipart/form-data": components["schemas"]["ReasonInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Redemption"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Voucher, receipt or block not found or not visible to you (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description CREDENTIAL_INVALID: unknown, expired or replaced QR, or another partner's. SCAN_INVALID / SCAN_EXPIRED: the scan reference is unknown here or past expires_at; scan again. SCAN_LIMIT_REACHED: too many open scans of this voucher. VOUCHER_ALREADY_USED: used (or its use reversed); do not apply the benefit. VOUCHER_EXPIRED, VOUCHER_NOT_YET_VALID, VOUCHER_REVOKED. REDEMPTION_BLOCKED: an emergency block covers the offer or partner. REDEMPTION_ALREADY_REVERSED. REDEMPTION_BLOCK_ACTIVE (block_id names it) / REDEMPTION_BLOCK_CLEARED. IDEMPOTENCY_KEY_REUSED: the key was used for a different request. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters, or a missing or non-UUID Idempotency-Key or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     v1_admin_roles_list: {
         parameters: {
             query?: never;
@@ -9540,6 +10925,298 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    v1_admin_vouchers_list: {
+        parameters: {
+            query?: {
+                /** @description One owner (user UUID). */
+                beneficiary_id?: string;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description One offer. */
+                offer_id?: string;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /** @description One partner. */
+                partner_id?: string;
+                /**
+                 * @description Displayed voucher status, evaluated now.
+                 *
+                 *     * `reversed` - reversed
+                 *     * `used` - used
+                 *     * `revoked` - revoked
+                 *     * `expired` - expired
+                 *     * `not_yet_valid` - not_yet_valid
+                 *     * `available` - available
+                 */
+                status?: "available" | "expired" | "not_yet_valid" | "reversed" | "revoked" | "used";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedVoucherList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters, or a missing or non-UUID Idempotency-Key or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_vouchers_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                voucher_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Voucher"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Voucher, receipt or block not found or not visible to you (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_vouchers_confirm_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required client-generated UUID, stored before sending and reused on every retry of the same attempt. A retry replays the original result; a new key is a new attempt. Never generate a new key after an unknown outcome. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                voucher_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminConfirmInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["AdminConfirmInput"];
+                "multipart/form-data": components["schemas"]["AdminConfirmInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Redemption"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Redemption"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Voucher, receipt or block not found or not visible to you (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description CREDENTIAL_INVALID: unknown, expired or replaced QR, or another partner's. SCAN_INVALID / SCAN_EXPIRED: the scan reference is unknown here or past expires_at; scan again. SCAN_LIMIT_REACHED: too many open scans of this voucher. VOUCHER_ALREADY_USED: used (or its use reversed); do not apply the benefit. VOUCHER_EXPIRED, VOUCHER_NOT_YET_VALID, VOUCHER_REVOKED. REDEMPTION_BLOCKED: an emergency block covers the offer or partner. REDEMPTION_ALREADY_REVERSED. REDEMPTION_BLOCK_ACTIVE (block_id names it) / REDEMPTION_BLOCK_CLEARED. IDEMPOTENCY_KEY_REUSED: the key was used for a different request. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters, or a missing or non-UUID Idempotency-Key or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_vouchers_revoke_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required client-generated UUID, stored before sending and reused on every retry of the same attempt. A retry replays the original result; a new key is a new attempt. Never generate a new key after an unknown outcome. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                voucher_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReasonInput"];
+                "multipart/form-data": components["schemas"]["ReasonInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Voucher"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Voucher, receipt or block not found or not visible to you (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description CREDENTIAL_INVALID: unknown, expired or replaced QR, or another partner's. SCAN_INVALID / SCAN_EXPIRED: the scan reference is unknown here or past expires_at; scan again. SCAN_LIMIT_REACHED: too many open scans of this voucher. VOUCHER_ALREADY_USED: used (or its use reversed); do not apply the benefit. VOUCHER_EXPIRED, VOUCHER_NOT_YET_VALID, VOUCHER_REVOKED. REDEMPTION_BLOCKED: an emergency block covers the offer or partner. REDEMPTION_ALREADY_REVERSED. REDEMPTION_BLOCK_ACTIVE (block_id names it) / REDEMPTION_BLOCK_CLEARED. IDEMPOTENCY_KEY_REUSED: the key was used for a different request. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters, or a missing or non-UUID Idempotency-Key or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
             };
         };
     };
@@ -11305,6 +12982,184 @@ export interface operations {
             };
             /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_marketplace_vouchers_list: {
+        parameters: {
+            query?: {
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description One offer. */
+                offer_id?: string;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Displayed voucher status, evaluated now.
+                 *
+                 *     * `reversed` - reversed
+                 *     * `used` - used
+                 *     * `revoked` - revoked
+                 *     * `expired` - expired
+                 *     * `not_yet_valid` - not_yet_valid
+                 *     * `available` - available
+                 */
+                status?: "available" | "expired" | "not_yet_valid" | "reversed" | "revoked" | "used";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedOwnVoucherListItemList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters, or a missing or non-UUID Idempotency-Key or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_marketplace_vouchers_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                voucher_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnVoucher"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Voucher, receipt or block not found or not visible to you (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_marketplace_vouchers_credential_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                voucher_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Credential"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Voucher, receipt or block not found or not visible to you (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description CREDENTIAL_INVALID: unknown, expired or replaced QR, or another partner's. SCAN_INVALID / SCAN_EXPIRED: the scan reference is unknown here or past expires_at; scan again. SCAN_LIMIT_REACHED: too many open scans of this voucher. VOUCHER_ALREADY_USED: used (or its use reversed); do not apply the benefit. VOUCHER_EXPIRED, VOUCHER_NOT_YET_VALID, VOUCHER_REVOKED. REDEMPTION_BLOCKED: an emergency block covers the offer or partner. REDEMPTION_ALREADY_REVERSED. REDEMPTION_BLOCK_ACTIVE (block_id names it) / REDEMPTION_BLOCK_CLEARED. IDEMPOTENCY_KEY_REUSED: the key was used for a different request. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Too many requests; retry after Retry-After seconds (RATE_LIMITED). */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -13265,6 +15120,366 @@ export interface operations {
             };
             /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_redemptions_list: {
+        parameters: {
+            query?: {
+                /** @description Confirmed before this ISO 8601 time. */
+                confirmed_before?: string;
+                /** @description Confirmed at or after this ISO 8601 time. */
+                confirmed_from?: string;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description One offer. */
+                offer_id?: string;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /** @description true: only corrected uses; false: only uncorrected ones. */
+                reversed?: boolean;
+                /**
+                 * @description partner_scan, partner_manual or admin_assisted.
+                 *
+                 *     * `partner_scan` - Partner scanned the QR
+                 *     * `partner_manual` - Partner entered the reference
+                 *     * `admin_assisted` - Administrator on behalf
+                 */
+                source?: "admin_assisted" | "partner_manual" | "partner_scan";
+            };
+            header: {
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPartnerRedemptionListItemList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters, or a missing or non-UUID Idempotency-Key or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_redemptions_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required client-generated UUID, stored before sending and reused on every retry of the same attempt. A retry replays the original result; a new key is a new attempt. Never generate a new key after an unknown outcome. */
+                "Idempotency-Key": string;
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ConfirmInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["ConfirmInput"];
+                "multipart/form-data": components["schemas"]["ConfirmInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerRedemption"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerRedemption"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Voucher, receipt or block not found or not visible to you (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description CREDENTIAL_INVALID: unknown, expired or replaced QR, or another partner's. SCAN_INVALID / SCAN_EXPIRED: the scan reference is unknown here or past expires_at; scan again. SCAN_LIMIT_REACHED: too many open scans of this voucher. VOUCHER_ALREADY_USED: used (or its use reversed); do not apply the benefit. VOUCHER_EXPIRED, VOUCHER_NOT_YET_VALID, VOUCHER_REVOKED. REDEMPTION_BLOCKED: an emergency block covers the offer or partner. REDEMPTION_ALREADY_REVERSED. REDEMPTION_BLOCK_ACTIVE (block_id names it) / REDEMPTION_BLOCK_CLEARED. IDEMPOTENCY_KEY_REUSED: the key was used for a different request. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters, or a missing or non-UUID Idempotency-Key or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_redemptions_retrieve: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path: {
+                redemption_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerRedemption"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Voucher, receipt or block not found or not visible to you (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters, or a missing or non-UUID Idempotency-Key or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_redemptions_operations_retrieve: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path: {
+                /** @description The Idempotency-Key you sent when confirming. */
+                idempotency_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerRedemption"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Voucher, receipt or block not found or not visible to you (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters, or a missing or non-UUID Idempotency-Key or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_voucher_scans_create: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ValidateInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["ValidateInput"];
+                "multipart/form-data": components["schemas"]["ValidateInput"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Scan"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not the voucher's owner (employee endpoints), a required permission is missing or was revoked, the organization scope was denied, or the organization is not a registered partner (FORBIDDEN). PARTNER_NOT_VERIFIED: your partner registration is not verified. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description CREDENTIAL_INVALID: unknown, expired or replaced QR, or another partner's. SCAN_INVALID / SCAN_EXPIRED: the scan reference is unknown here or past expires_at; scan again. SCAN_LIMIT_REACHED: too many open scans of this voucher. VOUCHER_ALREADY_USED: used (or its use reversed); do not apply the benefit. VOUCHER_EXPIRED, VOUCHER_NOT_YET_VALID, VOUCHER_REVOKED. REDEMPTION_BLOCKED: an emergency block covers the offer or partner. REDEMPTION_ALREADY_REVERSED. REDEMPTION_BLOCK_ACTIVE (block_id names it) / REDEMPTION_BLOCK_CLEARED. IDEMPOTENCY_KEY_REUSED: the key was used for a different request. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters, or a missing or non-UUID Idempotency-Key or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Too many requests; retry after Retry-After seconds (RATE_LIMITED). */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

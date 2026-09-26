@@ -39,6 +39,7 @@ import {
 } from "@/design-system/primitives/dropdown-menu";
 import { Skeleton } from "@/design-system/primitives/skeleton";
 import { SOURCE_LABEL } from "@/features/partners/components/partner-details";
+import { RedemptionControl } from "@/features/redemptions/components/redemption-blocks";
 import { ApiError } from "@/shared/api";
 import {
   ClaimAdminPermission,
@@ -360,6 +361,7 @@ function OfferWorkspace({ offer }: { offer: Offer }) {
         />
       )}
       <PublicationCard offer={offer} partner={partner?.business_name} />
+      <RedemptionControl scope="offer" targetId={offer.id} />
       <Versions offerId={offer.id} />
       {canViewDecisions ? <Decisions offerId={offer.id} /> : null}
       <ActionDialog

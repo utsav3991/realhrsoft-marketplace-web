@@ -50,7 +50,6 @@ import {
   DecisionDialog,
   decisionAttempt,
   DecisionFacts,
-  VoucherDetails,
   type DecisionAttempt,
 } from "./claim-details";
 
@@ -251,10 +250,7 @@ function ClaimsList() {
       className: "hidden sm:table-cell",
       cell: (claim) =>
         claim.voucher ? (
-          <span className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-xs">{claim.voucher.reference}</span>
-            <StatusBadge domain="voucher" status={claim.voucher.status} />
-          </span>
+          <StatusBadge domain="voucher" status={claim.voucher.status} />
         ) : (
           <span className="text-muted-foreground">—</span>
         ),
@@ -419,7 +415,18 @@ function LoadedPartnerClaim({ claim }: { claim: PartnerClaim }) {
           </CardHeader>
           <CardContent>
             <DetailList>
-              <VoucherDetails voucher={claim.voucher} />
+              <Detail label="Voucher">
+                <StatusBadge domain="voucher" status={claim.voucher.status} />
+              </Detail>
+              <Detail label="Usable until">{formatDateTime(claim.voucher.valid_until)}</Detail>
+              {claim.voucher.used_at ? (
+                <Detail label="Used">{formatDateTime(claim.voucher.used_at)}</Detail>
+              ) : null}
+              {claim.voucher.redemption?.reversed_at ? (
+                <Detail label="Use corrected">
+                  {formatDateTime(claim.voucher.redemption.reversed_at)}
+                </Detail>
+              ) : null}
             </DetailList>
           </CardContent>
         </Card>

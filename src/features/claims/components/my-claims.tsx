@@ -27,6 +27,8 @@ import { formatDate, formatDateTime } from "@/shared/lib/format";
 import { usePageParam } from "@/shared/hooks/use-page-param";
 import { useUrlParams } from "@/shared/hooks/use-url-params";
 
+import { VoucherQr } from "@/features/redemptions/components/voucher-qr";
+
 import { useCancelClaim } from "../api/mutations";
 import { CLAIM_SORTS, useMyClaim, useMyClaims, type OwnClaim } from "../api/queries";
 import {
@@ -209,11 +211,12 @@ function LoadedClaim({ claim }: { claim: OwnClaim }) {
             <CardTitle>Your voucher</CardTitle>
             <CardDescription>
               {usable
-                ? "Show the reference to the business. They confirm the use; showing a code or opening a link does not."
+                ? "Show the QR code at the business. The voucher is used only when they confirm it; showing a code or opening a link does not."
                 : "The voucher issued when your claim was accepted."}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
+            {usable ? <VoucherQr voucherId={voucher.id} reference={voucher.reference} /> : null}
             <DetailList>
               <VoucherDetails voucher={voucher} usable={usable} />
             </DetailList>

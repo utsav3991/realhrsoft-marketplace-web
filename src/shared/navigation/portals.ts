@@ -7,11 +7,15 @@ import {
   Handshake,
   KeyRound,
   LayoutDashboard,
+  OctagonPause,
+  ReceiptText,
+  ScanLine,
   ShieldCheck,
   Store,
   Tag,
   Tags,
   Ticket,
+  TicketCheck,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -35,6 +39,8 @@ import {
   PartnerClaimPermission,
   PartnerOfferPermission,
   PartnerPermission,
+  PartnerRedemptionPermission,
+  RedemptionAdminPermission,
   canAny,
   type PermissionCode,
 } from "@/shared/authorization";
@@ -128,6 +134,24 @@ export const PORTALS: readonly Portal[] = [
         anyOf: [ClaimAdminPermission.CLAIM_VIEW],
       },
       {
+        href: "/admin/vouchers",
+        label: "Vouchers",
+        icon: TicketCheck,
+        anyOf: [RedemptionAdminPermission.VOUCHER_VIEW],
+      },
+      {
+        href: "/admin/redemptions",
+        label: "Receipts",
+        icon: ReceiptText,
+        anyOf: [RedemptionAdminPermission.REDEMPTION_VIEW],
+      },
+      {
+        href: "/admin/redemption-blocks",
+        label: "Redemption blocks",
+        icon: OctagonPause,
+        anyOf: [RedemptionAdminPermission.BLOCK_VIEW],
+      },
+      {
         href: "/admin/company-benefits",
         label: "Company benefits",
         icon: Gift,
@@ -183,6 +207,23 @@ export const PORTALS: readonly Portal[] = [
         inOrganization: true,
       },
       {
+        href: "/partner/redeem",
+        label: "Redeem",
+        icon: ScanLine,
+        anyOf: [
+          PartnerRedemptionPermission.VOUCHER_VALIDATE,
+          PartnerRedemptionPermission.VOUCHER_CONFIRM,
+        ],
+        inOrganization: true,
+      },
+      {
+        href: "/partner/redemptions",
+        label: "Receipts",
+        icon: ReceiptText,
+        anyOf: [PartnerRedemptionPermission.REDEMPTION_VIEW],
+        inOrganization: true,
+      },
+      {
         href: "/partner/analytics",
         label: "Analytics",
         icon: ChartColumn,
@@ -227,6 +268,7 @@ export const PORTALS: readonly Portal[] = [
     navigation: [
       { href: "/marketplace", label: "Discover", icon: Store },
       { href: "/marketplace/claims", label: "My offers", icon: Ticket },
+      { href: "/marketplace/vouchers", label: "My vouchers", icon: TicketCheck },
       // Separate from offers (EMP-02): the employer's own benefits, not partner offers.
       { href: "/marketplace/company-benefits", label: "Company benefits", icon: Gift },
     ],

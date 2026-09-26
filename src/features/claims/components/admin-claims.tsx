@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Check, Ticket, X } from "lucide-react";
+import { ArrowLeft, Check, Ticket, TicketCheck, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -11,6 +11,7 @@ import { Badge } from "@/design-system/primitives/badge";
 import { Button } from "@/design-system/primitives/button";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -31,6 +32,7 @@ import {
   IdentityPermission,
   OfferAdminPermission,
   OrganizationAdminPermission,
+  RedemptionAdminPermission,
   useCan,
 } from "@/shared/authorization";
 import { Detail, DetailList } from "@/shared/components/details";
@@ -303,6 +305,7 @@ function LoadedClaim({ claim }: { claim: Claim }) {
   const canViewUsers = useCan(IdentityPermission.USER_VIEW);
   const canViewSource = useCanViewSource()[claim.kind];
   const canViewOrganizations = useCan(OrganizationAdminPermission.ORGANIZATION_VIEW);
+  const canViewVouchers = useCan(RedemptionAdminPermission.VOUCHER_VIEW);
   const [attempt, setAttempt] = useState<DecisionAttempt | null>(null);
   const decide = useDecideAdminClaim();
   const pending = claim.status === "requested";
@@ -392,6 +395,16 @@ function LoadedClaim({ claim }: { claim: Claim }) {
             <CardDescription>
               Issued on acceptance with the accepted version&apos;s terms.
             </CardDescription>
+            {canViewVouchers ? (
+              <CardAction>
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/admin/vouchers/${claim.voucher.id}`}>
+                    <TicketCheck aria-hidden />
+                    Open voucher
+                  </Link>
+                </Button>
+              </CardAction>
+            ) : null}
           </CardHeader>
           <CardContent>
             <DetailList>

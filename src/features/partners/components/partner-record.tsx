@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@/design-system/primitives/card";
 import { Skeleton } from "@/design-system/primitives/skeleton";
+import { RedemptionControl } from "@/features/redemptions/components/redemption-blocks";
 import { ApiError } from "@/shared/api";
 import {
   OfferAdminPermission,
@@ -166,6 +167,7 @@ function PartnerWorkspace({ partner }: { partner: Partner }) {
         />
       )}
       <RegistrationCard partner={partner} />
+      <RedemptionControl scope="partner" targetId={partner.id} />
       {canViewDecisions ? <Decisions partnerId={partner.id} /> : null}
       <DecisionDialogs partner={partner} decision={deciding} onClose={() => setDeciding(null)} />
     </div>

@@ -119,7 +119,11 @@ export function VoucherDetails({
       {method === "promo_code" && presentation.promo_code ? (
         <Detail label="Promo code">
           {usable ? (
-            <Copyable value={presentation.promo_code} what="Code" className="font-mono text-base font-bold" />
+            <Copyable
+              value={presentation.promo_code}
+              what="Code"
+              className="font-mono text-base font-bold"
+            />
           ) : (
             <span className="font-mono">{presentation.promo_code}</span>
           )}
@@ -156,7 +160,8 @@ export function ClaimStatusCallout({
   claim,
   audience,
 }: {
-  claim: Pick<OwnClaim, "status" | "decision_deadline" | "decision" | "voucher">;
+  // Only whether a voucher exists matters; partners get a narrower voucher.
+  claim: Pick<OwnClaim, "status" | "decision_deadline" | "decision"> & { voucher: object | null };
   audience: "employee" | "partner" | "admin";
 }) {
   const reason = claim.decision?.reason;
@@ -186,7 +191,7 @@ export function ClaimStatusCallout({
           <AlertDescription>
             {claim.voucher
               ? audience === "employee"
-                ? "Your voucher is ready. Show its reference to the business; they confirm the use."
+                ? "Your voucher is ready. Show its QR code at the business; they confirm the use."
                 : "A voucher was issued. The business confirms its use when the employee presents it."
               : "One use of the benefit was recorded."}
           </AlertDescription>
@@ -218,7 +223,9 @@ export function ClaimStatusCallout({
           <Ban aria-hidden />
           <AlertTitle>Cancelled</AlertTitle>
           <AlertDescription>
-            {audience === "employee" ? "You withdrew the request." : "The employee withdrew the request."}
+            {audience === "employee"
+              ? "You withdrew the request."
+              : "The employee withdrew the request."}
           </AlertDescription>
         </Alert>
       );

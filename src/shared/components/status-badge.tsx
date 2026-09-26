@@ -73,7 +73,11 @@ export const STATUS_DEFINITIONS = {
     },
     active: { label: "Active", intent: "success", description: "Published and inside its dates" },
     expired: { label: "Expired", intent: "neutral", description: "Published; its end date passed" },
-    paused: { label: "Paused", intent: "warning", description: "Hidden by its owner until resumed" },
+    paused: {
+      label: "Paused",
+      intent: "warning",
+      description: "Hidden by its owner until resumed",
+    },
     suspended: {
       label: "Suspended",
       intent: "danger",
@@ -151,9 +155,39 @@ export const STATUS_DEFINITIONS = {
       description: "The confirmed use was corrected",
     },
   },
+  /** A receipt: one confirmed use. A reversal corrects it and the receipt is kept. */
+  redemption: {
+    confirmed: {
+      label: "Confirmed",
+      intent: "success",
+      description: "The partner confirmed the use",
+    },
+    reversed: {
+      label: "Reversed",
+      intent: "warning",
+      description: "Corrected by Aayulogic; the receipt is kept",
+    },
+  },
+  /** An emergency block over one offer's or one partner's vouchers. */
+  redemptionBlock: {
+    active: {
+      label: "Active",
+      intent: "danger",
+      description: "Its vouchers cannot be shown, validated or confirmed",
+    },
+    cleared: {
+      label: "Cleared",
+      intent: "neutral",
+      description: "Its unused vouchers are usable again",
+    },
+  },
   /** Company Benefit badge: the same display status as an offer, without review states. */
   benefit: {
-    draft: { label: "Draft", intent: "neutral", description: "Not published; employees cannot see it" },
+    draft: {
+      label: "Draft",
+      intent: "neutral",
+      description: "Not published; employees cannot see it",
+    },
     scheduled: {
       label: "Scheduled",
       intent: "info",
@@ -161,7 +195,11 @@ export const STATUS_DEFINITIONS = {
     },
     active: { label: "Active", intent: "success", description: "Published and inside its dates" },
     expired: { label: "Expired", intent: "neutral", description: "Published; its end date passed" },
-    paused: { label: "Paused", intent: "warning", description: "Hidden by the employer until resumed" },
+    paused: {
+      label: "Paused",
+      intent: "warning",
+      description: "Hidden by the employer until resumed",
+    },
     suspended: {
       label: "Suspended",
       intent: "danger",

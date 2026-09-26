@@ -158,6 +158,32 @@ export const EmployerAnalyticsPermission = {
   BENEFIT_REPORT_VIEW: "analytics.benefit_report.view",
 } as const;
 
+/**
+ * Global: Aayulogic oversight of vouchers (/admin/vouchers), their confirmed uses
+ * (/admin/redemptions) and emergency redemption blocks (/admin/redemption-blocks).
+ */
+export const RedemptionAdminPermission = {
+  VOUCHER_VIEW: "redemptions.voucher.view",
+  /** Confirms a use on the partner's behalf, with an audited reason. */
+  VOUCHER_CONFIRM: "redemptions.voucher.confirm",
+  VOUCHER_REVOKE: "redemptions.voucher.revoke",
+  REDEMPTION_VIEW: "redemptions.redemption.view",
+  REDEMPTION_REVERSE: "redemptions.redemption.reverse",
+  BLOCK_VIEW: "redemptions.block.view",
+  BLOCK_ACTIVATE: "redemptions.block.activate",
+  BLOCK_CLEAR: "redemptions.block.clear",
+} as const;
+
+/**
+ * Organization: the selected partner's counter (/partner/redeem) and receipts
+ * (/partner/redemptions). Validating and confirming are separate from accepting a claim.
+ */
+export const PartnerRedemptionPermission = {
+  VOUCHER_VALIDATE: "redemptions.partner_voucher.validate",
+  VOUCHER_CONFIRM: "redemptions.partner_voucher.confirm",
+  REDEMPTION_VIEW: "redemptions.partner_redemption.view",
+} as const;
+
 type ValueOf<T> = T[keyof T];
 
 export type IdentityPermissionCode = ValueOf<typeof IdentityPermission>;
@@ -169,14 +195,16 @@ export type GlobalPermissionCode =
   | ValueOf<typeof EmploymentAdminPermission>
   | ValueOf<typeof ClaimAdminPermission>
   | ValueOf<typeof AnalyticsAdminPermission>
-  | ValueOf<typeof BenefitAdminPermission>;
+  | ValueOf<typeof BenefitAdminPermission>
+  | ValueOf<typeof RedemptionAdminPermission>;
 export type OrganizationPermissionCode =
   | ValueOf<typeof PartnerPermission>
   | ValueOf<typeof PartnerOfferPermission>
   | ValueOf<typeof PartnerClaimPermission>
   | ValueOf<typeof PartnerAnalyticsPermission>
   | ValueOf<typeof EmployerBenefitPermission>
-  | ValueOf<typeof EmployerAnalyticsPermission>;
+  | ValueOf<typeof EmployerAnalyticsPermission>
+  | ValueOf<typeof PartnerRedemptionPermission>;
 export type PermissionCode = GlobalPermissionCode | OrganizationPermissionCode;
 
 /** Every administrative global code: holding any of them opens the admin console. */
@@ -189,4 +217,5 @@ export const GLOBAL_PERMISSIONS: readonly GlobalPermissionCode[] = [
   ...Object.values(ClaimAdminPermission),
   ...Object.values(AnalyticsAdminPermission),
   ...Object.values(BenefitAdminPermission),
+  ...Object.values(RedemptionAdminPermission),
 ];

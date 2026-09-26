@@ -15,6 +15,8 @@ export {
   PartnerClaimPermission,
   PartnerOfferPermission,
   PartnerPermission,
+  PartnerRedemptionPermission,
+  RedemptionAdminPermission,
   type GlobalPermissionCode,
   type IdentityPermissionCode,
   type OrganizationPermissionCode,
