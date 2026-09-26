@@ -33,20 +33,29 @@ import { usePageParam } from "@/shared/hooks/use-page-param";
 import { useSortParam } from "@/shared/hooks/use-sort-param";
 import { useUrlParams } from "@/shared/hooks/use-url-params";
 import { OrganizationFilter } from "@/features/organizations/components/organization-filter";
+import {
+  OfferDecisionHistory,
+  OfferVersionHistory,
+} from "@/features/offers/components/offer-details";
+import { formatDate } from "@/shared/lib/format";
 
 import { useAdminBenefitAction, type AdminBenefitAction } from "../api/mutations";
 import {
-  ADMIN_BENEFIT_SORTS,
+  BENEFIT_SORTS,
   useAdminBenefit,
+  useAdminBenefitDecisions,
   useAdminBenefits,
+  useAdminBenefitVersions,
   type Benefit,
 } from "../api/queries";
+import { benefitVersion } from "../schemas/benefit";
 import {
   AvailabilityBadge,
   BENEFIT_STATUSES,
   BenefitContentCard,
   benefitStatusFrom,
   BenefitStatusCallout,
+  isSuspended,
   LifecycleCard,
   validity,
 } from "./benefit-details";
@@ -61,7 +70,7 @@ export function AdminBenefits() {
   const rawOrganization = searchParams.get("organization_id");
   const organizationId = rawOrganization && isUuid(rawOrganization) ? rawOrganization : null;
   const [draft, setDraft] = useState(search);
-  const sort = useSortParam(ADMIN_BENEFIT_SORTS);
+  const sort = useSortParam(BENEFIT_SORTS);
   const paging = usePageParam();
   const benefits = useAdminBenefits(
     { search, status, organizationId, ordering: sort.value },
@@ -82,20 +91,18 @@ export function AdminBenefits() {
   const columns: DataTableColumns<RowOf<typeof benefits>> = [
     {
       id: "benefit",
-      sortKey: "title",
       header: "Benefit",
       cell: (benefit) => (
         <Link
           href={`/admin/company-benefits/${benefit.id}`}
           className="font-medium hover:underline"
         >
-          {benefit.title}
+          {benefitVersion(benefit)?.title ?? "Untitled benefit"}
         </Link>
       ),
     },
     {
       id: "employer",
-      sortKey: "organization_name",
       header: "Employer",
       cell: (benefit) => (
         <Tooltip>
@@ -103,9 +110,9 @@ export function AdminBenefits() {
             <button
               type="button"
               className="hover:underline"
-              onClick={() => setParam("organization_id", benefit.organization_id)}
+              onClick={() => setParam("organization_id", benefit.provider_organization.id)}
             >
-              {benefit.organization_name}
+              {benefit.provider_organization.name}
             </button>
           </TooltipTrigger>
           <TooltipContent>Show only this employer</TooltipContent>
@@ -125,18 +132,20 @@ export function AdminBenefits() {
     },
     {
       id: "valid",
-      sortKey: "valid_from",
       header: "Valid",
       cellClassName: "text-muted-foreground",
-      cell: (benefit) => validity(benefit.valid_from, benefit.valid_until),
+      cell: (benefit) => {
+        const version = benefitVersion(benefit);
+        return version ? validity(version.valid_from, version.valid_until) : "—";
+      },
     },
     {
-      id: "claims",
-      sortKey: "claim_count",
-      header: "Claims",
-      className: "text-right",
-      cellClassName: "tabular-nums",
-      cell: (benefit) => benefit.claim_count,
+      id: "updated",
+      sortKey: "updated_at",
+      header: "Updated",
+      className: "hidden lg:table-cell",
+      cellClassName: "text-muted-foreground",
+      cell: (benefit) => formatDate(benefit.updated_at),
     },
   ];
 
@@ -241,7 +250,7 @@ const ACTIONS = {
   suspend: {
     title: "Suspend this benefit?",
     description:
-      "Hides it from the employer's employees at once. The employer sees your reason and can still edit or retire it, but only an administrator can reinstate it.",
+      "Hides it from the employer's employees at once. The employer sees your reason; editing, resuming or publishing does not lift it, only a reinstatement does.",
     confirmLabel: "Suspend benefit",
     done: "Benefit suspended",
     destructive: true,
@@ -249,7 +258,7 @@ const ACTIONS = {
   reinstate: {
     title: "Reinstate this benefit?",
     description:
-      "Returns it to active. Employees see it again while it is inside its dates and the Employer capacity is on.",
+      "Lifts the suspension. Employees see it again while it is published, enabled, inside its dates and the Employer capacity is on.",
     confirmLabel: "Reinstate benefit",
     done: "Benefit reinstated",
     destructive: false,
@@ -262,35 +271,34 @@ function BenefitModeration({ benefit }: { benefit: Benefit }) {
   const [acting, setActing] = useState<AdminBenefitAction | null>(null);
   const mutation = useAdminBenefitAction(benefit.id);
   const spec = ACTIONS[acting ?? "suspend"];
+  const employer = benefit.provider_organization;
+  const suspended = isSuspended(benefit);
 
   return (
     <div className="space-y-6">
       <BackToBenefits />
       <PageHeader
-        title={benefit.title}
+        title={benefitVersion(benefit)?.title ?? "Benefit"}
         description={
           canViewOrganization ? (
-            <Link
-              href={`/admin/organizations/${benefit.organization_id}`}
-              className="hover:underline"
-            >
-              {benefit.organization_name}
+            <Link href={`/admin/organizations/${employer.id}`} className="hover:underline">
+              {employer.name}
             </Link>
           ) : (
-            benefit.organization_name
+            employer.name
           )
         }
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge domain="benefit" status={benefit.display_status} />
             <AvailabilityBadge benefit={benefit} />
-            {canSuspend && benefit.status === "active" ? (
+            {canSuspend && !suspended && benefit.availability !== "retired" ? (
               <Button variant="outline" onClick={() => setActing("suspend")}>
                 <Pause aria-hidden />
                 Suspend
               </Button>
             ) : null}
-            {canSuspend && benefit.status === "suspended" ? (
+            {canSuspend && suspended ? (
               <Button onClick={() => setActing("reinstate")}>
                 <Play aria-hidden />
                 Reinstate
@@ -302,6 +310,8 @@ function BenefitModeration({ benefit }: { benefit: Benefit }) {
       <BenefitStatusCallout benefit={benefit} audience="admin" />
       <BenefitContentCard benefit={benefit} />
       <LifecycleCard benefit={benefit} />
+      <Versions benefitId={benefit.id} />
+      <Decisions benefitId={benefit.id} />
       <ReasonDialog
         open={acting !== null}
         onOpenChange={(open) => !open && setActing(null)}
@@ -316,5 +326,19 @@ function BenefitModeration({ benefit }: { benefit: Benefit }) {
         }}
       />
     </div>
+  );
+}
+
+function Versions({ benefitId }: { benefitId: string }) {
+  const paging = usePageParam("versions_");
+  return (
+    <OfferVersionHistory versions={useAdminBenefitVersions(benefitId, paging)} paging={paging} />
+  );
+}
+
+function Decisions({ benefitId }: { benefitId: string }) {
+  const paging = usePageParam("decisions_");
+  return (
+    <OfferDecisionHistory decisions={useAdminBenefitDecisions(benefitId, paging)} paging={paging} />
   );
 }

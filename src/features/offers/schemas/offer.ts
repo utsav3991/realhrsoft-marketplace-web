@@ -3,38 +3,57 @@ import { z } from "zod";
 import type { Schemas } from "@/shared/api";
 import { fromDateTimeLocal, toDateTimeLocal } from "@/shared/lib/format";
 
-import type { Offer, RedemptionMethod } from "../api/queries";
+import type { AcceptanceMode, Offer, OfferVersion, PresentationMethod } from "../api/queries";
+import {
+  BENEFIT_VALUE_FIELDS,
+  benefitValueBody,
+  benefitValueSchema,
+  benefitValueValues,
+  EMPTY_BENEFIT_VALUE,
+} from "./benefit-value";
 
-// Mirrors the Django offer serializers and services; the server re-validates.
+// Mirrors the Django offer serializers and offers/terms.py; the server re-validates.
 const requiredText = (max: number, message: string) =>
   z.string().trim().min(1, message).max(max, `At most ${max} characters`);
 const optionalText = (max: number) => z.string().trim().max(max, `At most ${max} characters`);
 
-export const REDEMPTION_METHODS: readonly { value: RedemptionMethod; label: string }[] = [
+export const PRESENTATION_METHODS: readonly { value: PresentationMethod; label: string }[] = [
   { value: "promo_code", label: "Promo code" },
-  { value: "qr_code", label: "QR code" },
   { value: "booking_link", label: "Booking / external link" },
   { value: "show_employee_id", label: "Show employee ID" },
   { value: "in_store", label: "In-store verification" },
   { value: "custom", label: "Custom" },
 ];
 
-export const REDEMPTION_LABEL = Object.fromEntries(
-  REDEMPTION_METHODS.map(({ value, label }) => [value, label]),
-) as Record<RedemptionMethod, string>;
+export const PRESENTATION_LABEL = Object.fromEntries(
+  PRESENTATION_METHODS.map(({ value, label }) => [value, label]),
+) as Record<PresentationMethod, string>;
 
-/** Which optional redemption fields each method uses; the API stores the others empty. */
-export const METHOD_FIELDS: Record<
-  RedemptionMethod,
-  readonly ("redemptionCode" | "redemptionUrl" | "redemptionInstructions" | "customMethodName")[]
-> = {
-  promo_code: ["redemptionCode"],
-  qr_code: ["redemptionCode"],
-  booking_link: ["redemptionUrl"],
+/** The method's label; a custom method shows the partner's own name for it. */
+export function presentationLabel(method: PresentationMethod, customName?: string | null): string {
+  return method === "custom" && customName ? customName : PRESENTATION_LABEL[method];
+}
+
+type PresentationField = "promoCode" | "redemptionUrl" | "redemptionInstructions" | "customMethodName";
+
+/** Which optional presentation fields each method uses; the API stores the others empty. */
+export const METHOD_FIELDS: Record<PresentationMethod, readonly PresentationField[]> = {
+  promo_code: ["promoCode", "redemptionInstructions"],
+  booking_link: ["redemptionUrl", "redemptionInstructions"],
   show_employee_id: ["redemptionInstructions"],
   in_store: ["redemptionInstructions"],
   custom: ["customMethodName", "redemptionInstructions"],
 };
+
+/** Methods whose instructions are required; for the others they are optional. */
+export const INSTRUCTION_METHODS: readonly PresentationMethod[] = ["in_store", "custom"];
+
+export const ACCEPTANCE_LABEL: Record<AcceptanceMode, string> = {
+  auto_accept: "Accepted automatically",
+  partner_approval_required: "Partner approves each claim",
+};
+
+export const APPROVAL_TTL_HOURS = { min: 1, max: 720, default: 72 } as const;
 
 const PROMO_CODE = /^[A-Za-z0-9_-]{3,64}$/;
 const HTTPS_URL = /^https:\/\/[^\s/$.?#][^\s]*$/;
@@ -42,7 +61,7 @@ const HTTPS_URL = /^https:\/\/[^\s/$.?#][^\s]*$/;
 /** Offer audiences a partner offer may use. Own Employees is a Company Benefit, not an offer. */
 export type OfferAudience = "all_eligible_users" | "selected_organizations";
 
-export const AUDIENCE_LABEL: Record<Offer["audience_type"], string> = {
+export const AUDIENCE_LABEL: Record<Schemas["OfferAudienceTypeEnum"], string> = {
   all_eligible_users: "All eligible users",
   selected_organizations: "Selected organizations",
   specific_user_groups: "Specific user groups",
@@ -57,23 +76,19 @@ export const offerSchema = z
   .object({
     categoryId: z.string().min(1, "Choose a category"),
     title: requiredText(150, "Enter a title"),
-    benefit: requiredText(255, "Enter the benefit headline"),
+    headline: requiredText(255, "Enter the card headline"),
+    benefit: benefitValueSchema,
     description: requiredText(4000, "Describe the offer"),
-    terms: requiredText(4000, "Enter the terms and conditions"),
+    terms: optionalText(4000),
     validFrom: z.string().min(1, "Choose when the offer starts"),
     validUntil: z.string().min(1, "Choose when the offer ends"),
-    redemptionMethod: z.enum([
-      "promo_code",
-      "qr_code",
-      "booking_link",
-      "show_employee_id",
-      "in_store",
-      "custom",
-    ]),
-    redemptionCode: optionalText(255),
+    presentationMethod: z.enum(["promo_code", "booking_link", "show_employee_id", "in_store", "custom"]),
+    promoCode: optionalText(64),
     redemptionUrl: optionalText(500),
     redemptionInstructions: optionalText(2000),
     customMethodName: optionalText(100),
+    acceptanceMode: z.enum(["auto_accept", "partner_approval_required"]),
+    approvalTtlHours: z.string().trim(),
     audienceType: z.enum(["all_eligible_users", "selected_organizations"]),
     audienceOrganizations: z
       .array(z.object({ id: z.string(), name: z.string() }))
@@ -86,29 +101,35 @@ export const offerSchema = z
     if (values.validFrom && values.validUntil && values.validUntil <= values.validFrom) {
       issue("validUntil", "End after the start");
     }
-    switch (values.redemptionMethod) {
+    switch (values.presentationMethod) {
       case "promo_code":
-        if (!PROMO_CODE.test(values.redemptionCode))
-          issue("redemptionCode", "Use 3-64 letters, digits, hyphens or underscores");
-        break;
-      case "qr_code":
-        if (!values.redemptionCode) issue("redemptionCode", "Enter the value the QR code encodes");
+        if (!PROMO_CODE.test(values.promoCode))
+          issue("promoCode", "Use 3-64 letters, digits, hyphens or underscores");
         break;
       case "booking_link":
         if (!HTTPS_URL.test(values.redemptionUrl))
           issue("redemptionUrl", "Enter a link starting with https://");
         break;
       case "custom":
-        if (!values.customMethodName) issue("customMethodName", "Name the redemption method");
-        if (!values.redemptionInstructions)
-          issue("redemptionInstructions", "Explain how employees redeem it");
+        if (!values.customMethodName) issue("customMethodName", "Name the method");
         break;
       case "in_store":
-        if (!values.redemptionInstructions)
-          issue("redemptionInstructions", "Explain how employees redeem it");
-        break;
       case "show_employee_id":
         break;
+    }
+    if (INSTRUCTION_METHODS.includes(values.presentationMethod) && !values.redemptionInstructions)
+      issue("redemptionInstructions", "Explain how employees use it");
+    if (values.acceptanceMode === "partner_approval_required") {
+      const hours = Number(values.approvalTtlHours);
+      if (
+        !/^\d{1,3}$/.test(values.approvalTtlHours) ||
+        hours < APPROVAL_TTL_HOURS.min ||
+        hours > APPROVAL_TTL_HOURS.max
+      )
+        issue(
+          "approvalTtlHours",
+          `Use whole hours from ${APPROVAL_TTL_HOURS.min} to ${APPROVAL_TTL_HOURS.max}`,
+        );
     }
     if (values.audienceType === "selected_organizations" && values.audienceOrganizations.length === 0)
       issue("audienceOrganizations", "Choose at least one organization");
@@ -118,16 +139,19 @@ export type OfferValues = z.infer<typeof offerSchema>;
 export const EMPTY_OFFER: OfferValues = {
   categoryId: "",
   title: "",
-  benefit: "",
+  headline: "",
+  benefit: EMPTY_BENEFIT_VALUE,
   description: "",
   terms: "",
   validFrom: "",
   validUntil: "",
-  redemptionMethod: "promo_code",
-  redemptionCode: "",
+  presentationMethod: "promo_code",
+  promoCode: "",
   redemptionUrl: "",
   redemptionInstructions: "",
   customMethodName: "",
+  acceptanceMode: "auto_accept",
+  approvalTtlHours: String(APPROVAL_TTL_HOURS.default),
   audienceType: "all_eligible_users",
   audienceOrganizations: [],
   reason: "",
@@ -137,16 +161,19 @@ export const EMPTY_OFFER: OfferValues = {
 export const OFFER_FIELDS = {
   category_id: "categoryId",
   title: "title",
-  benefit: "benefit",
+  headline: "headline",
+  ...BENEFIT_VALUE_FIELDS,
   description: "description",
   terms: "terms",
   valid_from: "validFrom",
   valid_until: "validUntil",
-  redemption_method: "redemptionMethod",
-  redemption_code: "redemptionCode",
+  presentation_method: "presentationMethod",
+  promo_code: "promoCode",
   redemption_url: "redemptionUrl",
   redemption_instructions: "redemptionInstructions",
   custom_method_name: "customMethodName",
+  acceptance_mode: "acceptanceMode",
+  approval_ttl_hours: "approvalTtlHours",
   audience_type: "audienceType",
   audience_organization_ids: "audienceOrganizations",
   reason: "reason",
@@ -156,51 +183,69 @@ export type OfferContentBody = Omit<Schemas["OfferInput"], "intent">;
 
 /**
  * PUT semantics: every field is sent. Fields the chosen method does not use are sent empty,
- * as the API would store them.
+ * as the API would store them; an automatic offer sends no decision window.
  */
 export function offerBody(values: OfferValues): OfferContentBody {
-  const used = METHOD_FIELDS[values.redemptionMethod];
-  const field = (name: (typeof used)[number]) => (used.includes(name) ? values[name] : "");
+  const used = METHOD_FIELDS[values.presentationMethod];
+  const field = (name: PresentationField) => (used.includes(name) ? values[name] : "");
   const selected = values.audienceType === "selected_organizations";
+  const approval = values.acceptanceMode === "partner_approval_required";
   return {
     category_id: values.categoryId,
     title: values.title,
-    benefit: values.benefit,
+    headline: values.headline,
+    benefit: benefitValueBody(values.benefit),
     description: values.description,
     terms: values.terms,
     valid_from: fromDateTimeLocal(values.validFrom) ?? "",
     valid_until: fromDateTimeLocal(values.validUntil) ?? "",
-    redemption_method: values.redemptionMethod,
-    redemption_code: field("redemptionCode"),
+    presentation_method: values.presentationMethod,
+    promo_code: field("promoCode"),
     redemption_url: field("redemptionUrl"),
     redemption_instructions: field("redemptionInstructions"),
     custom_method_name: field("customMethodName"),
+    acceptance_mode: values.acceptanceMode,
+    approval_ttl_hours: approval ? Number(values.approvalTtlHours) : null,
     audience_type: values.audienceType,
     audience_organization_ids: selected ? values.audienceOrganizations.map((o) => o.id) : [],
     reason: values.reason,
   };
 }
 
+/**
+ * The terms an edit starts from: the working version (a draft, or a frozen one an edit copies
+ * into a new draft), else the live one.
+ */
+export function editableVersion(offer: Offer): OfferVersion | null {
+  return offer.working_version ?? offer.current_version;
+}
+
 export function offerValues(offer: Offer): OfferValues {
+  const version = editableVersion(offer);
+  const policy = version?.marketplace_policy;
+  if (!version || !policy) return EMPTY_OFFER;
   return {
-    categoryId: offer.category.id,
-    title: offer.title,
-    benefit: offer.benefit,
-    description: offer.description,
-    terms: offer.terms,
-    validFrom: toDateTimeLocal(offer.valid_from),
-    validUntil: toDateTimeLocal(offer.valid_until),
-    redemptionMethod: offer.redemption_method,
-    redemptionCode: offer.redemption_code ?? "",
-    redemptionUrl: offer.redemption_url ?? "",
-    redemptionInstructions: offer.redemption_instructions ?? "",
-    customMethodName: offer.custom_method_name ?? "",
+    categoryId: policy.category.id,
+    title: version.title,
+    headline: version.headline,
+    benefit: benefitValueValues(version.benefit),
+    description: version.description,
+    terms: version.terms ?? "",
+    validFrom: toDateTimeLocal(version.valid_from),
+    validUntil: toDateTimeLocal(version.valid_until),
+    presentationMethod: policy.presentation_method,
+    promoCode: policy.promo_code,
+    redemptionUrl: policy.redemption_url,
+    redemptionInstructions: policy.redemption_instructions,
+    customMethodName: policy.custom_method_name,
+    acceptanceMode: policy.acceptance_mode,
+    approvalTtlHours: String(policy.approval_ttl_hours ?? APPROVAL_TTL_HOURS.default),
     // specific_user_groups is not accepted yet, so an offer can never carry it.
     audienceType:
-      offer.audience_type === "selected_organizations"
+      policy.audience_type === "selected_organizations"
         ? "selected_organizations"
         : "all_eligible_users",
-    audienceOrganizations: offer.audience_organizations.map(({ id, name }) => ({ id, name })),
+    audienceOrganizations: policy.audience_organizations.map(({ id, name }) => ({ id, name })),
     reason: "",
   };
 }

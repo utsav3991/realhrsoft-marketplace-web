@@ -33,14 +33,18 @@ import { errorMessage, type Schemas } from "@/shared/api";
 import { applyApiFieldErrors } from "@/shared/forms/api-field-errors";
 
 import {
+  ACCEPTANCE_LABEL,
+  APPROVAL_TTL_HOURS,
   AUDIENCE_LABEL,
+  INSTRUCTION_METHODS,
   METHOD_FIELDS,
   OFFER_FIELDS,
   offerSchema,
-  REDEMPTION_METHODS,
+  PRESENTATION_METHODS,
   type AudienceOrganization,
   type OfferValues,
 } from "../schemas/offer";
+import { BenefitValueFields } from "./benefit-value-fields";
 
 export type OfferIntent = Schemas["AdminOfferCreate"]["intent"];
 
@@ -79,8 +83,9 @@ interface OfferFormProps {
 }
 
 /**
- * Offer content, redemption and audience. The API replaces every field on save and stores
- * the redemption fields the chosen method does not use as empty.
+ * One version's terms: content, benefit value, how it is applied, how claims are accepted and
+ * the audience. The API replaces every field on save and stores the presentation fields the
+ * chosen method does not use as empty.
  */
 export function OfferForm({
   defaultValues,
@@ -96,7 +101,8 @@ export function OfferForm({
   const [pendingIntent, setPendingIntent] = useState<OfferIntent | null>(null);
   const form = useForm<OfferValues>({ resolver: zodResolver(offerSchema), defaultValues });
   const { isSubmitting } = form.formState;
-  const method = form.watch("redemptionMethod");
+  const method = form.watch("presentationMethod");
+  const acceptanceMode = form.watch("acceptanceMode");
   const audienceType = form.watch("audienceType");
   const used = METHOD_FIELDS[method];
   const canSelectOrganizations =
@@ -186,14 +192,14 @@ export function OfferForm({
           />
           <FormField
             control={form.control}
-            name="benefit"
+            name="headline"
             render={({ field }) => (
               <FormItem className="sm:col-span-2">
-                <FormLabel>Benefit</FormLabel>
+                <FormLabel>Headline</FormLabel>
                 <FormControl>
                   <Input placeholder="20% off main courses" {...field} />
                 </FormControl>
-                <FormDescription>The headline employees see first.</FormDescription>
+                <FormDescription>The line employees see first on the offer card.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -216,7 +222,7 @@ export function OfferForm({
             name="terms"
             render={({ field }) => (
               <FormItem className="sm:col-span-2">
-                <FormLabel>Terms and conditions</FormLabel>
+                <FormLabel optional>Terms and conditions</FormLabel>
                 <FormControl>
                   <RichTextEditor {...controlled(field)} />
                 </FormControl>
@@ -247,7 +253,7 @@ export function OfferForm({
                 <FormControl>
                   <DateTimePicker defaultTime="23:59" {...controlled(field)} />
                 </FormControl>
-                <FormDescription>Shows as expired from this moment.</FormDescription>
+                <FormDescription>Claims close and issued vouchers expire then.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -255,13 +261,21 @@ export function OfferForm({
         </FormSection>
 
         <FormSection
-          title="Redemption"
-          description="Codes, links and instructions reach employees only after they claim."
+          title="Benefit"
+          description="The value employees receive, frozen into every claim of this version."
+          disabled={isSubmitting}
+        >
+          <BenefitValueFields disabled={isSubmitting} />
+        </FormSection>
+
+        <FormSection
+          title="How it is applied"
+          description="Codes, links and instructions reach employees only with an issued voucher. The voucher's own QR code proves use; this method is how you apply the benefit."
           disabled={isSubmitting}
         >
           <FormField
             control={form.control}
-            name="redemptionMethod"
+            name="presentationMethod"
             render={({ field }) => (
               <FormItem className="sm:col-span-2">
                 <FormLabel>Method</FormLabel>
@@ -272,7 +286,7 @@ export function OfferForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {REDEMPTION_METHODS.map((option) => (
+                    {PRESENTATION_METHODS.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>
@@ -298,20 +312,18 @@ export function OfferForm({
               )}
             />
           ) : null}
-          {used.includes("redemptionCode") ? (
+          {used.includes("promoCode") ? (
             <FormField
               control={form.control}
-              name="redemptionCode"
+              name="promoCode"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{method === "qr_code" ? "QR code value" : "Promo code"}</FormLabel>
+                  <FormLabel>Promo code</FormLabel>
                   <FormControl>
                     <Input className="font-mono" autoComplete="off" spellCheck={false} {...field} />
                   </FormControl>
                   <FormDescription>
-                    {method === "qr_code"
-                      ? "The value the QR code encodes."
-                      : "3-64 letters, digits, hyphens or underscores."}
+                    Shared code your cashier applies; 3-64 letters, digits, hyphens or underscores.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -340,12 +352,70 @@ export function OfferForm({
               name="redemptionInstructions"
               render={({ field }) => (
                 <FormItem className="sm:col-span-2">
-                  <FormLabel optional={method === "show_employee_id"}>
-                    {method === "show_employee_id" ? "Instructions" : "Redemption instructions"}
-                  </FormLabel>
+                  <FormLabel optional={!INSTRUCTION_METHODS.includes(method)}>Instructions</FormLabel>
                   <FormControl>
                     <RichTextEditor {...controlled(field)} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ) : null}
+        </FormSection>
+
+        <FormSection
+          title="Claims"
+          description="Whether a claim is accepted at once or waits for the partner. Accepting a claim issues its voucher."
+          disabled={isSubmitting}
+        >
+          <FormField
+            control={form.control}
+            name="acceptanceMode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Acceptance</FormLabel>
+                <Select value={field.value} onValueChange={field.onChange} disabled={isSubmitting}>
+                  <FormControl>
+                    <SelectTrigger ref={field.ref} onBlur={field.onBlur} className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="auto_accept">{ACCEPTANCE_LABEL.auto_accept}</SelectItem>
+                    <SelectItem value="partner_approval_required">
+                      {ACCEPTANCE_LABEL.partner_approval_required}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Each employee can request the offer once, whatever the decision.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {acceptanceMode === "partner_approval_required" ? (
+            <FormField
+              control={form.control}
+              name="approvalTtlHours"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Decision window (hours)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={APPROVAL_TTL_HOURS.min}
+                      max={APPROVAL_TTL_HOURS.max}
+                      step={1}
+                      className="sm:w-40"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    A request expires if not decided in time, and never later than the offer
+                    ends. {APPROVAL_TTL_HOURS.min}-{APPROVAL_TTL_HOURS.max} hours.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

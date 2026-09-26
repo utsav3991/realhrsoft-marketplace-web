@@ -1,6 +1,21 @@
 "use client";
 
-import { ArrowLeft, Lock, Pencil, Plus, Send, ShieldAlert, Tag, Undo2 } from "lucide-react";
+import {
+  Archive,
+  ArrowLeft,
+  CloudOff,
+  Lock,
+  MoreHorizontal,
+  Pause,
+  Pencil,
+  Play,
+  Plus,
+  Send,
+  ShieldAlert,
+  Tag,
+  Undo2,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -19,6 +34,12 @@ import {
   CardTitle,
 } from "@/design-system/primitives/card";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/design-system/primitives/dropdown-menu";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -33,6 +54,7 @@ import {
   PartnerOfferPermission,
   PartnerPermission,
   useCanInOrganization,
+  type OrganizationPermissionCode,
 } from "@/shared/authorization";
 import { ConfirmDialog } from "@/shared/components/confirm-dialog";
 import { QueryDataTable, type RowOf } from "@/shared/components/query-data-table";
@@ -40,33 +62,42 @@ import { useSortParam } from "@/shared/hooks/use-sort-param";
 import { StatusBadge } from "@/shared/components/status-badge";
 import { ErrorState } from "@/shared/feedback/states";
 import { formatDate } from "@/shared/lib/format";
+
 import { usePageParam } from "@/shared/hooks/use-page-param";
 import { useUrlParams } from "@/shared/hooks/use-url-params";
 
 import {
   useCreateOwnOffer,
-  useSubmitOwnOffer,
+  useOwnOfferAction,
   useUpdateOwnOffer,
-  useWithdrawOwnOffer,
+  type OwnOfferAction,
 } from "../api/mutations";
 import {
   OWN_OFFER_SORTS,
   useOwnOffer,
   useOwnOfferDecisions,
   useOwnOffers,
+  useOwnOfferVersions,
   type Offer,
 } from "../api/queries";
-import { EMPTY_OFFER, offerBody, offerValues } from "../schemas/offer";
+import { benefitSummary } from "../schemas/benefit-value";
+import { editableVersion, EMPTY_OFFER, offerBody, offerValues } from "../schemas/offer";
 import { useOwnCategoryOptions } from "./category-options";
 import {
   isEditable,
+  isInReview,
+  isPausable,
+  isPublished,
+  isResumable,
+  isRetirable,
   isSubmittable,
-  isWithdrawable,
-  OfferContentCard,
   OfferDecisionHistory,
   OfferStatusCallout,
+  OfferVersionHistory,
+  OfferVersions,
   PublicationCard,
-  RedemptionCard,
+  shownVersion,
+  validity,
   VisibilityBadge,
 } from "./offer-details";
 import { OfferForm, type IntentButton } from "./offer-form";
@@ -147,15 +178,19 @@ export function OwnOffers() {
     {
       id: "offer",
       header: "Offer",
-      sortKey: "title",
-      cell: (offer) => (
-        <>
-          <Link href={`/partner/offers/${offer.id}`} className="font-medium hover:underline">
-            {offer.title}
-          </Link>
-          <p className="text-muted-foreground text-xs">{offer.category.name}</p>
-        </>
-      ),
+      cell: (offer) => {
+        const version = shownVersion(offer);
+        return (
+          <>
+            <Link href={`/partner/offers/${offer.id}`} className="font-medium hover:underline">
+              {version?.title ?? "Untitled offer"}
+            </Link>
+            <p className="text-muted-foreground text-xs">
+              {version ? benefitSummary(version.benefit) : null}
+            </p>
+          </>
+        );
+      },
     },
     {
       id: "status",
@@ -171,9 +206,19 @@ export function OwnOffers() {
     {
       id: "valid",
       header: "Valid",
-      sortKey: "valid_from",
       cellClassName: "text-muted-foreground",
-      cell: (offer) => `${formatDate(offer.valid_from)} – ${formatDate(offer.valid_until)}`,
+      cell: (offer) => {
+        const version = shownVersion(offer);
+        return version ? validity(version.valid_from, version.valid_until) : "—";
+      },
+    },
+    {
+      id: "updated",
+      header: "Updated",
+      sortKey: "updated_at",
+      className: "hidden lg:table-cell",
+      cellClassName: "text-muted-foreground",
+      cell: (offer) => formatDate(offer.updated_at),
     },
   ];
   return (
@@ -262,7 +307,10 @@ function PortalOfferForm({
   onCancel?: () => void;
 }): ReactNode {
   const organizationId = useSelectedOrganizationId();
-  const categories = useOwnCategoryOptions(organizationId, offer?.category);
+  const categories = useOwnCategoryOptions(
+    organizationId,
+    offer ? editableVersion(offer)?.marketplace_policy?.category : undefined,
+  );
   if (categories.query.isPending) return <Skeleton className="h-96 w-full" />;
   if (categories.query.isError) {
     return (
@@ -302,7 +350,7 @@ export function NewOwnOffer() {
             <CardTitle>New offer</CardTitle>
             <CardDescription>
               Save it as a draft or submit it for Aayulogic review. Employees see it only once
-              approved and inside its dates.
+              approved, enabled and inside its dates.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -353,86 +401,196 @@ export function OwnOffer({ offerId }: { offerId: string }) {
   return <OwnOfferWorkspace offer={offer.data} organizationId={organizationId} />;
 }
 
-type OwnerAction = "submit" | "withdraw";
+interface OwnerActionSpec {
+  label: string;
+  icon: LucideIcon;
+  permission: OrganizationPermissionCode;
+  available: (offer: Offer) => boolean;
+  title: string;
+  description: string;
+  confirmLabel: string;
+  done: string;
+  destructive?: boolean;
+}
+
+// In priority order: submit is the page's primary button, the rest go in the menu.
+const OWNER_ACTIONS: Record<OwnOfferAction, OwnerActionSpec> = {
+  submit: {
+    label: "Submit for review",
+    icon: Send,
+    permission: PartnerOfferPermission.OFFER_SUBMIT,
+    available: isSubmittable,
+    title: "Submit for review?",
+    description:
+      "Aayulogic reviews the draft. It is frozen while it waits, but you can retract it. A live version stays live meanwhile.",
+    confirmLabel: "Submit",
+    done: "Submitted for review",
+  },
+  retract: {
+    label: "Retract from review",
+    icon: Undo2,
+    permission: PartnerOfferPermission.OFFER_WITHDRAW,
+    available: isInReview,
+    title: "Retract from review?",
+    description:
+      "The review stops. The version stays frozen; edit the offer to start a new draft. A live version stays live.",
+    confirmLabel: "Retract",
+    done: "Retracted from review",
+    destructive: true,
+  },
+  resume: {
+    label: "Resume",
+    icon: Play,
+    permission: PartnerOfferPermission.OFFER_PAUSE,
+    available: isResumable,
+    title: "Resume this offer?",
+    description:
+      "Employees can see and claim it again while every other gate passes. An Aayulogic suspension stays in place.",
+    confirmLabel: "Resume",
+    done: "Offer resumed",
+  },
+  pause: {
+    label: "Pause",
+    icon: Pause,
+    permission: PartnerOfferPermission.OFFER_PAUSE,
+    available: isPausable,
+    title: "Pause this offer?",
+    description:
+      "Employees stop seeing it and cannot claim it until you resume it. Accepted claims and issued vouchers are unaffected.",
+    confirmLabel: "Pause",
+    done: "Offer paused",
+  },
+  unpublish: {
+    label: "Unpublish",
+    icon: CloudOff,
+    permission: PartnerOfferPermission.OFFER_WITHDRAW,
+    available: isPublished,
+    title: "Unpublish this offer?",
+    description:
+      "The live version goes offline (no new claims) and a draft copy is kept to edit and resubmit. Accepted claims and vouchers are unaffected.",
+    confirmLabel: "Unpublish",
+    done: "Offer unpublished",
+    destructive: true,
+  },
+  retire: {
+    label: "Retire",
+    icon: Archive,
+    permission: PartnerOfferPermission.OFFER_RETIRE,
+    available: isRetirable,
+    title: "Retire this offer?",
+    description:
+      "This is final: no new claims or edits. Accepted claims, issued vouchers and their history are kept.",
+    confirmLabel: "Retire offer",
+    done: "Offer retired",
+    destructive: true,
+  },
+};
+
+function useOwnerActions(offer: Offer): OwnOfferAction[] {
+  const granted: Record<OwnOfferAction, boolean> = {
+    submit: useCanInOrganization(OWNER_ACTIONS.submit.permission),
+    retract: useCanInOrganization(OWNER_ACTIONS.retract.permission),
+    resume: useCanInOrganization(OWNER_ACTIONS.resume.permission),
+    pause: useCanInOrganization(OWNER_ACTIONS.pause.permission),
+    unpublish: useCanInOrganization(OWNER_ACTIONS.unpublish.permission),
+    retire: useCanInOrganization(OWNER_ACTIONS.retire.permission),
+  };
+  return (Object.keys(OWNER_ACTIONS) as OwnOfferAction[]).filter(
+    (action) => granted[action] && OWNER_ACTIONS[action].available(offer),
+  );
+}
 
 function OwnOfferWorkspace({ offer, organizationId }: { offer: Offer; organizationId: string }) {
   const canUpdate = useCanInOrganization(PartnerOfferPermission.OFFER_UPDATE);
-  const canSubmit = useCanInOrganization(PartnerOfferPermission.OFFER_SUBMIT);
-  const canWithdraw = useCanInOrganization(PartnerOfferPermission.OFFER_WITHDRAW);
   const canViewDecisions = useCanInOrganization(PartnerOfferPermission.OFFER_DECISION_VIEW);
-  const [editing, setEditing] = useState(false);
-  const [acting, setActing] = useState<OwnerAction | null>(null);
+  // The offer the edit started from: a background refetch must not turn a stale draft into an
+  // overwrite of someone else's change (the API answers 409 instead).
+  const [editingFrom, setEditingFrom] = useState<Offer | null>(null);
+  const [acting, setActing] = useState<OwnOfferAction | null>(null);
   const update = useUpdateOwnOffer(organizationId, offer.id);
-  const submit = useSubmitOwnOffer(organizationId, offer.id);
-  const withdraw = useWithdrawOwnOffer(organizationId, offer.id);
-  const approved = offer.status === "approved";
-  const intents = usePortalIntents(
-    approved ? "Save and send for review" : "Save changes",
-    !approved,
-  );
+  const action = useOwnOfferAction(organizationId, offer.id);
+  const intents = usePortalIntents("Save draft", true);
+  const actions = useOwnerActions(offer);
+  const version = shownVersion(offer);
+  const spec = OWNER_ACTIONS[acting ?? "submit"];
 
-  const submitButton =
-    canSubmit && isSubmittable(offer) ? (
-      <Button onClick={() => setActing("submit")}>
-        <Send aria-hidden />
-        Submit for review
-      </Button>
-    ) : null;
+  // Submit is the one primary button; everything else is in the menu.
+  const primary = actions.find((a) => a === "submit");
+  const menu = actions.filter((a) => a !== "submit");
 
   return (
     <div className="space-y-6">
       <BackToOwnOffers />
       <PageHeader
-        title={offer.title}
-        description={offer.benefit}
+        title={version?.title ?? "Offer"}
+        description={version?.headline}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge domain="offer" status={offer.display_status} />
-            {canWithdraw && isWithdrawable(offer) ? (
-              <Button variant="outline" onClick={() => setActing("withdraw")}>
-                <Undo2 aria-hidden />
-                Withdraw to draft
+            {primary ? (
+              <Button onClick={() => setActing(primary)}>
+                <Send aria-hidden />
+                {OWNER_ACTIONS[primary].label}
               </Button>
             ) : null}
-            {submitButton}
+            {menu.length > 0 ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" aria-label="More actions">
+                    <MoreHorizontal aria-hidden />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {menu.map((item) => {
+                    const Icon = OWNER_ACTIONS[item].icon;
+                    return (
+                      <DropdownMenuItem key={item} onSelect={() => setActing(item)}>
+                        <Icon aria-hidden />
+                        {OWNER_ACTIONS[item].label}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
           </div>
         }
       />
       <OfferStatusCallout offer={offer} audience="partner" />
-      {editing ? (
+      {editingFrom ? (
         <Card>
           <CardHeader>
             <CardTitle>Edit offer</CardTitle>
             <CardDescription>
-              Saving replaces every field.{" "}
-              {approved
-                ? "Changed content goes back to Aayulogic review and is hidden from employees until approved again."
+              Saving replaces every field of the working draft, or starts a new one.{" "}
+              {editingFrom.current_version
+                ? `Employees keep seeing version ${editingFrom.current_version.number} until Aayulogic approves the change.`
                 : "Submit it when it is ready for review."}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <PortalOfferForm
-              offer={offer}
+              offer={editingFrom}
               intents={intents}
-              onCancel={() => setEditing(false)}
+              onCancel={() => setEditingFrom(null)}
               onSubmit={async (values, intent) => {
                 await update.mutateAsync({
                   ...offerBody(values),
                   intent: intent === "submit" ? "submit" : "save",
-                  expected_version: offer.version,
+                  expected_version: editingFrom.version,
                 });
-                toast.success(intent === "submit" ? "Saved and submitted" : "Offer saved");
-                setEditing(false);
+                toast.success(intent === "submit" ? "Saved and submitted" : "Draft saved");
+                setEditingFrom(null);
               }}
             />
           </CardContent>
         </Card>
       ) : (
-        <OfferContentCard
+        <OfferVersions
           offer={offer}
-          action={
+          editAction={
             canUpdate && isEditable(offer) ? (
-              <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+              <Button variant="outline" size="sm" onClick={() => setEditingFrom(offer)}>
                 <Pencil aria-hidden />
                 Edit
               </Button>
@@ -440,40 +598,36 @@ function OwnOfferWorkspace({ offer, organizationId }: { offer: Offer; organizati
           }
         />
       )}
-      <RedemptionCard offer={offer} />
       <PublicationCard offer={offer} />
+      <OwnVersions organizationId={organizationId} offerId={offer.id} />
       {canViewDecisions ? (
         <OwnDecisions organizationId={organizationId} offerId={offer.id} />
       ) : null}
 
       <ConfirmDialog
-        open={acting === "submit"}
+        open={acting !== null}
         onOpenChange={(open) => !open && setActing(null)}
-        title="Submit for review?"
-        description="Aayulogic reviews the current content. You cannot edit it while it waits, but you can withdraw it."
-        confirmLabel="Submit"
+        title={spec.title}
+        description={spec.description}
+        confirmLabel={spec.confirmLabel}
+        destructive={spec.destructive}
         onConfirm={async () => {
-          await submit.mutateAsync({ expected_version: offer.version, reason: "" });
-          toast.success("Offer submitted for review");
-        }}
-      />
-      <ConfirmDialog
-        open={acting === "withdraw"}
-        onOpenChange={(open) => !open && setActing(null)}
-        title="Withdraw to draft?"
-        description={
-          approved
-            ? "The offer stops being visible to employees. Submit it again to republish it."
-            : "The review stops and the offer returns to draft."
-        }
-        confirmLabel="Withdraw"
-        destructive
-        onConfirm={async () => {
-          await withdraw.mutateAsync({ expected_version: offer.version, reason: "" });
-          toast.success("Offer withdrawn to draft");
+          if (!acting) return;
+          await action.mutateAsync({ action: acting, expected_version: offer.version, reason: "" });
+          toast.success(spec.done);
         }}
       />
     </div>
+  );
+}
+
+function OwnVersions({ organizationId, offerId }: { organizationId: string; offerId: string }) {
+  const paging = usePageParam("versions_");
+  return (
+    <OfferVersionHistory
+      versions={useOwnOfferVersions(organizationId, offerId, paging)}
+      paging={paging}
+    />
   );
 }
 

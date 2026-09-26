@@ -4,26 +4,36 @@ import type { SortOrdering } from "@/design-system/components/data-table";
 import { api, nextOffset, PAGE_SIZE, pathId, unwrap, type Page, type Schemas } from "@/shared/api";
 
 export type Offer = Schemas["Offer"];
+export type OfferVersion = Schemas["OfferVersion"];
 export type OfferDecision = Schemas["OfferDecision"];
 export type OfferCategory = Schemas["OfferCategory"];
-export type OfferStatus = Offer["status"];
-export type RedemptionMethod = Offer["redemption_method"];
+/** The category a version names: enough to show it and flag a retired one. */
+export type CategoryRef = Schemas["CategoryRef"];
+export type DisplayStatus = Schemas["DisplayStatusEnum"];
+export type Availability = Schemas["AvailabilityEnum"];
+export type AcceptanceMode = Schemas["AcceptanceModeEnum"];
+export type PresentationMethod = Schemas["PresentationMethodEnum"];
 export type PostedVia = Offer["posted_via"];
-export type PartnerSource = Offer["partner"]["source"];
+/** Marketplace offers are never posted through the employer portal. */
+export type OfferPostedVia = Exclude<PostedVia, "employer_portal">;
+export type PartnerSource = Schemas["SourceEnum"];
 
 /** Offer columns the API sorts by (`ordering`). */
-export const OFFER_SORTS = ["title", "partner", "valid_from"] as const;
+export const OFFER_SORTS = ["partner", "first_published_at", "updated_at", "created_at"] as const;
 export type OfferOrdering = SortOrdering<(typeof OFFER_SORTS)[number]>;
 /** A partner's own offers share one partner, so that column does not sort. */
-export const OWN_OFFER_SORTS = ["title", "valid_from"] as const;
+export const OWN_OFFER_SORTS = ["first_published_at", "updated_at", "created_at"] as const;
 export const CATEGORY_SORTS = ["name", "slug", "sort_order"] as const;
 export type CategoryOrdering = SortOrdering<(typeof CATEGORY_SORTS)[number]>;
 
 export interface OfferFilters {
   search: string;
-  status: OfferStatus | null;
+  status: DisplayStatus | null;
+  /** The review queue: offers whose working version awaits review, live or not. */
+  inReview: boolean | null;
+  acceptanceMode: AcceptanceMode | null;
   source: PartnerSource | null;
-  postedVia: PostedVia | null;
+  postedVia: OfferPostedVia | null;
   featured: boolean | null;
   partnerId: string | null;
   /** Offers whose audience includes this organization's employees. */
@@ -44,6 +54,8 @@ export const offerKeys = {
   detail: (id: string) => [...offerKeys.all, "detail", id] as const,
   decisions: (id: string) => [...offerKeys.all, "decisions", id] as const,
   decisionPage: (id: string, page: Page) => [...offerKeys.decisions(id), page] as const,
+  versions: (id: string) => [...offerKeys.all, "versions", id] as const,
+  versionPage: (id: string, page: Page) => [...offerKeys.versions(id), page] as const,
   categories: () => [...offerKeys.all, "categories"] as const,
   categoryList: (filters: CategoryFilters, page: Page) =>
     [...offerKeys.categories(), filters, page] as const,
@@ -52,7 +64,7 @@ export const offerKeys = {
   own: (organizationId: string) => [...offerKeys.all, "own", organizationId] as const,
   ownList: (
     organizationId: string,
-    status: OfferStatus | null,
+    status: DisplayStatus | null,
     ordering: OfferOrdering | null,
     page: Page,
   ) => [...offerKeys.own(organizationId), "list", status, ordering, page] as const,
@@ -60,13 +72,15 @@ export const offerKeys = {
     [...offerKeys.own(organizationId), "detail", id] as const,
   ownDecisions: (organizationId: string, id: string, page: Page) =>
     [...offerKeys.own(organizationId), "decisions", id, page] as const,
+  ownVersions: (organizationId: string, id: string, page: Page) =>
+    [...offerKeys.own(organizationId), "versions", id, page] as const,
   ownCategories: (organizationId: string) =>
     [...offerKeys.own(organizationId), "categories"] as const,
 };
 
 // --- Aayulogic administration ---------------------------------------------------------
 
-/** Every partner's offers; the review queue is status=pending_review. */
+/** Every partner's marketplace offers; the review queue is in_review=true. */
 export function useOffers(filters: OfferFilters, page: Page) {
   return useQuery({
     queryKey: offerKeys.list(filters, page),
@@ -76,7 +90,9 @@ export function useOffers(filters: OfferFilters, page: Page) {
           params: {
             query: {
               search: filters.search || undefined,
-              status: filters.status ?? undefined,
+              display_status: filters.status ?? undefined,
+              in_review: filters.inReview ?? undefined,
+              acceptance_mode: filters.acceptanceMode ?? undefined,
               source: filters.source ?? undefined,
               posted_via: filters.postedVia ?? undefined,
               is_featured: filters.featured ?? undefined,
@@ -107,7 +123,25 @@ export function useOffer(offerId: string) {
   });
 }
 
-/** Every moderation decision on an offer, newest first. */
+/** Every version with its frozen terms, newest first. */
+export function useOfferVersions(offerId: string, page: Page) {
+  return useQuery({
+    queryKey: offerKeys.versionPage(offerId, page),
+    queryFn: ({ signal }) =>
+      unwrap(
+        api.GET("/admin/offers/{offer_id}/versions", {
+          params: {
+            path: { offer_id: pathId(offerId) },
+            query: { offset: page.offset, limit: page.limit },
+          },
+          signal,
+        }),
+      ),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** Every publication and moderation decision on an offer, newest first. */
 export function useOfferDecisions(offerId: string, page: Page) {
   return useQuery({
     queryKey: offerKeys.decisionPage(offerId, page),
@@ -188,7 +222,7 @@ export function organizationHeader(organizationId: string) {
 
 export function useOwnOffers(
   organizationId: string,
-  status: OfferStatus | null,
+  status: DisplayStatus | null,
   ordering: OfferOrdering | null,
   page: Page,
 ) {
@@ -200,7 +234,7 @@ export function useOwnOffers(
           params: {
             header: organizationHeader(organizationId),
             query: {
-              status: status ?? undefined,
+              display_status: status ?? undefined,
               ordering: ordering ? [ordering] : undefined,
               offset: page.offset,
               limit: page.limit,
@@ -247,6 +281,24 @@ export function useOwnOfferDecisions(organizationId: string, offerId: string, pa
   });
 }
 
+export function useOwnOfferVersions(organizationId: string, offerId: string, page: Page) {
+  return useQuery({
+    queryKey: offerKeys.ownVersions(organizationId, offerId, page),
+    queryFn: ({ signal }) =>
+      unwrap(
+        api.GET("/partner/offers/{offer_id}/versions", {
+          params: {
+            header: organizationHeader(organizationId),
+            path: { offer_id: pathId(offerId) },
+            query: { offset: page.offset, limit: page.limit },
+          },
+          signal,
+        }),
+      ),
+    placeholderData: keepPreviousData,
+  });
+}
+
 /** Active categories a partner may choose; not paginated. */
 export function useOwnCategories(organizationId: string) {
   return useQuery({
@@ -273,7 +325,8 @@ export interface CatalogueFilters {
 }
 
 // Eligibility, not a permission code, opens these: an employee account with a current
-// employment. Anyone else gets 403. Responses never carry redemption details.
+// employment. Anyone else gets 403. Responses never carry promo codes, links or instructions:
+// those come with an issued voucher.
 export const catalogueKeys = {
   all: ["catalogue"] as const,
   lists: () => [...catalogueKeys.all, "list"] as const,

@@ -13,7 +13,7 @@ import {
 
 import { AdminClaim } from "./admin-claims";
 import { Catalogue, CatalogueOffer } from "./catalogue";
-import { RedemptionDetails } from "./claim-details";
+import { MyClaim } from "./my-claims";
 import { PartnerClaims } from "./partner-claims";
 
 const push = vi.fn();
@@ -25,80 +25,100 @@ vi.mock("next/navigation", () => ({
 
 const ORG = "4a293c96-2952-43ac-bf39-bdfda7531c48";
 const OFFER_ID = "6a1c9d2e-4b7f-4e3a-8c5d-1f2e3a4b5c6d";
+const VERSION_ID = "5e7c9a1b-3d5f-4b7a-8c9e-1a3c5e7a9b2d";
 const CLAIM_ID = "0e2f9a51-7c3d-4b8e-9f10-2a3b4c5d6e7f";
-const REFERENCE = "7KX2MQ9RTP";
+const KEY = /^[0-9a-f-]{36}$/;
 
 const offer: Schemas["MarketplaceOffer"] = {
   id: OFFER_ID,
-  partner: {
-    id: "0b0b5e3c-3c3f-4bd6-9a55-8f3b7f0a8f2e",
-    organization_id: ORG,
-    business_name: "Himalayan Coffee House",
-    status: "verified",
-    source: "partner_organization",
-  },
-  category: {
-    id: "2f6f4c1e-8a4b-4d51-9d4e-5f1c2b7a9e10",
-    name: "Food & Dining",
-    slug: "food-dining",
-    description: "",
-    sort_order: 10,
-    is_active: true,
-    version: 1,
-    created_at: "2026-09-25T09:00:00Z",
-    updated_at: "2026-09-25T09:00:00Z",
-  },
+  version_id: VERSION_ID,
+  version_number: 2,
   title: "20% off at Himalayan Coffee House",
-  benefit: "20% off all drinks",
-  description: "Show the code at the counter.",
+  headline: "20% off all drinks",
+  description: "Show the voucher at the counter.",
   terms: "One use per visit.",
   valid_from: "2026-09-01T00:00:00Z",
   valid_until: "2026-12-31T00:00:00Z",
-  redemption_method: "promo_code",
+  benefit: { schema_version: 1, type: "percentage", description: "", percent: "20" },
+  partner: { id: "0b0b5e3c-3c3f-4bd6-9a55-8f3b7f0a8f2e", business_name: "Himalayan Coffee House" },
+  category: { id: "2f6f4c1e-8a4b-4d51-9d4e-5f1c2b7a9e10", name: "Food & Dining", slug: "food" },
+  presentation_method: "promo_code",
   custom_method_name: "",
+  acceptance_mode: "auto_accept",
+  approval_ttl_hours: null,
   is_featured: false,
   my_claim: null,
 };
-
-const partnerClaim: Schemas["PartnerClaim"] = {
-  reference: REFERENCE,
-  status: "active",
-  offer_id: OFFER_ID,
-  offer_revision: 1,
-  title: offer.title,
-  benefit: offer.benefit,
-  redemption_method: "promo_code",
-  claimed_at: "2026-09-25T10:00:00Z",
-  expires_at: "2026-12-31T00:00:00Z",
-  used_at: null,
+const approvalOffer: Schemas["MarketplaceOffer"] = {
+  ...offer,
+  acceptance_mode: "partner_approval_required",
+  approval_ttl_hours: 72,
 };
 
-const employeeClaim: Schemas["EmployeeClaim"] = {
-  id: CLAIM_ID,
-  reference: REFERENCE,
-  status: "active",
-  offer_id: OFFER_ID,
-  partner_name: offer.partner.business_name,
-  title: offer.title,
-  benefit: offer.benefit,
-  terms: offer.terms,
-  redemption_method: "promo_code",
-  redemption_code: "HRSOFT20",
-  redemption_url: "",
-  redemption_instructions: "",
-  custom_method_name: "",
-  claimed_at: "2026-09-25T10:00:00Z",
-  expires_at: "2026-12-31T00:00:00Z",
+const voucher: Schemas["VoucherSummary"] = {
+  id: "8c1e3a5b-7d9f-4b1a-8c3e-5a7b9c1d3e5f",
+  status: "available",
+  reference: "VX7K2MQ9",
+  valid_from: "2026-09-01T00:00:00Z",
+  valid_until: "2026-12-31T00:00:00Z",
+  presentation: {
+    method: "promo_code",
+    promo_code: "HRSOFT20",
+    redemption_url: "",
+    redemption_instructions: "",
+    custom_method_name: "",
+  },
   used_at: null,
+  redemption: null,
+};
+
+const requested: Schemas["OwnClaim"] = {
+  id: CLAIM_ID,
+  kind: "marketplace_offer",
+  offer_id: OFFER_ID,
+  partner: offer.partner.business_name,
+  version_id: VERSION_ID,
+  version_number: 2,
+  title: offer.title,
+  headline: offer.headline,
+  status: "requested",
+  requested_at: "2026-09-25T10:00:00Z",
+  decision_deadline: "2026-09-28T10:00:00Z",
+  accepted_at: null,
+  decision: null,
+  voucher: null,
+  benefit_usage: null,
+};
+const accepted: Schemas["OwnClaim"] = {
+  ...requested,
+  status: "accepted",
+  decision_deadline: null,
+  accepted_at: "2026-09-25T10:00:00Z",
+  decision: { outcome: "accepted", source: "policy", reason: "", decided_at: "2026-09-25T10:00:00Z" },
+  voucher,
+};
+
+// The partner's view never names the claimant or their employer.
+const partnerClaim: Schemas["PartnerClaim"] = {
+  id: requested.id,
+  offer_id: requested.offer_id,
+  version_id: requested.version_id,
+  version_number: requested.version_number,
+  title: requested.title,
+  headline: requested.headline,
+  status: requested.status,
+  requested_at: requested.requested_at,
+  decision_deadline: requested.decision_deadline,
+  accepted_at: requested.accepted_at,
+  decision: null,
+  voucher: null,
 };
 
 const adminClaim: Schemas["Claim"] = {
-  ...employeeClaim,
-  offer_revision: 1,
-  employee_id: "9d31c4aa-1f99-4c90-b748-e00893786136",
-  employee_email: "asha@employer.test",
-  organization_id: "57a70ccd-174a-4501-ae31-712d32e778ca",
-  redemption: null,
+  ...requested,
+  beneficiary_id: "9d31c4aa-1f99-4c90-b748-e00893786136",
+  beneficiary_email: "asha@employer.test",
+  employer: { id: "57a70ccd-174a-4501-ae31-712d32e778ca", name: "Acme" },
 };
 
 const page = <T,>(results: T[]) => ({ count: results.length, next: null, previous: null, results });
@@ -112,8 +132,8 @@ function json(body: unknown, status = 200) {
   });
 }
 
-function problem(status: number, code: string) {
-  return json({ type: "about:blank", title: code, status, code, detail: code }, status);
+function problem(status: number, code: string, extra: Record<string, unknown> = {}) {
+  return json({ type: "about:blank", title: code, status, code, detail: code, ...extra }, status);
 }
 
 function actor(overrides: Partial<CurrentActor> = {}): CurrentActor {
@@ -153,11 +173,12 @@ function renderAs(current: CurrentActor, ui: React.ReactNode) {
 }
 
 const path = (request: Request) => new URL(request.url).pathname;
+const posts = () => fetchMock.mock.calls.filter(([r]) => r.method === "POST").map(([r]) => r);
 
 function posted() {
-  const call = fetchMock.mock.calls.find(([r]) => r.method === "POST");
-  if (!call) throw new Error("no POST");
-  return call[0];
+  const request = posts()[0];
+  if (!request) throw new Error("no POST");
+  return request;
 }
 
 beforeEach(() => vi.stubGlobal("fetch", fetchMock));
@@ -175,33 +196,45 @@ describe("Employee catalogue", () => {
     expect(await screen.findByText("Offers are for employees")).toBeVisible();
   });
 
-  it("claims with an Idempotency-Key and opens the claim", async () => {
-    fetchMock.mockImplementation(async (request) => {
-      if (request.method === "POST") return json(employeeClaim, 201);
-      if (path(request).endsWith("/marketplace/claims")) return json(page([]));
-      return json(offer);
-    });
+  it("claims the version it showed with an Idempotency-Key and opens the claim", async () => {
+    fetchMock.mockImplementation(async (request) =>
+      request.method === "POST" ? json(accepted, 201) : json(offer),
+    );
     const user = userEvent.setup();
     renderAs(actor(), <CatalogueOffer offerId={OFFER_ID} />);
     await user.click(await screen.findByRole("button", { name: "Claim offer" }));
+    expect(screen.getByText(/You get a voucher straight away/)).toBeVisible();
     await user.click(screen.getAllByRole("button", { name: "Claim offer" }).at(-1)!);
 
     await waitFor(() => expect(push).toHaveBeenCalledWith(`/marketplace/claims/${CLAIM_ID}`));
     const request = posted();
     expect(path(request)).toBe("/api/v1/marketplace/claims");
-    expect(request.headers.get("Idempotency-Key")).toMatch(/^[0-9a-f-]{36}$/);
+    expect(request.headers.get("Idempotency-Key")).toMatch(KEY);
     expect(request.headers.get("X-Organization-ID")).toBeNull();
-    expect(await request.json()).toEqual({ offer_id: OFFER_ID });
+    expect(await request.json()).toEqual({ offer_id: OFFER_ID, version_id: VERSION_ID });
+  });
+
+  it("explains partner approval before an employee requests the offer", async () => {
+    fetchMock.mockImplementation(async (request) =>
+      request.method === "POST" ? json(requested, 201) : json(approvalOffer),
+    );
+    const user = userEvent.setup();
+    renderAs(actor(), <CatalogueOffer offerId={OFFER_ID} />);
+    expect(await screen.findByText(/approves each request within 72 hours/)).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Request offer" }));
+    expect(screen.getByText(/You get a voucher only if they accept it/)).toBeVisible();
+    await user.click(screen.getAllByRole("button", { name: "Request offer" }).at(-1)!);
+    await waitFor(() => expect(push).toHaveBeenCalledWith(`/marketplace/claims/${CLAIM_ID}`));
   });
 
   it("links to an existing claim instead of offering another", async () => {
-    fetchMock.mockResolvedValue(json({ ...offer, my_claim: { id: CLAIM_ID, status: "used" } }));
+    fetchMock.mockResolvedValue(json({ ...offer, my_claim: { id: CLAIM_ID, status: "rejected" } }));
     renderAs(actor(), <CatalogueOffer offerId={OFFER_ID} />);
     expect(await screen.findByRole("link", { name: "View your claim" })).toHaveAttribute(
       "href",
       `/marketplace/claims/${CLAIM_ID}`,
     );
-    expect(screen.getByText("Used")).toBeVisible();
+    expect(screen.getByText("Rejected")).toBeVisible();
     expect(screen.queryByRole("button", { name: "Claim offer" })).not.toBeInTheDocument();
   });
 
@@ -210,14 +243,14 @@ describe("Employee catalogue", () => {
       ...offer,
       id: "7b2d0e3f-5c8a-4f4b-9d6e-2a3b4c5d6e7f",
       title: "Free pastry",
-      my_claim: { id: CLAIM_ID, status: "active" as const },
+      my_claim: { id: CLAIM_ID, status: "accepted" as const },
     };
     fetchMock.mockImplementation(async (request) =>
       path(request).endsWith("/offer-categories") ? json([]) : json(page([offer, claimed])),
     );
     renderAs(actor(), <Catalogue />);
     expect(await screen.findByRole("button", { name: "Claim offer" })).toBeVisible();
-    expect(screen.getByRole("link", { name: "View your claim" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "View your voucher" })).toHaveAttribute(
       "href",
       `/marketplace/claims/${CLAIM_ID}`,
     );
@@ -230,16 +263,7 @@ describe("Employee catalogue", () => {
   it("opens the existing claim when the API answers ALREADY_CLAIMED", async () => {
     fetchMock.mockImplementation(async (request) =>
       request.method === "POST"
-        ? json(
-            {
-              type: "about:blank",
-              title: "Conflict",
-              status: 409,
-              code: "ALREADY_CLAIMED",
-              claim_id: CLAIM_ID,
-            },
-            409,
-          )
+        ? problem(409, "ALREADY_CLAIMED", { claim_id: CLAIM_ID })
         : json(offer),
     );
     const user = userEvent.setup();
@@ -248,110 +272,144 @@ describe("Employee catalogue", () => {
     await user.click(screen.getAllByRole("button", { name: "Claim offer" }).at(-1)!);
     await waitFor(() => expect(push).toHaveBeenCalledWith(`/marketplace/claims/${CLAIM_ID}`));
   });
-});
 
-describe("Redemption details", () => {
-  const qrClaim = { ...employeeClaim, redemption_method: "qr_code" as const };
-
-  it("draws a scannable QR code for a redeemable claim", () => {
-    render(
-      <dl>
-        <RedemptionDetails claim={qrClaim} scannable />
-      </dl>,
-    );
-    const code = screen.getByRole("img", { name: "QR code to show the partner" });
-    expect(code.querySelector("path")?.getAttribute("d")).toMatch(/^M\d/);
-    expect(screen.getByText("HRSOFT20")).toBeVisible();
-  });
-
-  it("shows only the value when the claim can no longer be redeemed", () => {
-    render(
-      <dl>
-        <RedemptionDetails claim={qrClaim} />
-      </dl>,
-    );
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
-    expect(screen.getByText("HRSOFT20")).toBeVisible();
-  });
-});
-
-describe("Partner claim verification", () => {
-  it("looks up but does not confirm without the confirm permission", async () => {
+  it("asks to review the terms again when another version went live", async () => {
     fetchMock.mockImplementation(async (request) =>
-      path(request).endsWith("/partner/claims") ? json(page([partnerClaim])) : json(partnerClaim),
+      request.method === "POST" ? problem(409, "OFFER_VERSION_CHANGED") : json(offer),
     );
-    setActiveOrganizationId(ORG);
     const user = userEvent.setup();
-    renderAs(member([PartnerClaimPermission.CLAIM_VIEW]), <PartnerClaims />);
-    await user.type(screen.getByLabelText("Reference"), "7kx2-mq9rtp");
-    await user.click(screen.getByRole("button", { name: "Look up" }));
+    renderAs(actor(), <CatalogueOffer offerId={OFFER_ID} />);
+    await user.click(await screen.findByRole("button", { name: "Claim offer" }));
+    await user.click(screen.getAllByRole("button", { name: "Claim offer" }).at(-1)!);
 
-    expect(await screen.findByText("Active: can be confirmed")).toBeVisible();
-    expect(screen.queryByRole("button", { name: "Confirm redemption" })).not.toBeInTheDocument();
-    const lookup = fetchMock.mock.calls.find(([r]) => path(r).endsWith(REFERENCE))![0];
-    expect(path(lookup)).toBe(`/api/v1/partner/claims/${REFERENCE}`);
-    expect(lookup.headers.get("X-Organization-ID")).toBe(ORG);
+    // The dialog closes and the offer is refetched for the employee to read again.
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(fetchMock.mock.calls.filter(([r]) => r.method === "GET").length).toBeGreaterThan(1),
+    );
+    expect(push).not.toHaveBeenCalled();
+    // A new attempt gets a new key: the old one named other terms.
+    await user.click(screen.getByRole("button", { name: "Claim offer" }));
+    await user.click(screen.getAllByRole("button", { name: "Claim offer" }).at(-1)!);
+    await waitFor(() => expect(posts()).toHaveLength(2));
+    const [first, second] = posts();
+    expect(first!.headers.get("Idempotency-Key")).not.toBe(second!.headers.get("Idempotency-Key"));
+  });
+});
+
+describe("My claims", () => {
+  it("shows the voucher of an accepted claim with its reference and code", async () => {
+    fetchMock.mockResolvedValue(json(accepted));
+    renderAs(actor(), <MyClaim claimId={CLAIM_ID} />);
+    expect(await screen.findByText(voucher.reference)).toBeVisible();
+    expect(screen.getByText("HRSOFT20")).toBeVisible();
+    expect(screen.getByText("Available")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Cancel request" })).not.toBeInTheDocument();
   });
 
-  it("confirms a reference directly when the member may confirm but not view", async () => {
-    fetchMock.mockResolvedValue(json({ ...partnerClaim, status: "used", used_at: "2026-09-26T10:00:00Z" }));
-    setActiveOrganizationId(ORG);
+  it("cancels a pending request with an Idempotency-Key", async () => {
+    fetchMock.mockImplementation(async (request) =>
+      request.method === "POST"
+        ? json({ ...requested, status: "cancelled" })
+        : json(requested),
+    );
     const user = userEvent.setup();
-    renderAs(member([PartnerClaimPermission.CLAIM_CONFIRM]), <PartnerClaims />);
-    expect(screen.queryByText("Claims of your offers")).not.toBeInTheDocument();
-    await user.type(screen.getByLabelText("Reference"), REFERENCE);
-    await user.click(screen.getByRole("button", { name: "Continue" }));
-    await user.click(screen.getByRole("button", { name: "Confirm redemption" }));
-    await user.click(screen.getAllByRole("button", { name: "Confirm redemption" }).at(-1)!);
+    renderAs(actor(), <MyClaim claimId={CLAIM_ID} />);
+    expect(await screen.findByText("Awaiting the partner's approval")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Cancel request" }));
+    await user.click(screen.getAllByRole("button", { name: "Cancel request" }).at(-1)!);
 
-    expect(await screen.findByText(/Use was confirmed/)).toBeVisible();
+    await waitFor(() => expect(posts()).toHaveLength(1));
     const request = posted();
-    expect(path(request)).toBe(`/api/v1/partner/claims/${REFERENCE}/confirm`);
-    expect(request.headers.get("X-Organization-ID")).toBe(ORG);
-    expect(await request.json()).toEqual({ reason: "" });
-    // Never looked anything up: viewing needs its own permission.
-    expect(fetchMock.mock.calls.every(([r]) => r.method === "POST")).toBe(true);
+    expect(path(request)).toBe(`/api/v1/marketplace/claims/${CLAIM_ID}/cancel`);
+    expect(request.headers.get("Idempotency-Key")).toMatch(KEY);
+  });
+});
+
+describe("Partner decision queue", () => {
+  function servePartner() {
+    fetchMock.mockImplementation(async (request) =>
+      request.method === "POST"
+        ? json({ ...partnerClaim, status: "accepted", voucher })
+        : json(page([partnerClaim])),
+    );
+  }
+
+  it("lists pending requests without decisions for a member who may only view", async () => {
+    servePartner();
+    setActiveOrganizationId(ORG);
+    renderAs(member([PartnerClaimPermission.CLAIM_VIEW]), <PartnerClaims />);
+    expect(await screen.findByText("Awaiting your decision")).toBeVisible();
+    expect((await screen.findAllByRole("link", { name: offer.title }))[0]).toHaveAttribute(
+      "href",
+      `/partner/claims/${CLAIM_ID}`,
+    );
+    expect(screen.queryByRole("button", { name: "Accept" })).not.toBeInTheDocument();
+    const queue = fetchMock.mock.calls
+      .map(([r]) => new URL(r.url))
+      .find((url) => url.searchParams.get("status") === "requested");
+    expect(queue?.pathname).toBe("/api/v1/partner/offer-claims");
+    expect(queue?.searchParams.get("ordering")).toBe("decision_deadline");
   });
 
-  it("rejects a malformed reference before calling the API", async () => {
+  it("accepts with the organization, an Idempotency-Key and an optional note", async () => {
+    servePartner();
     setActiveOrganizationId(ORG);
     const user = userEvent.setup();
-    renderAs(member([PartnerClaimPermission.CLAIM_CONFIRM]), <PartnerClaims />);
-    await user.type(screen.getByLabelText("Reference"), "../admin");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByText("A reference is 10 letters and digits")).toBeVisible();
-    expect(fetchMock).not.toHaveBeenCalled();
+    renderAs(
+      member([PartnerClaimPermission.CLAIM_VIEW, PartnerClaimPermission.CLAIM_ACCEPT]),
+      <PartnerClaims />,
+    );
+    expect(screen.queryByRole("button", { name: "Reject" })).not.toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: "Accept" }));
+    await user.click(screen.getByRole("button", { name: "Accept claim" }));
+
+    await waitFor(() => expect(posts()).toHaveLength(1));
+    const request = posted();
+    expect(path(request)).toBe(`/api/v1/partner/offer-claims/${CLAIM_ID}/accept`);
+    expect(request.headers.get("X-Organization-ID")).toBe(ORG);
+    expect(request.headers.get("Idempotency-Key")).toMatch(KEY);
+    expect(await request.json()).toEqual({ reason: "" });
+  });
+
+  it("requires a reason to reject", async () => {
+    servePartner();
+    setActiveOrganizationId(ORG);
+    const user = userEvent.setup();
+    renderAs(
+      member([PartnerClaimPermission.CLAIM_VIEW, PartnerClaimPermission.CLAIM_REJECT]),
+      <PartnerClaims />,
+    );
+    await user.click(await screen.findByRole("button", { name: "Reject" }));
+    await user.click(screen.getByRole("button", { name: "Reject claim" }));
+    expect(await screen.findByText(/Give a reason/)).toBeVisible();
+    expect(posts()).toHaveLength(0);
   });
 });
 
 describe("<AdminClaim>", () => {
-  it("offers confirmation on behalf only with its permission", async () => {
+  it("decides on a partner's behalf only with each permission", async () => {
     fetchMock.mockResolvedValue(json(adminClaim));
     renderAs(
       actor({ globalPermissions: new Set([ClaimAdminPermission.CLAIM_VIEW]) }),
       <AdminClaim claimId={CLAIM_ID} />,
     );
-    expect(await screen.findByRole("heading", { name: adminClaim.title })).toBeVisible();
-    expect(screen.queryByRole("button", { name: "Confirm on behalf" })).not.toBeInTheDocument();
+    expect(await screen.findByText("asha@employer.test")).toBeVisible();
+    expect(screen.getByText("Acme")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Accept on behalf" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Reject on behalf" })).not.toBeInTheDocument();
   });
 
-  it("requires a reason to confirm on behalf", async () => {
+  it("requires a reason even to accept on a partner's behalf", async () => {
     fetchMock.mockResolvedValue(json(adminClaim));
     const user = userEvent.setup();
     renderAs(
       actor({ globalPermissions: new Set(Object.values(ClaimAdminPermission)) }),
       <AdminClaim claimId={CLAIM_ID} />,
     );
-    await user.click(await screen.findByRole("button", { name: "Confirm on behalf" }));
-    await user.click(screen.getByRole("button", { name: "Confirm redemption" }));
+    await user.click(await screen.findByRole("button", { name: "Accept on behalf" }));
+    await user.click(screen.getByRole("button", { name: "Accept claim" }));
     expect(await screen.findByText(/Give a reason/)).toBeVisible();
-    expect(fetchMock.mock.calls.some(([r]) => r.method === "POST")).toBe(false);
-
-    await user.type(screen.getByLabelText("Reason"), "Partner has no portal users");
-    await user.click(screen.getByRole("button", { name: "Confirm redemption" }));
-    await waitFor(() => expect(fetchMock.mock.calls.some(([r]) => r.method === "POST")).toBe(true));
-    const request = posted();
-    expect(path(request)).toBe(`/api/v1/admin/claims/${CLAIM_ID}/confirm`);
-    expect(await request.json()).toEqual({ reason: "Partner has no portal users" });
+    expect(posts()).toHaveLength(0);
   });
 });

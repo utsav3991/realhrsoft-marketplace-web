@@ -1,11 +1,9 @@
 "use client";
 
-import { ArrowLeft, BadgeCheck, Ticket, X } from "lucide-react";
+import { ArrowLeft, Check, Ticket, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { toast } from "sonner";
 
-import { RichText } from "@/design-system/components/rich-text-editor";
 import { type DataTableColumns } from "@/design-system/components/data-table";
 import { EmptyState } from "@/design-system/components/empty-state";
 import { PageHeader } from "@/design-system/components/page-header";
@@ -28,6 +26,7 @@ import {
 import { Skeleton } from "@/design-system/primitives/skeleton";
 import { ApiError, isUuid } from "@/shared/api";
 import {
+  BenefitAdminPermission,
   ClaimAdminPermission,
   IdentityPermission,
   OfferAdminPermission,
@@ -35,7 +34,6 @@ import {
   useCan,
 } from "@/shared/authorization";
 import { Detail, DetailList } from "@/shared/components/details";
-import { ReasonDialog } from "@/shared/components/reason-dialog";
 import { QueryDataTable, type RowOf } from "@/shared/components/query-data-table";
 import { useSortParam } from "@/shared/hooks/use-sort-param";
 import { StatusBadge } from "@/shared/components/status-badge";
@@ -46,51 +44,66 @@ import { useUrlParams } from "@/shared/hooks/use-url-params";
 import { PartnerFilter } from "@/features/partners/components/partner-filter";
 import { OrganizationFilter } from "@/features/organizations/components/organization-filter";
 
-import { useConfirmAdminClaim } from "../api/mutations";
+import { useDecideAdminClaim } from "../api/mutations";
 import {
-  ADMIN_CLAIM_SORTS,
+  CLAIM_SORTS,
   useAdminClaim,
   useAdminClaims,
   type AdminClaimFilters,
   type Claim,
+  type ClaimKind,
 } from "../api/queries";
 import {
   CLAIM_STATUSES,
   ClaimStatusCallout,
   claimStatusFrom,
-  RedemptionDetails,
-  ReferenceCode,
+  DecisionDialog,
+  decisionAttempt,
+  DecisionFacts,
+  VoucherDetails,
+  type DecisionAttempt,
 } from "./claim-details";
 
 const ALL = "all";
 
-/**
- * Identifier filters other admin pages link with (?offer_id=…), shown as removable chips.
- * Partner and employer have their own pickers.
- */
-const ID_FILTERS = [
-  { param: "offer_id", key: "offerId", label: "Offer" },
-  { param: "employee_id", key: "employeeId", label: "Employee" },
-] as const;
+export const KIND_LABEL: Record<ClaimKind, string> = {
+  marketplace_offer: "Offer",
+  employer_benefit: "Company benefit",
+};
+const KINDS = Object.keys(KIND_LABEL) as ClaimKind[];
 
 const uuidParam = (value: string | null) => (value && isUuid(value) ? value : null);
 
-/** Every employee's claims; filters live in the URL. */
+/** Where the claimed offer or benefit is administered. */
+function sourceHref(claim: Pick<Claim, "kind" | "offer_id">): string {
+  return claim.kind === "employer_benefit"
+    ? `/admin/company-benefits/${claim.offer_id}`
+    : `/admin/offers/${claim.offer_id}`;
+}
+
+function useCanViewSource() {
+  return {
+    marketplace_offer: useCan(OfferAdminPermission.OFFER_VIEW),
+    employer_benefit: useCan(BenefitAdminPermission.BENEFIT_VIEW),
+  };
+}
+
+/** Every claim of both kinds; filters live in the URL. */
 export function AdminClaims() {
   const { searchParams, set } = useUrlParams();
-  const sort = useSortParam(ADMIN_CLAIM_SORTS);
+  const sort = useSortParam(CLAIM_SORTS);
   const filters: AdminClaimFilters = {
     status: claimStatusFrom(searchParams.get("status")),
+    kind: KINDS.find((kind) => kind === searchParams.get("kind")) ?? null,
     offerId: uuidParam(searchParams.get("offer_id")),
     partnerId: uuidParam(searchParams.get("partner_id")),
-    organizationId: uuidParam(searchParams.get("organization_id")),
-    employeeId: uuidParam(searchParams.get("employee_id")),
+    employerId: uuidParam(searchParams.get("employer_id")),
     ordering: sort.value,
   };
   const paging = usePageParam();
   const claims = useAdminClaims(filters, paging);
   const canViewUsers = useCan(IdentityPermission.USER_VIEW);
-  const canViewOffers = useCan(OfferAdminPermission.OFFER_VIEW);
+  const canViewSource = useCanViewSource();
 
   function setParam(name: string, value: string | null) {
     set({ [name]: value });
@@ -98,43 +111,35 @@ export function AdminClaims() {
 
   const columns: DataTableColumns<RowOf<typeof claims>> = [
     {
-      id: "reference",
-      header: "Reference",
-      sortKey: "reference",
-      cell: (claim) => (
-        <Link href={`/admin/claims/${claim.id}`} className="font-mono font-medium hover:underline">
-          {claim.reference}
-        </Link>
-      ),
-    },
-    {
-      id: "offer",
-      header: "Offer",
-      sortKey: "title",
+      id: "claim",
+      header: "Claim",
       cell: (claim) => (
         <>
-          {canViewOffers ? (
-            <Link href={`/admin/offers/${claim.offer_id}`} className="hover:underline">
-              {claim.title}
-            </Link>
-          ) : (
-            claim.title
-          )}
-          <p className="text-muted-foreground text-xs">{claim.partner_name}</p>
+          <Link href={`/admin/claims/${claim.id}`} className="font-medium hover:underline">
+            {claim.title}
+          </Link>
+          <p className="text-muted-foreground text-xs">
+            {claim.partner ?? claim.employer?.name ?? ""}
+          </p>
         </>
       ),
     },
     {
+      id: "kind",
+      header: "Kind",
+      className: "hidden lg:table-cell",
+      cell: (claim) => <Badge intent="outline">{KIND_LABEL[claim.kind]}</Badge>,
+    },
+    {
       id: "employee",
       header: "Employee",
-      sortKey: "employee_email",
       cell: (claim) =>
         canViewUsers ? (
-          <Link href={`/admin/users/${claim.employee_id}`} className="hover:underline">
-            {claim.employee_email}
+          <Link href={`/admin/users/${claim.beneficiary_id}`} className="hover:underline">
+            {claim.beneficiary_email}
           </Link>
         ) : (
-          claim.employee_email
+          claim.beneficiary_email
         ),
     },
     {
@@ -143,22 +148,26 @@ export function AdminClaims() {
       cell: (claim) => <StatusBadge domain="claim" status={claim.status} />,
     },
     {
-      id: "claimed",
-      header: "Claimed",
-      sortKey: "claimed_at",
+      id: "requested",
+      header: "Requested",
+      sortKey: "requested_at",
       className: "hidden md:table-cell",
       cellClassName: "text-muted-foreground",
-      cell: (claim) => formatDate(claim.claimed_at),
+      cell: (claim) => formatDate(claim.requested_at),
     },
     {
-      id: "use-by",
-      header: "Use by",
-      sortKey: "expires_at",
+      id: "deadline",
+      header: "Decide by",
+      sortKey: "decision_deadline",
+      className: "hidden md:table-cell",
       cellClassName: "text-muted-foreground",
-      cell: (claim) => formatDate(claim.expires_at),
+      cell: (claim) =>
+        claim.status === "requested" && claim.decision_deadline
+          ? formatDateTime(claim.decision_deadline)
+          : "—",
     },
   ];
-  const filtered = Object.values(filters).some(Boolean);
+  const filtered = Object.entries(filters).some(([key, value]) => key !== "ordering" && value);
 
   return (
     <div className="space-y-4">
@@ -167,7 +176,7 @@ export function AdminClaims() {
           value={filters.status ?? ALL}
           onValueChange={(value) => setParam("status", value === ALL ? null : value)}
         >
-          <SelectTrigger className="w-44" aria-label="Filter by status">
+          <SelectTrigger className="w-48" aria-label="Filter by status">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -179,28 +188,55 @@ export function AdminClaims() {
             ))}
           </SelectContent>
         </Select>
+        <Select
+          value={filters.kind ?? ALL}
+          onValueChange={(value) => setParam("kind", value === ALL ? null : value)}
+        >
+          <SelectTrigger className="w-48" aria-label="Filter by kind">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Offers and benefits</SelectItem>
+            {KINDS.map((kind) => (
+              <SelectItem key={kind} value={kind}>
+                {KIND_LABEL[kind]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <PartnerFilter value={filters.partnerId} onChange={(id) => setParam("partner_id", id)} />
         <OrganizationFilter
           label="Employer"
           allLabel="All employers"
-          value={filters.organizationId}
-          onChange={(id) => setParam("organization_id", id)}
+          value={filters.employerId}
+          onChange={(id) => setParam("employer_id", id)}
         />
-        {ID_FILTERS.map(({ param, key, label }) =>
-          filters[key] ? (
-            <Badge key={param} intent="outline" className="gap-1.5 py-1.5 pr-1.5">
-              {label}: <span className="font-mono">{filters[key]?.slice(0, 8)}…</span>
-              <button
-                type="button"
-                className="hover:bg-secondary rounded-full p-0.5"
-                aria-label={`Clear ${label.toLowerCase()} filter`}
-                onClick={() => setParam(param, null)}
+        {filters.offerId ? (
+          <Badge intent="outline" className="gap-1.5 py-1.5 pr-1.5">
+            {filters.kind === "employer_benefit" ? "Benefit" : "Offer"}:{" "}
+            {canViewSource[filters.kind ?? "marketplace_offer"] ? (
+              <Link
+                href={sourceHref({
+                  kind: filters.kind ?? "marketplace_offer",
+                  offer_id: filters.offerId,
+                })}
+                className="font-mono hover:underline"
               >
-                <X aria-hidden />
-              </button>
-            </Badge>
-          ) : null,
-        )}
+                {filters.offerId.slice(0, 8)}…
+              </Link>
+            ) : (
+              <span className="font-mono">{filters.offerId.slice(0, 8)}…</span>
+            )}
+            <button
+              type="button"
+              className="hover:bg-secondary rounded-full p-0.5"
+              aria-label="Clear offer filter"
+              onClick={() => setParam("offer_id", null)}
+            >
+              <X aria-hidden />
+            </button>
+          </Badge>
+        ) : null}
       </div>
 
       <QueryDataTable
@@ -233,7 +269,7 @@ function BackToClaims() {
   );
 }
 
-/** One claim with its employee, employer, redemption snapshot and confirmation. */
+/** One claim with its claimant, employer, decision and voucher or benefit use. */
 export function AdminClaim({ claimId }: { claimId: string }) {
   const claim = useAdminClaim(claimId);
 
@@ -262,26 +298,35 @@ export function AdminClaim({ claimId }: { claimId: string }) {
 }
 
 function LoadedClaim({ claim }: { claim: Claim }) {
-  const canConfirm = useCan(ClaimAdminPermission.CLAIM_CONFIRM);
+  const canAccept = useCan(ClaimAdminPermission.CLAIM_ACCEPT);
+  const canReject = useCan(ClaimAdminPermission.CLAIM_REJECT);
   const canViewUsers = useCan(IdentityPermission.USER_VIEW);
-  const canViewOffers = useCan(OfferAdminPermission.OFFER_VIEW);
+  const canViewSource = useCanViewSource()[claim.kind];
   const canViewOrganizations = useCan(OrganizationAdminPermission.ORGANIZATION_VIEW);
-  const [confirming, setConfirming] = useState(false);
-  const confirm = useConfirmAdminClaim(claim.id);
+  const [attempt, setAttempt] = useState<DecisionAttempt | null>(null);
+  const decide = useDecideAdminClaim();
+  const pending = claim.status === "requested";
+  const employer = claim.employer;
 
   return (
     <div className="space-y-6">
       <BackToClaims />
       <PageHeader
         title={claim.title}
-        description={claim.partner_name}
+        description={claim.partner ?? KIND_LABEL[claim.kind]}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge domain="claim" status={claim.status} />
-            {canConfirm && claim.status === "active" ? (
-              <Button onClick={() => setConfirming(true)}>
-                <BadgeCheck aria-hidden />
-                Confirm on behalf
+            {pending && canReject ? (
+              <Button variant="outline" onClick={() => setAttempt(decisionAttempt("reject"))}>
+                <X aria-hidden />
+                Reject on behalf
+              </Button>
+            ) : null}
+            {pending && canAccept ? (
+              <Button onClick={() => setAttempt(decisionAttempt("accept"))}>
+                <Check aria-hidden />
+                Accept on behalf
               </Button>
             ) : null}
           </div>
@@ -294,98 +339,87 @@ function LoadedClaim({ claim }: { claim: Claim }) {
         </CardHeader>
         <CardContent>
           <DetailList>
-            <Detail label="Reference">
-              <ReferenceCode reference={claim.reference} />
-            </Detail>
             <Detail label="Employee">
               {canViewUsers ? (
-                <Link href={`/admin/users/${claim.employee_id}`} className="hover:underline">
-                  {claim.employee_email}
+                <Link href={`/admin/users/${claim.beneficiary_id}`} className="hover:underline">
+                  {claim.beneficiary_email}
                 </Link>
               ) : (
-                claim.employee_email
+                claim.beneficiary_email
               )}
             </Detail>
             <Detail label="Employer when claimed">
-              {canViewOrganizations ? (
-                <Link
-                  href={`/admin/organizations/${claim.organization_id}`}
-                  className="font-mono text-xs hover:underline"
-                >
-                  {claim.organization_id}
-                </Link>
+              {employer ? (
+                canViewOrganizations ? (
+                  <Link href={`/admin/organizations/${employer.id}`} className="hover:underline">
+                    {employer.name}
+                  </Link>
+                ) : (
+                  employer.name
+                )
               ) : (
-                <span className="font-mono text-xs">{claim.organization_id}</span>
+                "—"
               )}
             </Detail>
-            <Detail label="Offer">
-              {canViewOffers ? (
-                <Link href={`/admin/offers/${claim.offer_id}`} className="hover:underline">
+            <Detail label={KIND_LABEL[claim.kind]}>
+              {canViewSource ? (
+                <Link href={sourceHref(claim)} className="hover:underline">
                   {claim.title}
                 </Link>
               ) : (
                 claim.title
               )}
               <span className="text-muted-foreground ml-1 text-xs">
-                (revision {claim.offer_revision})
+                (version {claim.version_number})
               </span>
             </Detail>
-            <Detail label="Benefit">{claim.benefit}</Detail>
-            <Detail label="Claimed">{formatDateTime(claim.claimed_at)}</Detail>
-            <Detail label="Use by">{formatDateTime(claim.expires_at)}</Detail>
-            <Detail label="Terms and conditions" className="sm:col-span-2 lg:col-span-3">
-              <RichText value={claim.terms} />
-            </Detail>
+            <Detail label="Headline">{claim.headline}</Detail>
+            <Detail label="Requested">{formatDateTime(claim.requested_at)}</Detail>
+            {claim.decision_deadline ? (
+              <Detail label="Decide by">{formatDateTime(claim.decision_deadline)}</Detail>
+            ) : null}
+            {claim.accepted_at ? (
+              <Detail label="Accepted">{formatDateTime(claim.accepted_at)}</Detail>
+            ) : null}
+            <DecisionFacts claim={claim} />
           </DetailList>
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Redemption details</CardTitle>
-          <CardDescription>
-            Issued to the employee when they claimed; later offer edits do not change them.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DetailList>
-            <RedemptionDetails claim={claim} />
-          </DetailList>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Confirmation</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {claim.redemption ? (
+      {claim.voucher ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Voucher</CardTitle>
+            <CardDescription>
+              Issued on acceptance with the accepted version&apos;s terms.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             <DetailList>
-              <Detail label="Confirmed">{formatDateTime(claim.redemption.confirmed_at)}</Detail>
-              <Detail label="Via">
-                {claim.redemption.via === "admin" ? "Aayulogic on behalf" : "Partner portal"}
-              </Detail>
-              <Detail label="Confirmed by">
-                <span className="font-mono text-xs">{claim.redemption.confirmed_by}</span>
-              </Detail>
-              <Detail label="Note" className="sm:col-span-2 lg:col-span-3">
-                <span className="whitespace-pre-line">{claim.redemption.reason || "—"}</span>
-              </Detail>
+              <VoucherDetails voucher={claim.voucher} />
             </DetailList>
-          ) : (
-            <p className="text-muted-foreground text-sm">Not confirmed.</p>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ) : null}
+      {claim.benefit_usage ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Benefit use</CardTitle>
+            <CardDescription>Claiming a company benefit records one use.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DetailList>
+              <Detail label="Used">{formatDateTime(claim.benefit_usage.used_at)}</Detail>
+              <Detail label="Use number">{claim.benefit_usage.use_number}</Detail>
+            </DetailList>
+          </CardContent>
+        </Card>
+      ) : null}
 
-      <ReasonDialog
-        open={confirming}
-        onOpenChange={setConfirming}
-        title="Confirm this redemption on the partner's behalf?"
-        description={`Claim ${claim.reference} is marked used and cannot be redeemed again. Use this for support cases, such as a partner without portal users.`}
-        confirmLabel="Confirm redemption"
-        onConfirm={async (reason) => {
-          await confirm.mutateAsync({ reason });
-          toast.success(`Claim ${claim.reference} redeemed`);
-        }}
+      <DecisionDialog
+        attempt={attempt}
+        acceptReasonRequired
+        onClose={() => setAttempt(null)}
+        onDecide={(input) => decide.mutateAsync({ claimId: claim.id, ...input })}
       />
     </div>
   );

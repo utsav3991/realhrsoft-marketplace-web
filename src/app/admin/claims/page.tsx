@@ -13,7 +13,7 @@ export default function AdminClaimsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Claims"
-        description="Every employee's claimed offers, their redemption and who confirmed it."
+        description="Every offer and benefit claim with its claimant, decision and voucher."
       />
       <RequirePermission anyOf={[ClaimAdminPermission.CLAIM_VIEW]}>
         <Suspense>

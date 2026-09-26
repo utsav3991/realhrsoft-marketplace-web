@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, EyeOff, Gift, PauseCircle } from "lucide-react";
+import { Archive, CalendarClock, EyeOff, FilePen, Gift, PauseCircle } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { RichText } from "@/design-system/components/rich-text-editor";
@@ -13,51 +13,57 @@ import {
   CardHeader,
   CardTitle,
 } from "@/design-system/primitives/card";
+import type { DisplayStatus } from "@/features/offers/api/queries";
+import { AVAILABILITY_LABEL } from "@/features/offers/components/offer-details";
+import { benefitSummary } from "@/features/offers/schemas/benefit-value";
 import { Detail, DetailList } from "@/shared/components/details";
-import { formatDate, formatDateTime } from "@/shared/lib/format";
+import { formatDateTime } from "@/shared/lib/format";
 
-import type { Benefit, BenefitDisplayStatus } from "../api/queries";
+import type { Benefit } from "../api/queries";
+import { benefitVersion } from "../schemas/benefit";
 
-export const BENEFIT_STATUSES: readonly { value: BenefitDisplayStatus; label: string }[] = [
+export { validity } from "@/features/offers/components/offer-details";
+
+export const BENEFIT_STATUSES: readonly { value: DisplayStatus; label: string }[] = [
   { value: "active", label: "Active" },
   { value: "scheduled", label: "Scheduled" },
   { value: "draft", label: "Draft" },
   { value: "expired", label: "Expired" },
+  { value: "paused", label: "Paused" },
   { value: "suspended", label: "Suspended" },
   { value: "retired", label: "Retired" },
 ];
 
-export function benefitStatusFrom(value: string | null): BenefitDisplayStatus | null {
+export function benefitStatusFrom(value: string | null): DisplayStatus | null {
   return BENEFIT_STATUSES.find((option) => option.value === value)?.value ?? null;
 }
 
-/** A retired benefit is final; every other status can be edited (changes apply at once). */
-export function isEditable(benefit: Benefit): boolean {
-  return benefit.status !== "retired";
-}
+// --- Lifecycle guards: mirror the API's conflicts; the API still decides ---------------
 
-export function isPublishable(benefit: Benefit): boolean {
-  return benefit.status === "draft";
-}
-
-export function isRetirable(benefit: Benefit): boolean {
-  return benefit.status !== "retired";
-}
+const isRetired = (benefit: Benefit) => benefit.availability === "retired";
+export const isSuspended = (benefit: Benefit) => Boolean(benefit.suspended_at);
+/** Retirement is final; a live benefit's edit publishes a new version at once. */
+export const isEditable = (benefit: Benefit) => !isRetired(benefit);
+export const isLive = (benefit: Benefit) => benefit.current_version !== null;
+export const isPublishable = (benefit: Benefit) =>
+  !isRetired(benefit) && !isLive(benefit) && benefit.working_version?.state === "draft";
+export const isUnpublishable = (benefit: Benefit) => !isRetired(benefit) && isLive(benefit);
+export const isPausable = (benefit: Benefit) => benefit.availability === "enabled";
+export const isResumable = (benefit: Benefit) => benefit.availability === "paused";
+export const isRetirable = (benefit: Benefit) => !isRetired(benefit);
 
 export function usageLimit(max: number): string {
   return max === 1 ? "Once per employee" : `${max} times per employee`;
 }
 
-/** "1 Oct 2026 – 30 Sep 2027", or "From 1 Oct 2026" when open-ended. */
-export function validity(validFrom: string, validUntil: string | null): string {
-  return validUntil
-    ? `${formatDate(validFrom)} – ${formatDate(validUntil)}`
-    : `From ${formatDate(validFrom)}`;
+/** The benefit's lifetime limit from the terms shown, when there are any. */
+export function benefitLimit(benefit: Benefit): number | null {
+  return benefitVersion(benefit)?.benefit_policy?.max_claims_per_beneficiary ?? null;
 }
 
 /**
- * Marks a Company Benefit so it is never mistaken for a marketplace offer (EMP-02): it comes
- * from the employer, not a partner, and nothing is bought.
+ * Marks a Company Benefit so it is never mistaken for a marketplace offer: it comes from the
+ * employer, not a partner, and nothing is bought.
  */
 export function CompanyBenefitBadge() {
   return (
@@ -69,13 +75,16 @@ export function CompanyBenefitBadge() {
 }
 
 /** Only a badge: employees see the benefit only while every availability rule holds. */
-export function AvailabilityBadge({ benefit }: { benefit: Benefit }) {
-  return benefit.available_to_employees ? (
-    <Badge intent="success" title="Active, inside its dates, and the Employer capacity is on">
+export function AvailabilityBadge({ benefit }: { benefit: Pick<Benefit, "visible_to_employees"> }) {
+  return benefit.visible_to_employees ? (
+    <Badge
+      intent="success"
+      title="Published, enabled, not suspended, inside its dates, and the Employer capacity is on"
+    >
       Available to employees
     </Badge>
   ) : (
-    <Badge intent="outline" title="Not active, outside its dates, or the Employer capacity is off">
+    <Badge intent="outline" title="At least one availability rule does not hold">
       <EyeOff aria-hidden />
       Hidden
     </Badge>
@@ -89,33 +98,49 @@ export function BenefitContentCard({
   benefit: Benefit;
   action?: ReactNode;
 }) {
+  const version = benefitVersion(benefit);
+  const policy = version?.benefit_policy;
   return (
     <Card>
       <CardHeader className="flex-row items-start justify-between gap-4">
         <div className="space-y-1.5">
           <CardTitle>Benefit</CardTitle>
           <CardDescription>
-            Edits apply at once, also to employees who can already see it.
+            {isLive(benefit)
+              ? "Saving an edit publishes it at once as a new version; past uses keep the version they used."
+              : "A draft; employees see it once you publish it."}
           </CardDescription>
         </div>
         {action}
       </CardHeader>
       <CardContent>
-        <DetailList>
-          <Detail label="Title">{benefit.title}</Detail>
-          <Detail label="Valid from">{formatDateTime(benefit.valid_from)}</Detail>
-          <Detail label="Valid until">
-            {benefit.valid_until ? formatDateTime(benefit.valid_until) : "Open-ended"}
-          </Detail>
-          <Detail label="Usage limit">{usageLimit(benefit.max_claims_per_employee)}</Detail>
-          <Detail label="Audience">Own employees of {benefit.organization_name}</Detail>
-          <Detail label="Description" className="sm:col-span-2 lg:col-span-3">
-            <RichText value={benefit.description} />
-          </Detail>
-          <Detail label="How to use it" className="sm:col-span-2 lg:col-span-3">
-            {benefit.usage_rules ? <RichText value={benefit.usage_rules} /> : "—"}
-          </Detail>
-        </DetailList>
+        {version ? (
+          <DetailList>
+            <Detail label="Title">{version.title}</Detail>
+            <Detail label="Headline">{version.headline}</Detail>
+            <Detail label="Value">{benefitSummary(version.benefit)}</Detail>
+            <Detail label="Valid from">{formatDateTime(version.valid_from)}</Detail>
+            <Detail label="Valid until">
+              {version.valid_until ? formatDateTime(version.valid_until) : "Open-ended"}
+            </Detail>
+            {policy ? (
+              <Detail label="Usage limit">{usageLimit(policy.max_claims_per_beneficiary)}</Detail>
+            ) : null}
+            <Detail label="Audience">Own employees of {benefit.provider_organization.name}</Detail>
+            <Detail label="Version">{version.number}</Detail>
+            <Detail label="Description" className="sm:col-span-2 lg:col-span-3">
+              <RichText value={version.description} />
+            </Detail>
+            <Detail label="How to use it" className="sm:col-span-2 lg:col-span-3">
+              {policy?.usage_rules ? <RichText value={policy.usage_rules} /> : "—"}
+            </Detail>
+            <Detail label="Terms and conditions" className="sm:col-span-2 lg:col-span-3">
+              {version.terms ? <RichText value={version.terms} /> : "—"}
+            </Detail>
+          </DetailList>
+        ) : (
+          <p className="text-muted-foreground text-sm">No terms yet.</p>
+        )}
       </CardContent>
     </Card>
   );
@@ -126,23 +151,28 @@ export function LifecycleCard({ benefit }: { benefit: Benefit }) {
     <Card>
       <CardHeader>
         <CardTitle>Lifecycle</CardTitle>
-        <CardDescription>Every change is recorded in the audit log.</CardDescription>
+        <CardDescription>
+          Every change is recorded in the audit log. Usage counts are in the usage report.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <DetailList>
-          <Detail label="Claims so far">{benefit.claim_count}</Detail>
+          <Detail label="Availability">{AVAILABILITY_LABEL[benefit.availability]}</Detail>
+          <Detail label="Live version">
+            {benefit.current_version ? benefit.current_version.number : "None"}
+          </Detail>
+          <Detail label="First published">
+            {benefit.first_published_at ? formatDateTime(benefit.first_published_at) : "Not yet"}
+          </Detail>
           <Detail label="Created">{formatDateTime(benefit.created_at)}</Detail>
           <Detail label="Last updated">{formatDateTime(benefit.updated_at)}</Detail>
-          <Detail label="Published">
-            {benefit.published_at ? formatDateTime(benefit.published_at) : "Not yet"}
-          </Detail>
           {benefit.suspended_at ? (
             <Detail label="Suspended">{formatDateTime(benefit.suspended_at)}</Detail>
           ) : null}
           {benefit.retired_at ? (
             <Detail label="Retired">{formatDateTime(benefit.retired_at)}</Detail>
           ) : null}
-          <Detail label="Version">{benefit.version}</Detail>
+          <Detail label="Record version">{benefit.version}</Detail>
         </DetailList>
       </CardContent>
     </Card>
@@ -157,26 +187,52 @@ export function BenefitStatusCallout({
   benefit: Benefit;
   audience: "employer" | "admin";
 }) {
-  if (benefit.status === "suspended") {
+  if (isRetired(benefit)) {
+    return (
+      <Alert>
+        <Archive aria-hidden />
+        <AlertTitle>Retired</AlertTitle>
+        <AlertDescription>
+          Final: employees can no longer use it. Past uses stay in their history and the usage
+          report.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  if (isSuspended(benefit)) {
     return (
       <Alert variant="destructive">
         <PauseCircle aria-hidden />
         <AlertTitle>Suspended by Aayulogic</AlertTitle>
         <AlertDescription>
-          <p>Employees cannot see or claim it. Reason: {benefit.suspension_reason || "—"}</p>
+          <p>Employees cannot see or use it. Reason: {benefit.suspension_reason || "—"}</p>
           {audience === "employer" ? (
-            <p>You can still edit or retire it; only Aayulogic can reinstate it.</p>
+            <p>Editing, resuming or publishing does not lift it; only Aayulogic can reinstate it.</p>
           ) : null}
         </AlertDescription>
       </Alert>
     );
   }
+  if (benefit.availability === "paused") {
+    return (
+      <Alert>
+        <PauseCircle aria-hidden />
+        <AlertTitle>Paused</AlertTitle>
+        <AlertDescription>
+          {audience === "employer"
+            ? "Employees cannot see or use it until you resume it."
+            : "The employer paused it; employees cannot see or use it."}
+        </AlertDescription>
+      </Alert>
+    );
+  }
   if (audience === "admin") return null;
+  const version = benefitVersion(benefit);
   switch (benefit.display_status) {
     case "draft":
       return (
         <Alert>
-          <Gift aria-hidden />
+          <FilePen aria-hidden />
           <AlertTitle>Draft</AlertTitle>
           <AlertDescription>
             Only your organization sees it. Publish it to offer it to your employees; there is no
@@ -190,7 +246,8 @@ export function BenefitStatusCallout({
           <CalendarClock aria-hidden />
           <AlertTitle>Scheduled</AlertTitle>
           <AlertDescription>
-            Published. Employees see it from {formatDateTime(benefit.valid_from)}.
+            Published. Employees see it from{" "}
+            {version ? formatDateTime(version.valid_from) : "its start date"}.
           </AlertDescription>
         </Alert>
       );
@@ -200,7 +257,7 @@ export function BenefitStatusCallout({
           <CalendarClock aria-hidden />
           <AlertTitle>Expired</AlertTitle>
           <AlertDescription>
-            Its end date passed, so employees no longer see it. Extend the end date to offer it
+            Its end date passed, so employees no longer see it. Edit the end date to offer it
             again.
           </AlertDescription>
         </Alert>

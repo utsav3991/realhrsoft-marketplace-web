@@ -77,6 +77,7 @@ function useInvalidateOffer(offerId: string) {
     Promise.all([
       queryClient.invalidateQueries({ queryKey: offerKeys.detail(offerId) }),
       queryClient.invalidateQueries({ queryKey: offerKeys.decisions(offerId) }),
+      queryClient.invalidateQueries({ queryKey: offerKeys.versions(offerId) }),
       queryClient.invalidateQueries({ queryKey: offerKeys.lists() }),
     ]);
 }
@@ -94,43 +95,72 @@ export function useUpdateOffer(offerId: string) {
   });
 }
 
-/** Actions whose body is the loaded version plus an optional audit note. */
-type OptionalReasonAction = "submit" | "publish" | "approve";
-/** Actions whose body carries a required audited reason. */
-type RequiredReasonAction = "reject" | "request-changes" | "withdraw" | "suspend" | "reinstate";
-export type OfferAction = OptionalReasonAction | RequiredReasonAction;
+/** Decisions on the working version the reviewer read; the API answers 409 if it changed. */
+type VersionAction = "approve" | "publish" | "reject" | "request-changes";
+/** Offer-level actions on the loaded version, with a required reason except submit. */
+type OfferLevelAction = "submit" | "retract" | "unpublish" | "suspend" | "reinstate";
+export type OfferAction = VersionAction | OfferLevelAction;
+
+export interface OfferActionBody {
+  expected_version: number;
+  reason: string;
+  /** Required by the version actions: the working version shown to the reviewer. */
+  version_id?: string;
+}
+
+function versionBody({ version_id, ...body }: OfferActionBody) {
+  if (!version_id) throw new Error("A version decision needs the reviewed version_id");
+  return { ...body, version_id };
+}
 
 // Literal paths keep every call visible to the contract-coverage test.
-function postOfferAction(
-  action: OfferAction,
-  offerId: string,
-  body: Schemas["ExpectedVersion"] | Schemas["ExpectedVersionReason"],
-) {
+function postOfferAction(action: OfferAction, offerId: string, body: OfferActionBody) {
   const params = { path: { offer_id: pathId(offerId) } };
+  const { expected_version, reason } = body;
   switch (action) {
-    case "submit":
-      return api.POST("/admin/offers/{offer_id}/submit", { params, body });
-    case "publish":
-      return api.POST("/admin/offers/{offer_id}/publish", { params, body });
     case "approve":
-      return api.POST("/admin/offers/{offer_id}/approve", { params, body });
+      return api.POST("/admin/offers/{offer_id}/approve", { params, body: versionBody(body) });
+    case "publish":
+      return api.POST("/admin/offers/{offer_id}/publish", { params, body: versionBody(body) });
     case "reject":
-      return api.POST("/admin/offers/{offer_id}/reject", { params, body });
+      return api.POST("/admin/offers/{offer_id}/reject", { params, body: versionBody(body) });
     case "request-changes":
-      return api.POST("/admin/offers/{offer_id}/request-changes", { params, body });
-    case "withdraw":
-      return api.POST("/admin/offers/{offer_id}/withdraw", { params, body });
+      return api.POST("/admin/offers/{offer_id}/request-changes", {
+        params,
+        body: versionBody(body),
+      });
+    case "submit":
+      return api.POST("/admin/offers/{offer_id}/submit", {
+        params,
+        body: { expected_version, reason },
+      });
+    case "retract":
+      return api.POST("/admin/offers/{offer_id}/retract", {
+        params,
+        body: { expected_version, reason },
+      });
+    case "unpublish":
+      return api.POST("/admin/offers/{offer_id}/unpublish", {
+        params,
+        body: { expected_version, reason },
+      });
     case "suspend":
-      return api.POST("/admin/offers/{offer_id}/suspend", { params, body });
+      return api.POST("/admin/offers/{offer_id}/suspend", {
+        params,
+        body: { expected_version, reason },
+      });
     case "reinstate":
-      return api.POST("/admin/offers/{offer_id}/reinstate", { params, body });
+      return api.POST("/admin/offers/{offer_id}/reinstate", {
+        params,
+        body: { expected_version, reason },
+      });
   }
 }
 
 /** Every administrator state change on one offer. */
 export function useOfferAction(offerId: string) {
   return useMutation({
-    mutationFn: ({ action, ...body }: Schemas["ExpectedVersion"] & { action: OfferAction }) =>
+    mutationFn: ({ action, ...body }: OfferActionBody & { action: OfferAction }) =>
       unwrap(postOfferAction(action, offerId, body)),
     onSettled: useInvalidateOffer(offerId),
   });
@@ -186,34 +216,39 @@ export function useUpdateOwnOffer(organizationId: string, offerId: string) {
   });
 }
 
-export function useSubmitOwnOffer(organizationId: string, offerId: string) {
-  return useMutation({
-    mutationFn: (body: Schemas["ExpectedVersion"]) =>
-      unwrap(
-        api.POST("/partner/offers/{offer_id}/submit", {
-          params: {
-            header: organizationHeader(organizationId),
-            path: { offer_id: pathId(offerId) },
-          },
-          body,
-        }),
-      ),
-    onSettled: useInvalidateOwnOffers(organizationId),
-  });
+export type OwnOfferAction = "submit" | "retract" | "unpublish" | "pause" | "resume" | "retire";
+
+function postOwnOfferAction(
+  action: OwnOfferAction,
+  organizationId: string,
+  offerId: string,
+  body: Schemas["ExpectedVersion"],
+) {
+  const params = {
+    header: organizationHeader(organizationId),
+    path: { offer_id: pathId(offerId) },
+  };
+  switch (action) {
+    case "submit":
+      return api.POST("/partner/offers/{offer_id}/submit", { params, body });
+    case "retract":
+      return api.POST("/partner/offers/{offer_id}/retract", { params, body });
+    case "unpublish":
+      return api.POST("/partner/offers/{offer_id}/unpublish", { params, body });
+    case "pause":
+      return api.POST("/partner/offers/{offer_id}/pause", { params, body });
+    case "resume":
+      return api.POST("/partner/offers/{offer_id}/resume", { params, body });
+    case "retire":
+      return api.POST("/partner/offers/{offer_id}/retire", { params, body });
+  }
 }
 
-export function useWithdrawOwnOffer(organizationId: string, offerId: string) {
+/** Every owner state change on one of the selected organization's offers. */
+export function useOwnOfferAction(organizationId: string, offerId: string) {
   return useMutation({
-    mutationFn: (body: Schemas["ExpectedVersion"]) =>
-      unwrap(
-        api.POST("/partner/offers/{offer_id}/withdraw", {
-          params: {
-            header: organizationHeader(organizationId),
-            path: { offer_id: pathId(offerId) },
-          },
-          body,
-        }),
-      ),
+    mutationFn: ({ action, ...body }: Schemas["ExpectedVersion"] & { action: OwnOfferAction }) =>
+      unwrap(postOwnOfferAction(action, organizationId, offerId, body)),
     onSettled: useInvalidateOwnOffers(organizationId),
   });
 }

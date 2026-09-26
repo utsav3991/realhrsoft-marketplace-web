@@ -358,9 +358,9 @@ function LoadedEmployment({ employment }: { employment: Employment }) {
             <StatusBadge domain="employment" status={employmentStatus(employment)} />
             {canViewClaims ? (
               <Button asChild variant="outline">
-                <Link href={`/admin/claims?employee_id=${employment.user_id}`}>
+                <Link href={`/admin/claims?employer_id=${employment.organization_id}`}>
                   <Ticket aria-hidden />
-                  Claims
+                  Employer&apos;s claims
                 </Link>
               </Button>
             ) : null}
@@ -452,7 +452,6 @@ function EmploymentDetails({
  */
 export function UserEmploymentsCard({ userId, email }: { userId: string; email: string }) {
   const canView = useCan(EmploymentAdminPermission.EMPLOYMENT_VIEW);
-  const canViewClaims = useCan(ClaimAdminPermission.CLAIM_VIEW);
   const sort = useSortParam(EMPLOYMENT_SORTS, "employments_ordering");
   const paging = usePageParam("employments_");
   const employments = useEmployments(
@@ -473,14 +472,6 @@ export function UserEmploymentsCard({ userId, email }: { userId: string; email: 
           </CardDescription>
         </div>
         <div className="flex flex-wrap gap-2">
-          {canViewClaims ? (
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/admin/claims?employee_id=${userId}`}>
-                <Ticket aria-hidden />
-                Claims
-              </Link>
-            </Button>
-          ) : null}
           {employments.isSuccess && !hasCurrent ? (
             <StartEmploymentAction employee={{ id: userId, label: email }} size="sm" />
           ) : null}

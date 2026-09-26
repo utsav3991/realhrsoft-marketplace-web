@@ -8,7 +8,10 @@ import { describe, expect, it } from "vitest";
  * cannot land without its frontend integration going unnoticed. Endpoints the frontend
  * deliberately does not call belong in NOT_CALLED, with a reason.
  */
-const NOT_CALLED: Readonly<Record<string, string>> = {};
+const NOT_CALLED: Readonly<Record<string, string>> = {
+  "GET /marketplace/benefit-claims/{claim_id}":
+    "Benefit uses have no detail view: history rows already carry every field of the use.",
+};
 
 const root = process.cwd();
 const apiBase = "/api/v1";

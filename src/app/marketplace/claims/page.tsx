@@ -11,7 +11,7 @@ export default function MyClaimsPage() {
     <div className="space-y-6">
       <PageHeader
         title="My offers"
-        description="Offers you claimed, with the reference and details to redeem them."
+        description="Offers you requested or claimed, their approval and the vouchers issued for them."
       />
       <Suspense>
         <MyClaims />

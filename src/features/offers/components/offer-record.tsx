@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CloudOff,
   Check,
   MessageSquareWarning,
   MoreHorizontal,
@@ -57,16 +58,22 @@ import {
   useUpdateOffer,
   type OfferAction,
 } from "../api/mutations";
-import { useOffer, useOfferDecisions, type Offer, type OfferStatus } from "../api/queries";
-import { offerBody, offerValues } from "../schemas/offer";
+import { useOffer, useOfferDecisions, useOfferVersions, type Offer } from "../api/queries";
+import { editableVersion, offerBody, offerValues } from "../schemas/offer";
 import { useAdminCategoryOptions } from "./category-options";
 import {
+  isAdminPublishable,
   isEditable,
-  OfferContentCard,
+  isInReview,
+  isPublished,
+  isSubmittable,
+  isSuspended,
   OfferDecisionHistory,
   OfferStatusCallout,
+  OfferVersionHistory,
+  OfferVersions,
   PublicationCard,
-  RedemptionCard,
+  shownVersion,
 } from "./offer-details";
 import { OfferForm } from "./offer-form";
 import { BackToOffers, useAdminIntents } from "./new-offer";
@@ -104,8 +111,10 @@ interface ActionSpec {
   label: string;
   icon: LucideIcon;
   permission: GlobalPermissionCode;
-  /** Statuses the API accepts this action from. */
-  from: readonly OfferStatus[];
+  /** Whether the API accepts this action in the offer's current state. */
+  available: (offer: Offer) => boolean;
+  /** Decisions name the working version the reviewer read. */
+  onVersion?: boolean;
   title: string;
   description: string;
   confirmLabel: string;
@@ -115,40 +124,44 @@ interface ActionSpec {
   destructive?: boolean;
 }
 
+const notRetired = (offer: Offer) => offer.availability !== "retired";
+
 // In priority order: the first available action is the page's primary button.
 const ACTIONS: Record<OfferAction, ActionSpec> = {
   approve: {
     label: "Approve",
     icon: Check,
     permission: OfferAdminPermission.OFFER_APPROVE,
-    from: ["pending_review"],
-    title: "Approve this offer?",
+    available: isInReview,
+    onVersion: true,
+    title: "Approve this version?",
     description:
-      "Approves the content at the revision you reviewed. Employees see it only while the partner is verified and the offer is inside its dates.",
-    confirmLabel: "Approve offer",
-    done: "Offer approved",
+      "It becomes the live version at once, replacing any earlier one; claims keep the version they accepted. Employees see it only while the partner is verified and it is inside its dates.",
+    confirmLabel: "Approve version",
+    done: "Version approved",
     optionalReason: true,
   },
   publish: {
     label: "Publish",
     icon: Upload,
     permission: OfferAdminPermission.OFFER_PUBLISH,
-    from: ["draft", "changes_requested", "rejected"],
-    title: "Publish this offer directly?",
+    available: (offer) => isAdminPublishable(offer) && !isInReview(offer),
+    onVersion: true,
+    title: "Publish this version directly?",
     description:
-      "Approves the current revision without a separate review, recorded as published by you. The partner must still be verified.",
-    confirmLabel: "Publish offer",
-    done: "Offer published",
+      "Approves the working version without a separate review, recorded as published by you, and makes it live. The partner must still be verified.",
+    confirmLabel: "Publish version",
+    done: "Version published",
     optionalReason: true,
   },
   reinstate: {
     label: "Reinstate",
     icon: Play,
     permission: OfferAdminPermission.OFFER_REINSTATE,
-    from: ["suspended"],
+    available: isSuspended,
     title: "Reinstate this offer?",
     description:
-      "Returns it to approved at the same revision. The category must be active and the end date in the future.",
+      "Lifts the suspension. Employees see it again if every other gate passes; the partner must be verified.",
     confirmLabel: "Reinstate offer",
     done: "Offer reinstated",
   },
@@ -156,9 +169,11 @@ const ACTIONS: Record<OfferAction, ActionSpec> = {
     label: "Request changes",
     icon: MessageSquareWarning,
     permission: OfferAdminPermission.OFFER_REQUEST_CHANGES,
-    from: ["pending_review"],
+    available: isInReview,
+    onVersion: true,
     title: "Request changes?",
-    description: "The reason tells the partner what to change before resubmitting.",
+    description:
+      "The reason tells the partner what to change in a new draft. A live version stays live.",
     confirmLabel: "Request changes",
     done: "Changes requested",
   },
@@ -166,47 +181,61 @@ const ACTIONS: Record<OfferAction, ActionSpec> = {
     label: "Reject",
     icon: X,
     permission: OfferAdminPermission.OFFER_REJECT,
-    from: ["pending_review"],
-    title: "Reject this offer?",
+    available: isInReview,
+    onVersion: true,
+    title: "Reject this version?",
     description:
-      "The reason is shown to the partner as feedback. They can still edit and resubmit it.",
-    confirmLabel: "Reject offer",
-    done: "Offer rejected",
+      "The reason is shown to the partner as feedback. A live version stays live, and the partner can edit into a new draft.",
+    confirmLabel: "Reject version",
+    done: "Version rejected",
     destructive: true,
   },
   submit: {
     label: "Submit for review",
     icon: Send,
     permission: OfferAdminPermission.OFFER_SUBMIT,
-    from: ["draft", "changes_requested", "rejected"],
+    available: isSubmittable,
     title: "Submit for review on the partner's behalf?",
     description:
-      "Moves it to pending review. The category must be active and the end date in the future.",
+      "Freezes the draft and moves it to review. The category must be active and the end date in the future.",
     confirmLabel: "Submit",
-    done: "Offer submitted for review",
+    done: "Version submitted for review",
     optionalReason: true,
+  },
+  retract: {
+    label: "Retract from review",
+    icon: Undo2,
+    permission: OfferAdminPermission.OFFER_WITHDRAW,
+    available: isInReview,
+    title: "Retract this version from review?",
+    description:
+      "It becomes retracted and frozen; editing starts a new draft. A live version stays live.",
+    confirmLabel: "Retract",
+    done: "Version retracted",
+    destructive: true,
+  },
+  unpublish: {
+    label: "Unpublish",
+    icon: CloudOff,
+    permission: OfferAdminPermission.OFFER_WITHDRAW,
+    available: isPublished,
+    title: "Unpublish this offer?",
+    description:
+      "Takes the live version offline (no new claims) and keeps a draft copy to edit. Accepted claims and issued vouchers are unaffected. This is not retirement.",
+    confirmLabel: "Unpublish",
+    done: "Offer unpublished",
+    destructive: true,
   },
   suspend: {
     label: "Suspend",
     icon: Pause,
     permission: OfferAdminPermission.OFFER_SUSPEND,
-    from: ["approved"],
+    available: (offer) => notRetired(offer) && !isSuspended(offer),
     title: "Suspend this offer?",
     description:
-      "Hides it from employees immediately and locks it for editing until reinstated. The partner sees your reason.",
+      "Hides it from employees whatever its partner does; editing, resuming or publishing never lifts it. Issued vouchers keep their terms. The partner sees your reason.",
     confirmLabel: "Suspend offer",
     done: "Offer suspended",
-    destructive: true,
-  },
-  withdraw: {
-    label: "Withdraw to draft",
-    icon: Undo2,
-    permission: OfferAdminPermission.OFFER_WITHDRAW,
-    from: ["pending_review", "approved"],
-    title: "Withdraw to draft on the partner's behalf?",
-    description: "Returns it to draft and hides it from employees. History is kept.",
-    confirmLabel: "Withdraw",
-    done: "Offer withdrawn to draft",
     destructive: true,
   },
 };
@@ -219,11 +248,12 @@ function useAvailableActions(offer: Offer): OfferAction[] {
     "request-changes": useCan(ACTIONS["request-changes"].permission),
     reject: useCan(ACTIONS.reject.permission),
     submit: useCan(ACTIONS.submit.permission),
+    retract: useCan(ACTIONS.retract.permission),
+    unpublish: useCan(ACTIONS.unpublish.permission),
     suspend: useCan(ACTIONS.suspend.permission),
-    withdraw: useCan(ACTIONS.withdraw.permission),
   };
   return (Object.keys(ACTIONS) as OfferAction[]).filter(
-    (action) => granted[action] && ACTIONS[action].from.includes(offer.status),
+    (action) => granted[action] && ACTIONS[action].available(offer),
   );
 }
 
@@ -235,7 +265,10 @@ function OfferWorkspace({ offer }: { offer: Offer }) {
   const canViewClaims = useCan(ClaimAdminPermission.CLAIM_VIEW);
   const actions = useAvailableActions(offer);
   const [acting, setActing] = useState<OfferAction | "feature" | null>(null);
-  const [editing, setEditing] = useState(false);
+  // The offer the edit started from: a background refetch must not turn a stale draft into an
+  // overwrite of someone else's change (the API answers 409 instead).
+  const [editingFrom, setEditingFrom] = useState<Offer | null>(null);
+  const partner = offer.partner;
 
   // Two buttons at most; the rest go in the menu. Only a non-destructive first is cobalt.
   const [primary, secondary, ...menu] = actions;
@@ -244,19 +277,21 @@ function OfferWorkspace({ offer }: { offer: Offer }) {
     <div className="space-y-6">
       <BackToOffers />
       <PageHeader
-        title={offer.title}
+        title={shownVersion(offer)?.title ?? "Offer"}
         description={
-          <span className="flex flex-wrap items-center gap-x-2">
-            {canViewPartner ? (
-              <Link href={`/admin/partners/${offer.partner.id}`} className="hover:underline">
-                {offer.partner.business_name}
-              </Link>
-            ) : (
-              offer.partner.business_name
-            )}
-            <span aria-hidden>·</span>
-            {SOURCE_LABEL[offer.partner.source]}
-          </span>
+          partner ? (
+            <span className="flex flex-wrap items-center gap-x-2">
+              {canViewPartner ? (
+                <Link href={`/admin/partners/${partner.id}`} className="hover:underline">
+                  {partner.business_name}
+                </Link>
+              ) : (
+                partner.business_name
+              )}
+              <span aria-hidden>·</span>
+              {SOURCE_LABEL[partner.source]}
+            </span>
+          ) : null
         }
         actions={
           <div className="flex flex-wrap items-center gap-2">
@@ -309,14 +344,14 @@ function OfferWorkspace({ offer }: { offer: Offer }) {
         }
       />
       <OfferStatusCallout offer={offer} audience="reviewer" />
-      {editing ? (
-        <AssistedEdit offer={offer} onDone={() => setEditing(false)} />
+      {editingFrom ? (
+        <AssistedEdit offer={editingFrom} onDone={() => setEditingFrom(null)} />
       ) : (
-        <OfferContentCard
+        <OfferVersions
           offer={offer}
-          action={
+          editAction={
             canUpdate && isEditable(offer) ? (
-              <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+              <Button variant="outline" size="sm" onClick={() => setEditingFrom(offer)}>
                 <Pencil aria-hidden />
                 Edit
               </Button>
@@ -324,8 +359,8 @@ function OfferWorkspace({ offer }: { offer: Offer }) {
           }
         />
       )}
-      <RedemptionCard offer={offer} />
-      <PublicationCard offer={offer} partner={offer.partner.business_name} />
+      <PublicationCard offer={offer} partner={partner?.business_name} />
+      <Versions offerId={offer.id} />
       {canViewDecisions ? <Decisions offerId={offer.id} /> : null}
       <ActionDialog
         offer={offer}
@@ -355,6 +390,11 @@ function ActionButton({
   );
 }
 
+function Versions({ offerId }: { offerId: string }) {
+  const paging = usePageParam("versions_");
+  return <OfferVersionHistory versions={useOfferVersions(offerId, paging)} paging={paging} />;
+}
+
 function Decisions({ offerId }: { offerId: string }) {
   const paging = usePageParam("decisions_");
   return <OfferDecisionHistory decisions={useOfferDecisions(offerId, paging)} paging={paging} />;
@@ -362,19 +402,19 @@ function Decisions({ offerId }: { offerId: string }) {
 
 function AssistedEdit({ offer, onDone }: { offer: Offer; onDone: () => void }) {
   const update = useUpdateOffer(offer.id);
-  const categories = useAdminCategoryOptions(offer.category);
-  const approved = offer.status === "approved";
-  const intents = useAdminIntents("Save changes", { submittable: !approved });
+  const categories = useAdminCategoryOptions(editableVersion(offer)?.marketplace_policy?.category);
+  const intents = useAdminIntents("Save draft");
+  const live = offer.current_version;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Edit offer</CardTitle>
         <CardDescription>
-          Saving replaces every field.{" "}
-          {approved
-            ? "Changed content goes back to pending review unless you publish it."
-            : `The status stays ${offer.status.replace("_", " ")} unless you submit or publish.`}
+          Saving replaces every field of the working draft, or starts one.{" "}
+          {live
+            ? `Version ${live.number} stays live until the new version is approved or published.`
+            : "Submit or publish it when it is ready."}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -397,7 +437,13 @@ function AssistedEdit({ offer, onDone }: { offer: Offer; onDone: () => void }) {
                 intent,
                 expected_version: offer.version,
               });
-              toast.success(intent === "publish" ? "Offer saved and published" : "Offer saved");
+              toast.success(
+                intent === "publish"
+                  ? "Saved and published"
+                  : intent === "submit"
+                    ? "Saved and submitted for review"
+                    : "Draft saved",
+              );
               onDone();
             }}
           />
@@ -429,7 +475,12 @@ function ActionDialog({
       optional={spec.optionalReason}
       onConfirm={async (reason) => {
         if (!action) return;
-        await mutation.mutateAsync({ action, reason, expected_version: offer.version });
+        await mutation.mutateAsync({
+          action,
+          reason,
+          expected_version: offer.version,
+          version_id: spec.onVersion ? offer.working_version?.id : undefined,
+        });
         toast.success(spec.done);
       }}
     />

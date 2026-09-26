@@ -1,6 +1,15 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, CalendarClock, Search, Star, Store, Ticket } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CalendarClock,
+  Search,
+  ShieldCheck,
+  Star,
+  Store,
+  Ticket,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
@@ -27,6 +36,8 @@ import {
   useCatalogueOffer,
   type MarketplaceOffer,
 } from "@/features/offers/api/queries";
+import { benefitSummary } from "@/features/offers/schemas/benefit-value";
+import { presentationLabel } from "@/features/offers/schemas/offer";
 import { ApiError, isUuid } from "@/shared/api";
 import { ConfirmDialog } from "@/shared/components/confirm-dialog";
 import { Detail, DetailList } from "@/shared/components/details";
@@ -35,7 +46,7 @@ import { ListSkeleton } from "@/shared/feedback/list-skeleton";
 import { formatDate, formatDateTime } from "@/shared/lib/format";
 
 import { useClaimOffer } from "../api/mutations";
-import { MarketplaceErrorState, methodLabel } from "./claim-details";
+import { MarketplaceErrorState } from "./claim-details";
 
 /** Browsing: search, category and featured filters live in the URL. */
 export function Catalogue() {
@@ -77,8 +88,8 @@ export function Catalogue() {
         <Input
           type="search"
           maxLength={255}
-          placeholder="Search offers, benefits or businesses"
-          aria-label="Search offers by title, benefit or business"
+          placeholder="Search offers or businesses"
+          aria-label="Search offers by title, headline or business"
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
         />
@@ -176,12 +187,22 @@ function OfferCard({ offer }: { offer: MarketplaceOffer }) {
         </div>
         <p className="text-muted-foreground text-sm">{offer.partner.business_name}</p>
         <CardTitle className="text-lg">{offer.title}</CardTitle>
-        <CardDescription>{offer.benefit}</CardDescription>
+        <CardDescription>{offer.headline}</CardDescription>
       </CardHeader>
       <CardFooter className="mt-auto flex flex-col items-stretch gap-3">
-        <span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
-          <CalendarClock className="size-3.5" aria-hidden />
-          Until {formatDate(offer.valid_until)}
+        <span className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+          {offer.valid_until ? (
+            <span className="inline-flex items-center gap-1">
+              <CalendarClock className="size-3.5" aria-hidden />
+              Until {formatDate(offer.valid_until)}
+            </span>
+          ) : null}
+          {offer.acceptance_mode === "partner_approval_required" ? (
+            <span className="inline-flex items-center gap-1">
+              <ShieldCheck className="size-3.5" aria-hidden />
+              Needs partner approval
+            </span>
+          ) : null}
         </span>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Button asChild variant="ghost" size="sm" className="-ml-3">
@@ -208,7 +229,7 @@ function BackToCatalogue() {
   );
 }
 
-/** One catalogue offer. Redemption details are issued only by claiming it. */
+/** One catalogue offer. Codes, links and instructions come only with an issued voucher. */
 export function CatalogueOffer({ offerId }: { offerId: string }) {
   const offer = useCatalogueOffer(offerId);
 
@@ -257,21 +278,32 @@ function LoadedOffer({ offer }: { offer: MarketplaceOffer }) {
       />
       <Card>
         <CardHeader>
-          <CardTitle>{offer.benefit}</CardTitle>
+          <CardTitle>{offer.headline}</CardTitle>
           <CardDescription>
-            Valid {formatDateTime(offer.valid_from)} – {formatDateTime(offer.valid_until)}
+            Valid {formatDateTime(offer.valid_from)}
+            {offer.valid_until ? ` – ${formatDateTime(offer.valid_until)}` : null}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <DetailList>
-            <Detail label="How to redeem">{methodLabel(offer)}</Detail>
-            <Detail label="Ends">{formatDateTime(offer.valid_until)}</Detail>
+            <Detail label="Benefit">
+              {benefitSummary(offer.benefit)}
+              {offer.benefit.type !== "descriptive" && offer.benefit.description ? (
+                <span className="text-muted-foreground block text-xs">
+                  {offer.benefit.description}
+                </span>
+              ) : null}
+            </Detail>
+            <Detail label="How it is applied">
+              {presentationLabel(offer.presentation_method, offer.custom_method_name)}
+            </Detail>
+            <Detail label="Claiming">{acceptanceText(offer)}</Detail>
             <Detail label="Business">{offer.partner.business_name}</Detail>
             <Detail label="Description" className="sm:col-span-2 lg:col-span-3">
               <RichText value={offer.description} />
             </Detail>
             <Detail label="Terms and conditions" className="sm:col-span-2 lg:col-span-3">
-              <RichText value={offer.terms} />
+              {offer.terms ? <RichText value={offer.terms} /> : "—"}
             </Detail>
           </DetailList>
         </CardContent>
@@ -280,10 +312,20 @@ function LoadedOffer({ offer }: { offer: MarketplaceOffer }) {
   );
 }
 
+/** What happens when the employee claims, explained before they do (acceptance mode). */
+function acceptanceText(offer: MarketplaceOffer): string {
+  if (offer.acceptance_mode === "auto_accept") return "Accepted at once; your voucher is issued immediately.";
+  return offer.approval_ttl_hours
+    ? `${offer.partner.business_name} approves each request within ${offer.approval_ttl_hours} hours.`
+    : `${offer.partner.business_name} approves each request.`;
+}
+
 /**
- * Claiming is once per offer. The catalogue names the employee's existing claim
- * (`my_claim`), so a claimed offer links to it instead of offering a claim the API would
+ * Claiming is once per offer, whatever the outcome. The catalogue names the employee's existing
+ * claim (`my_claim`), so a claimed offer links to it instead of offering a claim the API would
  * refuse. If the claim was made elsewhere meanwhile, ALREADY_CLAIMED names it and we open it.
+ * The claim names the version the employee read: if other terms went live meanwhile, the API
+ * refuses (OFFER_VERSION_CHANGED) and the refreshed offer is shown to read again.
  */
 function ClaimAction({ offer, compact = false }: { offer: MarketplaceOffer; compact?: boolean }) {
   const router = useRouter();
@@ -292,6 +334,7 @@ function ClaimAction({ offer, compact = false }: { offer: MarketplaceOffer; comp
   const [open, setOpen] = useState(false);
   // One key per claim attempt, reused if the same attempt is retried after a failure.
   const idempotencyKey = useRef<string | null>(null);
+  const approval = offer.acceptance_mode === "partner_approval_required";
 
   const claimed = offer.my_claim;
   if (claimed) {
@@ -301,7 +344,7 @@ function ClaimAction({ offer, compact = false }: { offer: MarketplaceOffer; comp
         <Button asChild variant="outline" size={size}>
           <Link href={`/marketplace/claims/${claimed.id}`}>
             <Ticket aria-hidden />
-            View your claim
+            {claimed.status === "accepted" ? "View your voucher" : "View your claim"}
           </Link>
         </Button>
       </div>
@@ -320,30 +363,46 @@ function ClaimAction({ offer, compact = false }: { offer: MarketplaceOffer; comp
         }}
       >
         <Ticket aria-hidden />
-        Claim offer
+        {approval ? "Request offer" : "Claim offer"}
       </Button>
       <ConfirmDialog
         open={open}
         onOpenChange={setOpen}
-        title="Claim this offer?"
+        title={approval ? "Request this offer?" : "Claim this offer?"}
         description={
           <span className="space-y-2">
             <span className="block">
-              You can claim it once. You receive the redemption details straight away, and the
-              claim stays usable until {formatDateTime(offer.valid_until)}.
+              {approval
+                ? `${offer.partner.business_name} decides on your request${offer.approval_ttl_hours ? ` within ${offer.approval_ttl_hours} hours` : ""}. You get a voucher only if they accept it.`
+                : "You get a voucher straight away."}{" "}
+              You can {approval ? "request" : "claim"} it once, whatever the outcome.
             </span>
-            <span className="block">By claiming you accept the offer&apos;s terms.</span>
+            <span className="block">
+              By {approval ? "requesting" : "claiming"} you accept the terms shown here (version{" "}
+              {offer.version_number}).
+            </span>
           </span>
         }
-        confirmLabel="Claim offer"
+        confirmLabel={approval ? "Request offer" : "Claim offer"}
         onConfirm={async () => {
           const key = idempotencyKey.current ?? crypto.randomUUID();
           idempotencyKey.current = key;
           let claimId: string;
           try {
-            claimId = (await claim.mutateAsync({ offerId: offer.id, idempotencyKey: key })).id;
-            toast.success("Offer claimed");
+            const result = await claim.mutateAsync({
+              offerId: offer.id,
+              versionId: offer.version_id,
+              idempotencyKey: key,
+            });
+            claimId = result.id;
+            toast.success(result.status === "requested" ? "Request sent" : "Offer claimed");
           } catch (error) {
+            if (error instanceof ApiError && error.code === "OFFER_VERSION_CHANGED") {
+              // The refetched offer carries the new terms and version; a new attempt is needed.
+              idempotencyKey.current = null;
+              toast.warning("The offer's terms just changed. Review them before claiming.");
+              return;
+            }
             const existing = alreadyClaimedId(error);
             if (!existing) throw error;
             claimId = existing;

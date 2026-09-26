@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Search, Star, Tag } from "lucide-react";
+import { ClipboardCheck, Plus, Search, Star, Tag } from "lucide-react";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
@@ -30,23 +30,32 @@ import { isUuid } from "@/shared/api";
 import {
   OFFER_SORTS,
   useOffers,
-  type OfferStatus,
+  type AcceptanceMode,
+  type DisplayStatus,
+  type OfferPostedVia,
   type PartnerSource,
-  type PostedVia,
 } from "../api/queries";
-import { POSTED_VIA_LABEL, VisibilityBadge } from "./offer-details";
+import { benefitSummary } from "../schemas/benefit-value";
+import { ACCEPTANCE_LABEL } from "../schemas/offer";
+import { POSTED_VIA_LABEL, shownVersion, validity, VisibilityBadge } from "./offer-details";
 
 const ALL = "all";
-export const OFFER_STATUSES: readonly { value: OfferStatus; label: string }[] = [
-  { value: "pending_review", label: "Pending review" },
+export const OFFER_STATUSES: readonly { value: DisplayStatus; label: string }[] = [
+  { value: "active", label: "Active" },
+  { value: "scheduled", label: "Scheduled" },
   { value: "draft", label: "Draft" },
+  { value: "in_review", label: "In review" },
   { value: "changes_requested", label: "Changes requested" },
   { value: "rejected", label: "Rejected" },
-  { value: "approved", label: "Approved" },
+  { value: "retracted", label: "Retracted" },
+  { value: "expired", label: "Expired" },
+  { value: "paused", label: "Paused" },
   { value: "suspended", label: "Suspended" },
+  { value: "retired", label: "Retired" },
 ];
 const SOURCES = Object.keys(SOURCE_LABEL) as PartnerSource[];
-const POSTED_VIA = Object.keys(POSTED_VIA_LABEL) as PostedVia[];
+const POSTED_VIA: readonly OfferPostedVia[] = ["partner_portal", "admin_on_behalf"];
+const ACCEPTANCE_MODES = Object.keys(ACCEPTANCE_LABEL) as AcceptanceMode[];
 
 const uuidParam = (value: string | null) => (value && isUuid(value) ? value : null);
 
@@ -65,6 +74,8 @@ export function OffersDirectory() {
   const source = oneOf(searchParams.get("source"), SOURCES);
   const postedVia = oneOf(searchParams.get("posted_via"), POSTED_VIA);
   const featured = searchParams.get("featured") === "true" ? true : null;
+  const inReview = searchParams.get("in_review") === "true" ? true : null;
+  const acceptanceMode = oneOf(searchParams.get("acceptance_mode"), ACCEPTANCE_MODES);
   const partnerId = uuidParam(searchParams.get("partner_id"));
   const organizationId = uuidParam(searchParams.get("organization_id"));
   const [draft, setDraft] = useState(search);
@@ -74,6 +85,8 @@ export function OffersDirectory() {
     {
       search,
       status,
+      inReview,
+      acceptanceMode,
       source,
       postedVia,
       featured,
@@ -99,34 +112,48 @@ export function OffersDirectory() {
     {
       id: "offer",
       header: "Offer",
-      sortKey: "title",
-      cell: (offer) => (
-        <>
-          <Link href={`/admin/offers/${offer.id}`} className="font-medium hover:underline">
-            {offer.title}
-          </Link>
-          {offer.is_featured ? (
-            <Star className="text-primary ml-1 inline size-3.5" aria-label="Featured" />
-          ) : null}
-          <p className="text-muted-foreground text-xs">{offer.category.name}</p>
-        </>
-      ),
+      cell: (offer) => {
+        const version = shownVersion(offer);
+        return (
+          <>
+            <Link href={`/admin/offers/${offer.id}`} className="font-medium hover:underline">
+              {version?.title ?? "Untitled offer"}
+            </Link>
+            {offer.is_featured ? (
+              <Star className="text-primary ml-1 inline size-3.5" aria-label="Featured" />
+            ) : null}
+            <p className="text-muted-foreground text-xs">
+              {version ? benefitSummary(version.benefit) : null}
+            </p>
+          </>
+        );
+      },
     },
     {
       id: "partner",
       header: "Partner",
       sortKey: "partner",
-      cell: (offer) => (
-        <>
-          <p>{offer.partner.business_name}</p>
-          <p className="text-muted-foreground text-xs">{SOURCE_LABEL[offer.partner.source]}</p>
-        </>
-      ),
+      cell: (offer) =>
+        offer.partner ? (
+          <>
+            <p>{offer.partner.business_name}</p>
+            <p className="text-muted-foreground text-xs">{SOURCE_LABEL[offer.partner.source]}</p>
+          </>
+        ) : (
+          "—"
+        ),
     },
     {
       id: "status",
       header: "Status",
-      cell: (offer) => <StatusBadge domain="offer" status={offer.display_status} />,
+      cell: (offer) => (
+        <span className="flex flex-wrap items-center gap-1">
+          <StatusBadge domain="offer" status={offer.display_status} />
+          {offer.working_version?.state === "in_review" && offer.display_status !== "in_review" ? (
+            <StatusBadge domain="offerVersion" status="in_review" />
+          ) : null}
+        </span>
+      ),
     },
     {
       id: "employees",
@@ -137,9 +164,19 @@ export function OffersDirectory() {
     {
       id: "valid",
       header: "Valid",
-      sortKey: "valid_from",
       cellClassName: "text-muted-foreground",
-      cell: (offer) => `${formatDate(offer.valid_from)} – ${formatDate(offer.valid_until)}`,
+      cell: (offer) => {
+        const version = shownVersion(offer);
+        return version ? validity(version.valid_from, version.valid_until) : "—";
+      },
+    },
+    {
+      id: "updated",
+      header: "Updated",
+      sortKey: "updated_at",
+      className: "hidden xl:table-cell",
+      cellClassName: "text-muted-foreground",
+      cell: (offer) => formatDate(offer.updated_at),
     },
     {
       id: "posted-via",
@@ -150,7 +187,15 @@ export function OffersDirectory() {
     },
   ];
   const filtered = Boolean(
-    search || status || source || postedVia || featured || partnerId || organizationId,
+    search ||
+      status ||
+      inReview ||
+      acceptanceMode ||
+      source ||
+      postedVia ||
+      featured ||
+      partnerId ||
+      organizationId,
   );
 
   return (
@@ -161,8 +206,8 @@ export function OffersDirectory() {
             <Input
               type="search"
               maxLength={255}
-              placeholder="Search title, benefit or partner"
-              aria-label="Search offers by title, benefit or partner name"
+              placeholder="Search title, headline or partner"
+              aria-label="Search offers by title, headline or partner name"
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
             />
@@ -225,6 +270,30 @@ export function OffersDirectory() {
               ))}
             </SelectContent>
           </Select>
+          <Select
+            value={acceptanceMode ?? ALL}
+            onValueChange={(value) => setParam("acceptance_mode", value === ALL ? null : value)}
+          >
+            <SelectTrigger className="w-56" aria-label="Filter by claim acceptance">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Any claim acceptance</SelectItem>
+              {ACCEPTANCE_MODES.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {ACCEPTANCE_LABEL[option]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant={inReview ? "secondary" : "ghost"}
+            aria-pressed={inReview === true}
+            onClick={() => setParam("in_review", inReview ? null : "true")}
+          >
+            <ClipboardCheck aria-hidden />
+            Awaiting review
+          </Button>
           <Button
             variant={featured ? "secondary" : "ghost"}
             aria-pressed={featured === true}
@@ -264,7 +333,7 @@ export function OffersDirectory() {
         empty={
           <EmptyState
             icon={Tag}
-            title={status === "pending_review" ? "Nothing awaiting review" : "No offers found"}
+            title={inReview ? "Nothing awaiting review" : "No offers found"}
             description={filtered ? "Try different filters." : undefined}
           />
         }

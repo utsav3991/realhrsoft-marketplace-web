@@ -1,6 +1,15 @@
 "use client";
 
-import { CheckCircle2, Clock, Copy, ExternalLink, TimerOff, UserX } from "lucide-react";
+import {
+  Ban,
+  CheckCircle2,
+  Clock,
+  Copy,
+  ExternalLink,
+  TimerOff,
+  UserX,
+  XCircle,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -8,34 +17,36 @@ import { RichText } from "@/design-system/components/rich-text-editor";
 import { EmptyState } from "@/design-system/components/empty-state";
 import { Alert, AlertDescription, AlertTitle } from "@/design-system/primitives/alert";
 import { Button } from "@/design-system/primitives/button";
-import { REDEMPTION_LABEL } from "@/features/offers/schemas/offer";
-import { ApiError } from "@/shared/api";
+import { presentationLabel } from "@/features/offers/schemas/offer";
+import { ApiError, type Schemas } from "@/shared/api";
 import { Detail } from "@/shared/components/details";
-import { QrCode } from "@/shared/components/qr-code";
+import { ReasonDialog } from "@/shared/components/reason-dialog";
+import { StatusBadge } from "@/shared/components/status-badge";
 import { ErrorState } from "@/shared/feedback/states";
 import { formatDateTime } from "@/shared/lib/format";
 
-import type { ClaimStatus, EmployeeClaim, PartnerClaim } from "../api/queries";
+import type { ClaimDecision } from "../api/mutations";
+import type { ClaimStatus, OwnClaim, Voucher } from "../api/queries";
 
 export const CLAIM_STATUSES: readonly { value: ClaimStatus; label: string }[] = [
-  { value: "active", label: "Active" },
-  { value: "used", label: "Used" },
+  { value: "requested", label: "Awaiting approval" },
+  { value: "accepted", label: "Accepted" },
+  { value: "rejected", label: "Rejected" },
   { value: "expired", label: "Expired" },
+  { value: "cancelled", label: "Cancelled" },
 ];
 
 export function claimStatusFrom(value: string | null): ClaimStatus | null {
   return CLAIM_STATUSES.find((s) => s.value === value)?.value ?? null;
 }
 
-/** The redemption method's label; a custom method shows the partner's own name for it. */
-export function methodLabel(claim: {
-  redemption_method: EmployeeClaim["redemption_method"];
-  custom_method_name?: string;
-}): string {
-  return claim.redemption_method === "custom" && claim.custom_method_name
-    ? claim.custom_method_name
-    : REDEMPTION_LABEL[claim.redemption_method];
-}
+export const DECISION_SOURCE_LABEL: Record<Schemas["ClaimDecisionSourceEnum"], string> = {
+  policy: "Accepted automatically",
+  partner: "The partner",
+  admin: "Aayulogic",
+  beneficiary: "The employee",
+  system: "Deadline passed",
+};
 
 function copy(value: string, what: string) {
   navigator.clipboard.writeText(value).then(
@@ -44,132 +55,150 @@ function copy(value: string, what: string) {
   );
 }
 
-/** The 10-character reference the employee shows and the partner confirms with. */
-export function ReferenceCode({ reference, copyable = false }: { reference: string; copyable?: boolean }) {
+function Copyable({ value, what, className }: { value: string; what: string; className: string }) {
   return (
     <span className="inline-flex items-center gap-2">
-      <span className="font-mono text-lg font-bold tracking-[0.2em]">{reference}</span>
-      {copyable ? (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8"
-          aria-label="Copy reference"
-          onClick={() => copy(reference, "Reference")}
-        >
-          <Copy aria-hidden />
-        </Button>
-      ) : null}
+      <span className={className}>{value}</span>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="size-8"
+        aria-label={`Copy ${what.toLowerCase()}`}
+        onClick={() => copy(value, what)}
+      >
+        <Copy aria-hidden />
+      </Button>
     </span>
   );
 }
 
-/**
- * The redemption details snapshotted when the claim was made. Later offer edits never change
- * them. Showing a code or opening a link does not mark the claim used; the partner confirms.
- */
-export function RedemptionDetails({
-  claim,
+/** The voucher's short reference, which a cashier can type when the QR cannot be scanned. */
+export function VoucherReference({
+  reference,
   copyable = false,
-  scannable = false,
 }: {
-  claim: Pick<
-    EmployeeClaim,
-    | "redemption_method"
-    | "redemption_code"
-    | "redemption_url"
-    | "redemption_instructions"
-    | "custom_method_name"
-  >;
+  reference: string;
   copyable?: boolean;
-  /** Draw a QR-code claim as a scannable code, for the employee while it can be redeemed. */
-  scannable?: boolean;
 }) {
-  const method = claim.redemption_method;
+  const className = "font-mono text-lg font-bold tracking-[0.2em]";
+  return copyable ? (
+    <Copyable value={reference} what="Reference" className={className} />
+  ) : (
+    <span className={className}>{reference}</span>
+  );
+}
+
+/**
+ * The voucher an accepted claim issued, with how to apply the benefit, frozen at acceptance.
+ * Showing a code or opening a link does not use it: the partner confirms the use.
+ */
+export function VoucherDetails({
+  voucher,
+  usable = false,
+}: {
+  voucher: Voucher;
+  /** The owner's view while it can be used: codes can be copied. */
+  usable?: boolean;
+}) {
+  const presentation = voucher.presentation;
+  const method = presentation.method;
   return (
     <>
-      <Detail label="Method">{methodLabel(claim)}</Detail>
-      {method === "qr_code" && scannable && claim.redemption_code ? (
-        <Detail label="QR code" className="sm:col-span-2 lg:col-span-3">
-          <span className="block space-y-2">
-            <QrCode value={claim.redemption_code} label="QR code to show the partner" />
-            <span className="text-muted-foreground block text-sm">
-              Show this code to the partner to scan.
-            </span>
-          </span>
+      <Detail label="Voucher">
+        <StatusBadge domain="voucher" status={voucher.status} />
+      </Detail>
+      <Detail label="Reference">
+        <VoucherReference reference={voucher.reference} copyable={usable} />
+      </Detail>
+      <Detail label="Usable">
+        {formatDateTime(voucher.valid_from)} – {formatDateTime(voucher.valid_until)}
+      </Detail>
+      <Detail label="Applied by">
+        {presentationLabel(method, presentation.custom_method_name)}
+      </Detail>
+      {method === "promo_code" && presentation.promo_code ? (
+        <Detail label="Promo code">
+          {usable ? (
+            <Copyable value={presentation.promo_code} what="Code" className="font-mono text-base font-bold" />
+          ) : (
+            <span className="font-mono">{presentation.promo_code}</span>
+          )}
         </Detail>
       ) : null}
-      {(method === "promo_code" || method === "qr_code") && claim.redemption_code ? (
-        <Detail label={method === "qr_code" ? "QR code value" : "Promo code"}>
-          <span className="inline-flex items-center gap-2">
-            <span className="font-mono text-base font-bold">{claim.redemption_code}</span>
-            {copyable ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8"
-                aria-label="Copy code"
-                onClick={() => copy(claim.redemption_code, "Code")}
-              >
-                <Copy aria-hidden />
-              </Button>
-            ) : null}
-          </span>
-        </Detail>
-      ) : null}
-      {method === "booking_link" && claim.redemption_url ? (
+      {method === "booking_link" && presentation.redemption_url ? (
         <Detail label="Booking link">
           <a
-            href={claim.redemption_url}
+            href={presentation.redemption_url}
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary inline-flex items-center gap-1 break-all hover:underline"
           >
-            {claim.redemption_url}
+            {presentation.redemption_url}
             <ExternalLink className="size-3.5 shrink-0" aria-hidden />
           </a>
         </Detail>
       ) : null}
-      {claim.redemption_instructions ? (
-        <Detail label="How to redeem" className="sm:col-span-2 lg:col-span-3">
-          <RichText value={claim.redemption_instructions} />
+      {voucher.used_at ? <Detail label="Used">{formatDateTime(voucher.used_at)}</Detail> : null}
+      {voucher.redemption?.reversed_at ? (
+        <Detail label="Use corrected">{formatDateTime(voucher.redemption.reversed_at)}</Detail>
+      ) : null}
+      {presentation.redemption_instructions ? (
+        <Detail label="How to use it" className="sm:col-span-2 lg:col-span-3">
+          <RichText value={presentation.redemption_instructions} />
         </Detail>
       ) : null}
     </>
   );
 }
 
-/** What the claim's status means for the reader right now. */
+/** What the claim's decision means for the reader right now. */
 export function ClaimStatusCallout({
   claim,
   audience,
 }: {
-  claim: Pick<PartnerClaim, "status" | "expires_at" | "used_at">;
+  claim: Pick<OwnClaim, "status" | "decision_deadline" | "decision" | "voucher">;
   audience: "employee" | "partner" | "admin";
 }) {
+  const reason = claim.decision?.reason;
   switch (claim.status) {
-    case "active":
+    case "requested":
       return (
         <Alert>
           <Clock aria-hidden />
           <AlertTitle>
-            {audience === "employee" ? "Ready to redeem" : "Active: can be confirmed"}
+            {audience === "employee" ? "Awaiting the partner's approval" : "Awaiting a decision"}
           </AlertTitle>
           <AlertDescription>
             {audience === "employee"
-              ? `Show the reference to the partner before ${formatDateTime(claim.expires_at)}. They confirm the redemption; opening a link or showing a code does not.`
-              : `Confirm it only when the employee redeems the offer, before ${formatDateTime(claim.expires_at)}.`}
+              ? "No voucher yet: the partner accepts or rejects your request"
+              : "Accepting issues the voucher; rejecting shows your reason to the employee. Decide"}
+            {claim.decision_deadline
+              ? ` before ${formatDateTime(claim.decision_deadline)}, or it expires.`
+              : "."}
           </AlertDescription>
         </Alert>
       );
-    case "used":
+    case "accepted":
       return (
         <Alert>
           <CheckCircle2 aria-hidden />
-          <AlertTitle>Redeemed</AlertTitle>
+          <AlertTitle>Accepted</AlertTitle>
           <AlertDescription>
-            Use was confirmed {claim.used_at ? formatDateTime(claim.used_at) : ""}. It cannot be
-            confirmed again.
+            {claim.voucher
+              ? audience === "employee"
+                ? "Your voucher is ready. Show its reference to the business; they confirm the use."
+                : "A voucher was issued. The business confirms its use when the employee presents it."
+              : "One use of the benefit was recorded."}
+          </AlertDescription>
+        </Alert>
+      );
+    case "rejected":
+      return (
+        <Alert variant="destructive">
+          <XCircle aria-hidden />
+          <AlertTitle>Rejected</AlertTitle>
+          <AlertDescription className="whitespace-pre-line">
+            {reason || "No reason was given."}
           </AlertDescription>
         </Alert>
       );
@@ -179,12 +208,86 @@ export function ClaimStatusCallout({
           <TimerOff aria-hidden />
           <AlertTitle>Expired</AlertTitle>
           <AlertDescription>
-            The offer ended {formatDateTime(claim.expires_at)} before the claim was redeemed. It can
-            no longer be confirmed.
+            No decision was made before the deadline, so no voucher was issued.
+          </AlertDescription>
+        </Alert>
+      );
+    case "cancelled":
+      return (
+        <Alert>
+          <Ban aria-hidden />
+          <AlertTitle>Cancelled</AlertTitle>
+          <AlertDescription>
+            {audience === "employee" ? "You withdrew the request." : "The employee withdrew the request."}
           </AlertDescription>
         </Alert>
       );
   }
+}
+
+/** One accept or reject attempt; its Idempotency-Key is reused if the attempt is retried. */
+export interface DecisionAttempt {
+  decision: ClaimDecision;
+  idempotencyKey: string;
+}
+
+export function decisionAttempt(decision: ClaimDecision): DecisionAttempt {
+  return { decision, idempotencyKey: crypto.randomUUID() };
+}
+
+/**
+ * Accept or reject one pending claim. `acceptReasonRequired` covers administrators, who must
+ * justify an acceptance too.
+ */
+export function DecisionDialog({
+  attempt,
+  onClose,
+  onDecide,
+  acceptReasonRequired = false,
+}: {
+  attempt: DecisionAttempt | null;
+  onClose: () => void;
+  onDecide: (attempt: DecisionAttempt & { reason: string }) => Promise<unknown>;
+  acceptReasonRequired?: boolean;
+}) {
+  const accept = attempt?.decision === "accept";
+  return (
+    <ReasonDialog
+      open={attempt !== null}
+      onOpenChange={(open) => !open && onClose()}
+      title={accept ? "Accept this claim?" : "Reject this claim?"}
+      description={
+        accept
+          ? "The employee's voucher is issued now, with the terms of the version they requested. This is not confirming its use."
+          : "No voucher is issued. The employee sees your reason, so keep it free of internal details. They cannot request this offer again."
+      }
+      confirmLabel={accept ? "Accept claim" : "Reject claim"}
+      destructive={!accept}
+      optional={accept && !acceptReasonRequired}
+      onConfirm={async (reason) => {
+        if (!attempt) return;
+        await onDecide({ ...attempt, reason });
+        toast.success(accept ? "Claim accepted" : "Claim rejected");
+      }}
+    />
+  );
+}
+
+/** The decision recorded on a claim: who or what decided, when, and the reason. */
+export function DecisionFacts({ claim }: { claim: Pick<OwnClaim, "decision"> }): ReactNode {
+  const decision = claim.decision;
+  if (!decision) return null;
+  return (
+    <>
+      <Detail label="Decided by">{DECISION_SOURCE_LABEL[decision.source]}</Detail>
+      <Detail label="Decided">{formatDateTime(decision.decided_at)}</Detail>
+      {decision.reason ? (
+        <Detail label="Reason" className="sm:col-span-2 lg:col-span-3">
+          <span className="whitespace-pre-line">{decision.reason}</span>
+        </Detail>
+      ) : null}
+    </>
+  );
 }
 
 /**

@@ -28,6 +28,7 @@ import {
   CardTitle,
 } from "@/design-system/primitives/card";
 import { Skeleton } from "@/design-system/primitives/skeleton";
+import { benefitSummary } from "@/features/offers/schemas/benefit-value";
 import { ApiError } from "@/shared/api";
 import { ConfirmDialog } from "@/shared/components/confirm-dialog";
 import { Detail, DetailList } from "@/shared/components/details";
@@ -70,11 +71,17 @@ function BenefitsErrorState({
   return <ErrorState error={error} onRetry={onRetry} />;
 }
 
+/** Lifetime uses left, across every version of the benefit. */
+function usesLeft(benefit: EmployeeBenefit): number {
+  return Math.max(0, benefit.max_claims_per_beneficiary - benefit.my_use_count);
+}
+
 function remaining(benefit: EmployeeBenefit): string {
-  if (benefit.claims_remaining === 0) return "Limit reached";
-  return benefit.max_claims_per_employee === 1
+  const left = usesLeft(benefit);
+  if (left === 0) return "Limit reached";
+  return benefit.max_claims_per_beneficiary === 1
     ? "Not used yet"
-    : `${benefit.claims_remaining} of ${benefit.max_claims_per_employee} uses left`;
+    : `${left} of ${benefit.max_claims_per_beneficiary} uses left`;
 }
 
 /** E08: the employee's own employer's benefits, then their benefit history. */
@@ -125,11 +132,9 @@ function BenefitCard({ benefit }: { benefit: EmployeeBenefit }) {
         <div className="flex flex-wrap items-center gap-2">
           <CompanyBenefitBadge />
         </div>
-        <p className="text-muted-foreground text-sm">From {benefit.organization_name}</p>
+        <p className="text-muted-foreground text-sm">From your employer</p>
         <CardTitle className="text-lg">{benefit.title}</CardTitle>
-        <CardDescription className="line-clamp-3">
-          {richTextPreview(benefit.description)}
-        </CardDescription>
+        <CardDescription className="line-clamp-3">{benefit.headline}</CardDescription>
       </CardHeader>
       <CardFooter className="mt-auto flex flex-col items-stretch gap-3">
         <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -206,7 +211,7 @@ export function MyBenefit({ benefitId }: { benefitId: string }) {
         description={
           <span className="flex flex-wrap items-center gap-2">
             <CompanyBenefitBadge />
-            From {data.organization_name}
+            {data.headline}
           </span>
         }
         actions={<ClaimAction benefit={data} />}
@@ -220,12 +225,13 @@ export function MyBenefit({ benefitId }: { benefitId: string }) {
         </CardHeader>
         <CardContent>
           <DetailList>
+            <Detail label="Value">{benefitSummary(data.benefit)}</Detail>
             <Detail label="Valid from">{formatDateTime(data.valid_from)}</Detail>
             <Detail label="Valid until">
               {data.valid_until ? formatDateTime(data.valid_until) : "No end date"}
             </Detail>
             <Detail label="Usage">
-              {usageLimit(data.max_claims_per_employee)} · {remaining(data)}
+              {usageLimit(data.max_claims_per_beneficiary)} · {remaining(data)}
             </Detail>
             <Detail label="Description" className="sm:col-span-2 lg:col-span-3">
               <RichText value={data.description} />
@@ -233,6 +239,11 @@ export function MyBenefit({ benefitId }: { benefitId: string }) {
             <Detail label="How to use it" className="sm:col-span-2 lg:col-span-3">
               {data.usage_rules ? <RichText value={data.usage_rules} /> : "—"}
             </Detail>
+            {data.terms ? (
+              <Detail label="Terms and conditions" className="sm:col-span-2 lg:col-span-3">
+                <RichText value={data.terms} />
+              </Detail>
+            ) : null}
           </DetailList>
         </CardContent>
       </Card>
@@ -243,7 +254,9 @@ export function MyBenefit({ benefitId }: { benefitId: string }) {
 
 /**
  * Claiming is the use: there is no separate confirmation. Each attempt gets one
- * Idempotency-Key, reused if the same attempt is retried, so a retry never uses it twice.
+ * Idempotency-Key, reused if the same attempt is retried, so a retry never uses it twice. The
+ * use names the version the employee read; if other terms went live meanwhile the API refuses
+ * (OFFER_VERSION_CHANGED) and the refreshed benefit is shown to read again.
  */
 function ClaimAction({
   benefit,
@@ -258,11 +271,12 @@ function ClaimAction({
   const [open, setOpen] = useState(false);
   const idempotencyKey = useRef<string | null>(null);
 
-  if (benefit.claims_remaining === 0) {
+  const left = usesLeft(benefit);
+  if (left === 0) {
     return (
       <Badge intent="neutral">
         <CheckCircle2 aria-hidden />
-        {benefit.max_claims_per_employee === 1 ? "Used" : "Limit reached"}
+        {benefit.max_claims_per_beneficiary === 1 ? "Used" : "Limit reached"}
       </Badge>
     );
   }
@@ -289,9 +303,7 @@ function ClaimAction({
           <span className="space-y-2">
             <span className="block">
               This records one use now; there is nothing to show or confirm later.{" "}
-              {benefit.claims_remaining === 1
-                ? "It is your last remaining use."
-                : `You have ${benefit.claims_remaining} uses left.`}
+              {left === 1 ? "It is your last remaining use." : `You have ${left} uses left.`}
             </span>
             {benefit.usage_rules ? (
               <span className="block">{richTextPreview(benefit.usage_rules)}</span>
@@ -302,7 +314,21 @@ function ClaimAction({
         onConfirm={async () => {
           const key = idempotencyKey.current ?? crypto.randomUUID();
           idempotencyKey.current = key;
-          await claim.mutateAsync({ benefitId: benefit.id, idempotencyKey: key });
+          try {
+            await claim.mutateAsync({
+              benefitId: benefit.id,
+              versionId: benefit.version_id,
+              idempotencyKey: key,
+            });
+          } catch (error) {
+            if (error instanceof ApiError && error.code === "OFFER_VERSION_CHANGED") {
+              // The refetched benefit carries the new terms and version; a new attempt is needed.
+              idempotencyKey.current = null;
+              toast.warning("The benefit's terms just changed. Review them before using it.");
+              return;
+            }
+            throw error;
+          }
           toast.success("Benefit used");
           if (compact) router.push(`/marketplace/company-benefits/${benefit.id}`);
         }}
@@ -312,9 +338,9 @@ function ClaimAction({
 }
 
 /**
- * Benefit claims with the title and rules shown when claimed; one benefit's when given. History
- * stays readable after employment ends; a non-employee account (403) sees nothing here, since
- * the benefit list above already explains why.
+ * Benefit uses with the title and version used; one benefit's when given. History stays
+ * readable after employment ends; a non-employee account (403) sees nothing here, since the
+ * benefit list above already explains why.
  */
 function ClaimHistory({ title, benefitId = null }: { title: string; benefitId?: string | null }) {
   const sort = useSortParam(BENEFIT_CLAIM_SORTS, "history_ordering");
@@ -346,25 +372,28 @@ function ClaimHistory({ title, benefitId = null }: { title: string; benefitId?: 
           {
             id: "used",
             header: "Used",
-            sortKey: "claimed_at",
-            cell: (claim) => formatDateTime(claim.claimed_at),
+            sortKey: "accepted_at",
+            cell: (claim) =>
+              formatDateTime(claim.benefit_usage?.used_at ?? claim.accepted_at ?? claim.requested_at),
           },
           {
             id: "benefit",
             header: "Benefit",
-            sortKey: "title",
             cell: (claim) => (
               <>
                 <p className="font-medium">{claim.title}</p>
-                <p className="text-muted-foreground text-xs">{claim.organization_name}</p>
+                <p className="text-muted-foreground text-xs">
+                  {claim.headline} · version {claim.version_number}
+                </p>
               </>
             ),
           },
           {
-            id: "how-to-use",
-            header: "How to use it",
-            cellClassName: "text-muted-foreground",
-            cell: (claim) => richTextPreview(claim.usage_rules) || "—",
+            id: "use",
+            header: "Use",
+            className: "text-right",
+            cellClassName: "tabular-nums",
+            cell: (claim) => (claim.benefit_usage ? `#${claim.benefit_usage.use_number}` : "—"),
           },
         ]}
       />

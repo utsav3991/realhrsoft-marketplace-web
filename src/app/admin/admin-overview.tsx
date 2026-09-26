@@ -97,7 +97,7 @@ const SECTIONS: readonly Section[] = [
   {
     href: "/admin/claims",
     title: "Claims",
-    description: "Every claimed offer and its redemption; confirm one on a partner's behalf.",
+    description: "Every offer and benefit claim; accept or reject a pending one on a partner's behalf.",
     icon: Ticket,
     permission: ClaimAdminPermission.CLAIM_VIEW,
   },

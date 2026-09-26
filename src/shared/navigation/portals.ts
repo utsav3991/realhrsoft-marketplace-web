@@ -178,8 +178,8 @@ export const PORTALS: readonly Portal[] = [
         href: "/partner/claims",
         label: "Claims",
         icon: Ticket,
-        // A member who may only confirm can still redeem a reference the employee shows.
-        anyOf: [PartnerClaimPermission.CLAIM_VIEW, PartnerClaimPermission.CLAIM_CONFIRM],
+        // Deciding needs the queue, so viewing opens the page.
+        anyOf: [PartnerClaimPermission.CLAIM_VIEW],
         inOrganization: true,
       },
       {

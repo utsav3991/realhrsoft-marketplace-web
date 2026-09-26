@@ -28,47 +28,101 @@ vi.mock("next/navigation", () => ({
 
 const ORG = "4a293c96-2952-43ac-bf39-bdfda7531c48";
 const BENEFIT_ID = "b3c1e2d4-5f6a-4b7c-8d9e-0a1b2c3d4e5f";
+const VERSION_ID = "e1d2c3b4-a596-4877-8695-a4b3c2d1e0f9";
 
+function version(state: Schemas["OfferVersionStateEnum"]): Schemas["OfferVersion"] {
+  return {
+    id: VERSION_ID,
+    number: 1,
+    state,
+    title: "Free annual health check-up",
+    headline: "One free check-up a year",
+    description: "A full-body check-up, paid by Acme.",
+    terms: "",
+    valid_from: "2026-10-01T00:00:00Z",
+    valid_until: null,
+    fulfillment_mode: "claim_as_use",
+    benefit: { schema_version: 1, type: "descriptive", description: "Free check-up" },
+    marketplace_policy: null,
+    benefit_policy: { usage_rules: "Book through HR three days ahead.", max_claims_per_beneficiary: 1 },
+    edit_count: 1,
+    frozen_at: state === "draft" ? null : "2026-10-01T00:00:00Z",
+    frozen_by: null,
+    submitted_at: null,
+    submitted_by: null,
+    created_by: "hr",
+    created_at: "2026-09-26T09:00:00Z",
+    updated_at: "2026-09-26T09:00:00Z",
+  };
+}
+
+/** Never published: version 1 is a draft. */
 const benefit: Schemas["CompanyBenefit"] = {
   id: BENEFIT_ID,
-  organization_id: ORG,
-  organization_name: "Acme Nepal",
-  title: "Free annual health check-up",
-  description: "A full-body check-up, paid by Acme.",
-  usage_rules: "Book through HR three days ahead.",
-  valid_from: "2026-10-01T00:00:00Z",
-  valid_until: null,
-  max_claims_per_employee: 1,
-  status: "draft",
-  display_status: "draft",
-  available_to_employees: false,
-  claim_count: 0,
+  provider_organization: { id: ORG, name: "Acme Nepal" },
+  availability: "enabled",
   version: 1,
-  created_by: "hr",
-  updated_by: "hr",
-  published_at: null,
-  published_by: null,
+  display_status: "draft",
+  visible_to_employees: false,
+  current_version: null,
+  working_version: version("draft"),
+  first_published_at: null,
   suspended_at: null,
   suspended_by: null,
   suspension_reason: "",
   retired_at: null,
   retired_by: null,
+  latest_decision: null,
+  created_by: "hr",
+  updated_by: "hr",
   created_at: "2026-09-26T09:00:00Z",
   updated_at: "2026-09-26T09:00:00Z",
 };
-
-const employeeBenefit: Schemas["EmployeeCompanyBenefit"] = {
-  id: BENEFIT_ID,
-  organization_name: "Acme Nepal",
-  title: benefit.title,
-  description: benefit.description,
-  usage_rules: benefit.usage_rules,
-  valid_from: benefit.valid_from,
-  valid_until: null,
-  max_claims_per_employee: 2,
-  claims_used: 0,
-  claims_remaining: 2,
+const live: Schemas["CompanyBenefit"] = {
+  ...benefit,
+  version: 3,
+  display_status: "active",
+  visible_to_employees: true,
+  current_version: version("approved"),
+  working_version: null,
+  first_published_at: "2026-10-01T00:00:00Z",
 };
+
+const employeeBenefit: Schemas["CompanyBenefitCard"] = {
+  id: BENEFIT_ID,
+  version_id: VERSION_ID,
+  version_number: 1,
+  title: benefit.working_version!.title,
+  headline: benefit.working_version!.headline,
+  description: benefit.working_version!.description,
+  terms: "",
+  valid_from: "2026-10-01T00:00:00Z",
+  valid_until: null,
+  benefit: benefit.working_version!.benefit,
+  usage_rules: "Book through HR three days ahead.",
+  max_claims_per_beneficiary: 2,
+  my_use_count: 0,
+};
+
+function use(title = employeeBenefit.title): Schemas["OwnClaimListItem"] {
+  return {
+    id: "c1a2b3c4-d5e6-4f70-8192-a3b4c5d6e7f8",
+    kind: "employer_benefit",
+    offer_id: BENEFIT_ID,
+    partner: null,
+    version_id: VERSION_ID,
+    version_number: 1,
+    title,
+    headline: employeeBenefit.headline,
+    status: "accepted",
+    requested_at: "2026-10-05T04:30:00Z",
+    decision_deadline: null,
+    accepted_at: "2026-10-05T04:30:00Z",
+    decision: { outcome: "accepted", source: "policy", reason: "", decided_at: "2026-10-05T04:30:00Z" },
+    voucher: null,
+    benefit_usage: { id: "u1", used_at: "2026-10-05T04:30:00Z", use_number: 1 },
+  };
+}
 
 const page = <T,>(results: T[]) => ({ count: results.length, next: null, previous: null, results });
 
@@ -106,7 +160,7 @@ function employerMember(permissions: PermissionCode[]): CurrentActor {
   });
 }
 
-function renderAs(current: CurrentActor, ui: React.ReactNode) {
+function renderAs(current: CurrentActor, ui: React.ReactNode, client = makeQueryClient()) {
   const session: SessionValue = {
     status: "authenticated",
     actor: current,
@@ -115,10 +169,21 @@ function renderAs(current: CurrentActor, ui: React.ReactNode) {
     logout: async () => undefined,
   };
   return render(
-    <QueryClientProvider client={makeQueryClient()}>
+    <QueryClientProvider client={client}>
       <SessionContext.Provider value={session}>{ui}</SessionContext.Provider>
     </QueryClientProvider>,
   );
+}
+
+/** Detail, version history and decision history answer from one handler. */
+function serveRecord(record: Schemas["CompanyBenefit"], write: () => Response) {
+  fetchMock.mockImplementation(async (request) => {
+    const path = url(request).pathname;
+    if (request.method !== "GET") return write();
+    if (path.endsWith("/versions")) return json(page([version("approved")]));
+    if (path.endsWith("/decisions")) return json(page([]));
+    return json(record);
+  });
 }
 
 beforeEach(() => {
@@ -140,14 +205,15 @@ describe("Employer portal", () => {
     fetchMock.mockResolvedValue(json(page([benefit])));
     renderAs(employerMember([EmployerBenefitPermission.BENEFIT_VIEW]), <OwnBenefits />);
 
-    expect(await screen.findByRole("link", { name: benefit.title })).toBeVisible();
+    expect(await screen.findByRole("link", { name: employeeBenefit.title })).toBeVisible();
     expect(screen.getByText("Hidden")).toBeVisible();
+    expect(screen.getByText("Once per employee")).toBeVisible();
     // Creating needs its own code.
     expect(screen.queryByRole("link", { name: /New benefit/ })).toBeNull();
 
     const [request] = requests("GET", "/employer/benefits");
     expect(request?.headers.get("X-Organization-ID")).toBe(ORG);
-    expect(url(request!).searchParams.get("status")).toBe("draft");
+    expect(url(request!).searchParams.get("display_status")).toBe("draft");
   });
 
   it("creates a draft with no audience or owner field", async () => {
@@ -157,8 +223,12 @@ describe("Employer portal", () => {
     renderAs(employerMember([EmployerBenefitPermission.BENEFIT_CREATE]), <NewOwnBenefit />);
 
     expect(screen.getByText("Own employees of Acme Nepal")).toBeVisible();
-    await user.type(screen.getByLabelText("Title"), benefit.title);
+    // Publishing at creation needs its own code.
+    expect(screen.queryByRole("button", { name: "Save and publish" })).toBeNull();
+    await user.type(screen.getByLabelText("Title"), employeeBenefit.title);
+    await user.type(screen.getByLabelText("Headline"), employeeBenefit.headline);
     await user.type(await screen.findByRole("textbox", { name: "Description" }), "Free check-up");
+    await user.type(screen.getByLabelText("Benefit"), "One full-body check-up");
     await user.click(screen.getByRole("button", { name: /^Valid from/ }));
     await user.click(screen.getAllByRole("button", { name: /\b1st\b/ })[0]!);
     // user-event cannot type into a time input; set it as the browser would.
@@ -172,15 +242,18 @@ describe("Employer portal", () => {
     expect(request?.headers.get("X-Organization-ID")).toBe(ORG);
     const body = (await request!.clone().json()) as Record<string, unknown>;
     expect(body).toMatchObject({
-      title: benefit.title,
+      title: employeeBenefit.title,
+      headline: employeeBenefit.headline,
       description: "Free check-up",
+      benefit: { type: "descriptive", description: "One full-body check-up" },
       valid_until: null,
-      max_claims_per_employee: 3,
+      max_claims_per_beneficiary: 3,
+      intent: "save",
     });
     const validFrom = new Date(body.valid_from as string);
     expect([validFrom.getDate(), validFrom.getHours(), validFrom.getMinutes()]).toEqual([1, 9, 0]);
     expect(Object.keys(body)).not.toContain("organization_id");
-    expect(Object.keys(body)).not.toContain("audience");
+    expect(Object.keys(body)).not.toContain("audience_type");
   });
 
   it("rejects a usage limit outside 1-1000 before calling the API", async () => {
@@ -197,11 +270,7 @@ describe("Employer portal", () => {
   it("publishes a draft with the loaded version", async () => {
     setActiveOrganizationId(ORG);
     const user = userEvent.setup();
-    fetchMock.mockImplementation(async (request) =>
-      request.method === "POST"
-        ? json({ ...benefit, status: "active", version: 2 })
-        : json(benefit),
-    );
+    serveRecord(benefit, () => json({ ...live, version: 2 }));
     renderAs(
       employerMember([
         EmployerBenefitPermission.BENEFIT_VIEW,
@@ -218,42 +287,36 @@ describe("Employer portal", () => {
       expected_version: 1,
       reason: "",
     });
-    // Retiring needs its own code.
-    expect(screen.queryByRole("button", { name: "Retire" })).toBeNull();
+    // Pausing and retiring need their own codes.
+    expect(screen.queryByRole("button", { name: "More actions" })).toBeNull();
   });
 
-  it("saves an edit against the version it started from, not a refetched one", async () => {
+  it("publishes a live benefit's edit against the version it started from", async () => {
     setActiveOrganizationId(ORG);
     const user = userEvent.setup();
-    let version = 1;
-    fetchMock.mockImplementation(async (request) =>
-      request.method === "PUT"
-        ? problem(409, "CONFLICT")
-        : json({ ...benefit, version, title: version === 1 ? benefit.title : "Changed elsewhere" }),
-    );
+    let record = live;
+    fetchMock.mockImplementation(async (request) => {
+      const path = url(request).pathname;
+      if (request.method === "PUT") return problem(409, "CONFLICT");
+      if (path.endsWith("/versions")) return json(page([]));
+      return json(record);
+    });
     const client = makeQueryClient();
-    const session: SessionValue = {
-      status: "authenticated",
-      actor: employerMember([
+    renderAs(
+      employerMember([
         EmployerBenefitPermission.BENEFIT_VIEW,
         EmployerBenefitPermission.BENEFIT_UPDATE,
       ]),
-      error: null,
-      login: async () => undefined,
-      logout: async () => undefined,
-    };
-    render(
-      <QueryClientProvider client={client}>
-        <SessionContext.Provider value={session}>
-          <OwnBenefit benefitId={BENEFIT_ID} />
-        </SessionContext.Provider>
-      </QueryClientProvider>,
+      <OwnBenefit benefitId={BENEFIT_ID} />,
+      client,
     );
 
     await user.click(await screen.findByRole("button", { name: "Edit" }));
-    version = 2;
+    record = { ...live, version: 4 };
     await client.refetchQueries();
-    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    // A live benefit's edit is published at once; there is no draft to save.
+    expect(screen.queryByRole("button", { name: "Save draft" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Publish changes" }));
 
     await vi.waitFor(() =>
       expect(requests("PUT", `/employer/benefits/${BENEFIT_ID}`)).toHaveLength(1),
@@ -262,23 +325,15 @@ describe("Employer portal", () => {
       expected_version: number;
       title: string;
     };
-    expect(body.expected_version).toBe(1);
-    expect(body.title).toBe(benefit.title);
+    expect(body.expected_version).toBe(3);
+    expect(body.title).toBe(employeeBenefit.title);
   });
 });
 
 describe("Admin moderation", () => {
-  it("suspends an active benefit with a required reason", async () => {
+  it("suspends a benefit with a required reason and shows its histories", async () => {
     const user = userEvent.setup();
-    const active = {
-      ...benefit,
-      status: "active" as const,
-      display_status: "active" as const,
-      version: 3,
-    };
-    fetchMock.mockImplementation(async (request) =>
-      request.method === "POST" ? json({ ...active, status: "suspended" }) : json(active),
-    );
+    serveRecord(live, () => json({ ...live, suspended_at: "2026-10-02T00:00:00Z" }));
     renderAs(
       actor({
         globalPermissions: new Set([
@@ -289,7 +344,9 @@ describe("Admin moderation", () => {
       <AdminBenefitRecord benefitId={BENEFIT_ID} />,
     );
 
-    await user.click(await screen.findByRole("button", { name: "Suspend" }));
+    expect(await screen.findByText("Version history")).toBeVisible();
+    expect(screen.getByText("Decision history")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Suspend" }));
     const dialog = screen.getByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: "Suspend benefit" }));
     expect(requests("POST", "/suspend")).toHaveLength(0);
@@ -298,6 +355,7 @@ describe("Admin moderation", () => {
     await user.click(within(dialog).getByRole("button", { name: "Suspend benefit" }));
     await vi.waitFor(() => expect(requests("POST", "/suspend")).toHaveLength(1));
     const [request] = requests("POST", "/suspend");
+    expect(url(request!).pathname).toBe(`/api/v1/admin/company-benefits/${BENEFIT_ID}/suspend`);
     expect(request?.headers.get("X-Organization-ID")).toBeNull();
     expect(await request!.clone().json()).toEqual({
       expected_version: 3,
@@ -307,33 +365,21 @@ describe("Admin moderation", () => {
 });
 
 describe("Employee company benefits", () => {
-  function employeeRoutes(claim: () => Response) {
+  function employeeRoutes(claim: () => Response, card = employeeBenefit) {
     fetchMock.mockImplementation(async (request) => {
       const path = url(request).pathname;
       if (request.method === "POST") return claim();
       if (path.endsWith("/benefit-claims")) return json(page([]));
-      return json(page([employeeBenefit]));
+      return json(page([card]));
     });
   }
 
-  it("marks benefits apart from offers and claims with one key per attempt", async () => {
+  it("marks benefits apart from offers and uses them with one key per attempt", async () => {
     const user = userEvent.setup();
     let attempts = 0;
     employeeRoutes(() => {
       attempts += 1;
-      return attempts === 1
-        ? json({ title: "Server error", status: 500 }, 500)
-        : json(
-            {
-              id: "c1",
-              benefit_id: BENEFIT_ID,
-              organization_name: "Acme Nepal",
-              title: benefit.title,
-              usage_rules: "",
-              claimed_at: "2026-10-05T04:30:00Z",
-            },
-            201,
-          );
+      return attempts === 1 ? json({ title: "Server error", status: 500 }, 500) : json(use(), 201);
     });
     renderAs(actor({ actorType: "employee" }), <MyBenefits />);
 
@@ -348,27 +394,23 @@ describe("Employee company benefits", () => {
     await vi.waitFor(() =>
       expect(push).toHaveBeenCalledWith(`/marketplace/company-benefits/${BENEFIT_ID}`),
     );
-    const keys = requests("POST", "/claim").map((r) => r.headers.get("Idempotency-Key"));
+    const posts = requests("POST", "/marketplace/benefit-claims");
+    const keys = posts.map((r) => r.headers.get("Idempotency-Key"));
     expect(keys).toHaveLength(2);
     expect(keys[0]).toMatch(/^[0-9a-f-]{36}$/);
     expect(keys[1]).toBe(keys[0]);
+    expect(await posts[0]!.clone().json()).toEqual({
+      offer_id: BENEFIT_ID,
+      version_id: VERSION_ID,
+    });
   });
 
-  it("shows a used-up benefit without a claim button", async () => {
-    fetchMock.mockImplementation(async (request) =>
-      url(request).pathname.endsWith("/benefit-claims")
-        ? json(page([]))
-        : json(
-            page([
-              {
-                ...employeeBenefit,
-                max_claims_per_employee: 1,
-                claims_used: 1,
-                claims_remaining: 0,
-              },
-            ]),
-          ),
-    );
+  it("shows a used-up benefit without a use button", async () => {
+    employeeRoutes(() => json(use(), 201), {
+      ...employeeBenefit,
+      max_claims_per_beneficiary: 1,
+      my_use_count: 1,
+    });
     renderAs(actor({ actorType: "employee" }), <MyBenefits />);
     expect(await screen.findByText("Used")).toBeVisible();
     expect(screen.queryByRole("button", { name: "Use benefit" })).toBeNull();
@@ -377,23 +419,13 @@ describe("Employee company benefits", () => {
   it("explains a 403 once and keeps a former employee's history", async () => {
     fetchMock.mockImplementation(async (request) =>
       url(request).pathname.endsWith("/benefit-claims")
-        ? json(
-            page([
-              {
-                id: "c1",
-                benefit_id: BENEFIT_ID,
-                organization_name: "Acme Nepal",
-                title: "Old benefit",
-                usage_rules: "",
-                claimed_at: "2026-10-05T04:30:00Z",
-              },
-            ]),
-          )
+        ? json(page([use("Old benefit")]))
         : problem(403, "FORBIDDEN"),
     );
     renderAs(actor({ actorType: "employee" }), <MyBenefits />);
     expect(await screen.findByText("Company benefits are for employees")).toBeVisible();
     expect(await screen.findByText("Old benefit")).toBeVisible();
+    expect(screen.getByText("#1")).toBeVisible();
   });
 });
 
@@ -419,7 +451,7 @@ describe("Employer benefit usage report", () => {
             page([
               {
                 benefit_id: BENEFIT_ID,
-                title: benefit.title,
+                title: employeeBenefit.title,
                 display_status: "active",
                 claims: 12,
                 employees: 7,
@@ -429,7 +461,7 @@ describe("Employer benefit usage report", () => {
     );
     renderAs(employerMember([EmployerAnalyticsPermission.BENEFIT_REPORT_VIEW]), <BenefitUsage />);
 
-    expect(await screen.findByRole("cell", { name: benefit.title })).toBeVisible();
+    expect(await screen.findByRole("cell", { name: employeeBenefit.title })).toBeVisible();
     expect(screen.getByText("12", { selector: "p" })).toBeVisible();
     expect(screen.getByText("7", { selector: "p" })).toBeVisible();
     expect(screen.queryByText("Views")).toBeNull();

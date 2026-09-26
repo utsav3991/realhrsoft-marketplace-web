@@ -14,13 +14,10 @@ export default function PartnerClaimsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Claims"
-        description="Check the reference an employee shows you and confirm their redemption."
+        description="Accept or reject requests for offers that need your approval, and follow every claim of your offers."
       />
       <RequireOrganization capacity="any">
-        <RequirePermission
-          anyOf={[PartnerClaimPermission.CLAIM_VIEW, PartnerClaimPermission.CLAIM_CONFIRM]}
-          inOrganization
-        >
+        <RequirePermission anyOf={[PartnerClaimPermission.CLAIM_VIEW]} inOrganization>
           <Suspense>
             <PartnerClaims />
           </Suspense>

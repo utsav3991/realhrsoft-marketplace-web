@@ -2,31 +2,32 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import type { SortOrdering } from "@/design-system/components/data-table";
 import { organizationHeader } from "@/features/offers/api/queries";
-import { api, pathId, pathToken, unwrap, type Page, type Schemas } from "@/shared/api";
+import { api, pathId, unwrap, type Page, type Schemas } from "@/shared/api";
 
 export type Claim = Schemas["Claim"];
-export type EmployeeClaim = Schemas["EmployeeClaim"];
+export type OwnClaim = Schemas["OwnClaim"];
 export type PartnerClaim = Schemas["PartnerClaim"];
 export type ClaimStatus = Schemas["ClaimStatusEnum"];
+export type ClaimKind = Schemas["OfferKindEnum"];
+export type Voucher = Schemas["VoucherSummary"];
 
-/** Claim columns the API sorts by (`ordering`); administrators also sort by employee. */
-export const CLAIM_SORTS = ["reference", "title", "claimed_at", "expires_at", "used_at"] as const;
+/** Claim columns the API sorts by (`ordering`). */
+export const CLAIM_SORTS = ["requested_at", "decision_deadline", "accepted_at"] as const;
 export type ClaimOrdering = SortOrdering<(typeof CLAIM_SORTS)[number]>;
-export const ADMIN_CLAIM_SORTS = [...CLAIM_SORTS, "employee_email"] as const;
-export type AdminClaimOrdering = SortOrdering<(typeof ADMIN_CLAIM_SORTS)[number]>;
 
 export interface AdminClaimFilters {
   status: ClaimStatus | null;
+  kind: ClaimKind | null;
   offerId: string | null;
   partnerId: string | null;
-  organizationId: string | null;
-  employeeId: string | null;
-  ordering: AdminClaimOrdering | null;
+  /** The claimant's employer when they claimed. */
+  employerId: string | null;
+  ordering: ClaimOrdering | null;
 }
 
 export const claimKeys = {
   all: ["claims"] as const,
-  // The signed-in employee's own claims (My offers).
+  // The signed-in employee's own marketplace claims (My offers).
   mine: () => [...claimKeys.all, "mine"] as const,
   mineList: (
     status: ClaimStatus | null,
@@ -43,8 +44,8 @@ export const claimKeys = {
     ordering: ClaimOrdering | null,
     page: Page,
   ) => [...claimKeys.partner(organizationId), "list", status, ordering, page] as const,
-  partnerDetail: (organizationId: string, reference: string) =>
-    [...claimKeys.partner(organizationId), "detail", reference] as const,
+  partnerDetail: (organizationId: string, id: string) =>
+    [...claimKeys.partner(organizationId), "detail", id] as const,
   // Aayulogic administration.
   admin: () => [...claimKeys.all, "admin"] as const,
   adminList: (filters: AdminClaimFilters, page: Page) =>
@@ -52,16 +53,9 @@ export const claimKeys = {
   adminDetail: (id: string) => [...claimKeys.admin(), "detail", id] as const,
 };
 
-/** Claim references are 10 characters; the API matches them ignoring case. */
-export const REFERENCE_PATTERN = /^[A-Za-z0-9]{10}$/;
-
-export function normalizeReference(value: string): string {
-  return value.replace(/[\s-]/g, "").toUpperCase();
-}
-
 // --- Employee (eligibility, no permission code) ------------------------------------------
 
-/** The employee's claims, newest first by default. Former employees keep reading their history. */
+/** The employee's marketplace claims, newest first by default. History outlives employment. */
 export function useMyClaims(
   status: ClaimStatus | null,
   offerId: string | null,
@@ -104,6 +98,7 @@ export function useMyClaim(claimId: string) {
 
 // --- Partner portal (the selected organization) ------------------------------------------
 
+/** The partner's claims; the decision queue is status=requested. Claimants are never named. */
 export function usePartnerClaims(
   organizationId: string,
   status: ClaimStatus | null,
@@ -114,7 +109,7 @@ export function usePartnerClaims(
     queryKey: claimKeys.partnerList(organizationId, status, ordering, page),
     queryFn: ({ signal }) =>
       unwrap(
-        api.GET("/partner/claims", {
+        api.GET("/partner/offer-claims", {
           params: {
             header: organizationHeader(organizationId),
             query: {
@@ -131,18 +126,16 @@ export function usePartnerClaims(
   });
 }
 
-/** Looks up the reference an employee shows; another partner's claim is a 404. */
-export function usePartnerClaim(organizationId: string, reference: string | null) {
+/** Another organization's claim is a 404. */
+export function usePartnerClaim(organizationId: string, claimId: string) {
   return useQuery({
-    queryKey: claimKeys.partnerDetail(organizationId, reference ?? ""),
-    enabled: reference !== null,
-    retry: false,
+    queryKey: claimKeys.partnerDetail(organizationId, claimId),
     queryFn: ({ signal }) =>
       unwrap(
-        api.GET("/partner/claims/{reference}", {
+        api.GET("/partner/offer-claims/{claim_id}", {
           params: {
             header: organizationHeader(organizationId),
-            path: { reference: pathToken(reference ?? "") },
+            path: { claim_id: pathId(claimId) },
           },
           signal,
         }),
@@ -152,19 +145,20 @@ export function usePartnerClaim(organizationId: string, reference: string | null
 
 // --- Aayulogic administration ------------------------------------------------------------
 
+/** Every claim of both kinds, with its claimant, employer at claim time and decision. */
 export function useAdminClaims(filters: AdminClaimFilters, page: Page) {
   return useQuery({
     queryKey: claimKeys.adminList(filters, page),
     queryFn: ({ signal }) =>
       unwrap(
-        api.GET("/admin/claims", {
+        api.GET("/admin/offer-claims", {
           params: {
             query: {
               status: filters.status ?? undefined,
+              kind: filters.kind ?? undefined,
               offer_id: filters.offerId ?? undefined,
               partner_id: filters.partnerId ?? undefined,
-              organization_id: filters.organizationId ?? undefined,
-              employee_id: filters.employeeId ?? undefined,
+              employer_id: filters.employerId ?? undefined,
               ordering: filters.ordering ? [filters.ordering] : undefined,
               offset: page.offset,
               limit: page.limit,
@@ -182,7 +176,7 @@ export function useAdminClaim(claimId: string) {
     queryKey: claimKeys.adminDetail(claimId),
     queryFn: ({ signal }) =>
       unwrap(
-        api.GET("/admin/claims/{claim_id}", {
+        api.GET("/admin/offer-claims/{claim_id}", {
           params: { path: { claim_id: pathId(claimId) } },
           signal,
         }),

@@ -1,16 +1,16 @@
 import { useEffect } from "react";
 
-import type { Offer } from "../api/queries";
+import type { CategoryRef } from "../api/queries";
 import { useActiveCategories, useOwnCategories } from "../api/queries";
 import type { CategoryOption } from "./offer-form";
 
 /**
- * Active categories plus the offer's current one when it has been retired, so an edit form
+ * Active categories plus the edited version's one when it has been retired, so an edit form
  * can show it (saving still needs an active category; the API says so).
  */
 function withCurrent(
   active: readonly { id: string; name: string }[],
-  current: Offer["category"] | undefined,
+  current: CategoryRef | undefined,
 ): CategoryOption[] {
   const options = active.map(({ id, name }) => ({ id, name, isActive: true }));
   if (current && !options.some((option) => option.id === current.id)) {
@@ -20,7 +20,7 @@ function withCurrent(
 }
 
 /** Administrators: every active category, loading every page. */
-export function useAdminCategoryOptions(current?: Offer["category"]) {
+export function useAdminCategoryOptions(current?: CategoryRef) {
   const categories = useActiveCategories();
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = categories;
   useEffect(() => {
@@ -31,7 +31,7 @@ export function useAdminCategoryOptions(current?: Offer["category"]) {
 }
 
 /** Partner portal: the active categories of the selected organization's catalogue. */
-export function useOwnCategoryOptions(organizationId: string, current?: Offer["category"]) {
+export function useOwnCategoryOptions(organizationId: string, current?: CategoryRef) {
   const categories = useOwnCategories(organizationId);
   return { query: categories, options: withCurrent(categories.data ?? [], current) };
 }

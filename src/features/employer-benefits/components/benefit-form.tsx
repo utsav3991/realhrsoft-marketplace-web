@@ -22,7 +22,8 @@ import {
 } from "@/design-system/primitives/form";
 import { Input } from "@/design-system/primitives/input";
 import { Textarea } from "@/design-system/primitives/textarea";
-import { errorMessage } from "@/shared/api";
+import { BenefitValueFields } from "@/features/offers/components/benefit-value-fields";
+import { errorMessage, type Schemas } from "@/shared/api";
 import { applyApiFieldErrors } from "@/shared/forms/api-field-errors";
 
 import {
@@ -32,43 +33,67 @@ import {
   type BenefitValues,
 } from "../schemas/benefit";
 
+export type BenefitIntent = NonNullable<Schemas["BenefitContent"]["intent"]>;
+
+export interface BenefitIntentButton {
+  intent: BenefitIntent;
+  label: string;
+  /** The one primary button of the form; the others are outline. */
+  primary?: boolean;
+}
+
 interface BenefitFormProps {
   defaultValues: BenefitValues;
   /** The employer whose employees are the fixed audience. */
   organizationName: string;
-  submitLabel: string;
+  /** Submit buttons, one per intent the member may use here. */
+  intents: readonly BenefitIntentButton[];
   /** Resolves on success or throws an ApiError, shown in the form. */
-  onSubmit: (values: BenefitValues) => Promise<unknown>;
+  onSubmit: (values: BenefitValues, intent: BenefitIntent) => Promise<unknown>;
   onCancel?: () => void;
 }
 
 /**
- * Benefit content, validity and usage limit. The API replaces every field on save. There is no
- * audience field: a Company Benefit always goes to the organization's own employees (EMR-03).
+ * Benefit content, value, validity and usage limit. The API replaces every field on save. There
+ * is no audience field: a Company Benefit always goes to the organization's own employees.
  */
 export function BenefitForm({
   defaultValues,
   organizationName,
-  submitLabel,
+  intents,
   onSubmit,
   onCancel,
 }: BenefitFormProps) {
   const [failure, setFailure] = useState<string | null>(null);
+  const [pendingIntent, setPendingIntent] = useState<BenefitIntent | null>(null);
   const form = useForm<BenefitValues>({ resolver: zodResolver(benefitSchema), defaultValues });
   const { isSubmitting } = form.formState;
 
-  const submit = form.handleSubmit(async (values) => {
-    setFailure(null);
-    try {
-      await onSubmit(values);
-    } catch (error) {
-      if (!applyApiFieldErrors(error, form, BENEFIT_FIELDS)) setFailure(errorMessage(error));
-    }
-  });
+  function submitWith(intent: BenefitIntent) {
+    return form.handleSubmit(async (values) => {
+      setFailure(null);
+      setPendingIntent(intent);
+      try {
+        await onSubmit(values, intent);
+      } catch (error) {
+        if (!applyApiFieldErrors(error, form, BENEFIT_FIELDS)) setFailure(errorMessage(error));
+      } finally {
+        setPendingIntent(null);
+      }
+    });
+  }
 
   return (
     <Form {...form}>
-      <form onSubmit={(event) => void submit(event)} noValidate className="space-y-8">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          const primary = intents.find((i) => i.primary) ?? intents[0];
+          if (primary) void submitWith(primary.intent)(event);
+        }}
+        noValidate
+        className="space-y-8"
+      >
         {failure ? <FormAlert>{failure}</FormAlert> : null}
 
         <FormSection
@@ -85,6 +110,20 @@ export function BenefitForm({
                 <FormControl>
                   <Input placeholder="Free annual health check-up" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="headline"
+            render={({ field }) => (
+              <FormItem className="sm:col-span-2">
+                <FormLabel>Headline</FormLabel>
+                <FormControl>
+                  <Input placeholder="One free check-up a year" {...field} />
+                </FormControl>
+                <FormDescription>The line employees see first on the benefit card.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -123,12 +162,38 @@ export function BenefitForm({
                   />
                 </FormControl>
                 <FormDescription>
-                  Instructions and conditions employees see before and after claiming.
+                  Instructions and conditions employees see before and after using it.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="terms"
+            render={({ field }) => (
+              <FormItem className="sm:col-span-2">
+                <FormLabel optional>Terms and conditions</FormLabel>
+                <FormControl>
+                  <RichTextEditor
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    disabled={isSubmitting}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </FormSection>
+
+        <FormSection
+          title="Value"
+          description="What each use gives. Words are never read as a price."
+          disabled={isSubmitting}
+        >
+          <BenefitValueFields disabled={isSubmitting} />
         </FormSection>
 
         <FormSection title="Validity and usage" disabled={isSubmitting}>
@@ -192,8 +257,8 @@ export function BenefitForm({
                   />
                 </FormControl>
                 <FormDescription>
-                  How many times each employee may claim it, 1–{MAX_CLAIMS_PER_EMPLOYEE}. Lowering
-                  it never removes claims already made.
+                  How many times each employee may use it over its lifetime, 1–
+                  {MAX_CLAIMS_PER_EMPLOYEE}. Lowering it blocks further uses; past uses are kept.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -235,10 +300,20 @@ export function BenefitForm({
               Cancel
             </Button>
           ) : null}
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <Loader2 className="animate-spin" aria-hidden /> : null}
-            {submitLabel}
-          </Button>
+          {intents.map((button) => (
+            <Button
+              key={button.intent}
+              type="button"
+              variant={button.primary ? "default" : "outline"}
+              disabled={isSubmitting}
+              onClick={(event) => void submitWith(button.intent)(event)}
+            >
+              {pendingIntent === button.intent ? (
+                <Loader2 className="animate-spin" aria-hidden />
+              ) : null}
+              {button.label}
+            </Button>
+          ))}
         </FormActions>
       </form>
     </Form>

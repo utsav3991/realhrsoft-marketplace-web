@@ -1,21 +1,32 @@
 import { z } from "zod";
 
+import {
+  BENEFIT_VALUE_FIELDS,
+  benefitValueBody,
+  benefitValueSchema,
+  benefitValueValues,
+  EMPTY_BENEFIT_VALUE,
+} from "@/features/offers/schemas/benefit-value";
 import type { Schemas } from "@/shared/api";
 import { fromDateTimeLocal, toDateTimeLocal } from "@/shared/lib/format";
 
 import type { Benefit } from "../api/queries";
 
-// Mirrors the Django benefit serializer; the server re-validates.
+// Mirrors the Django benefit serializer and offers/terms.py; the server re-validates.
 export const MAX_CLAIMS_PER_EMPLOYEE = 1000;
 
 const requiredText = (max: number, message: string) =>
   z.string().trim().min(1, message).max(max, `At most ${max} characters`);
+const optionalText = (max: number) => z.string().trim().max(max, `At most ${max} characters`);
 
 export const benefitSchema = z
   .object({
     title: requiredText(150, "Enter a title"),
+    headline: requiredText(255, "Enter the card headline"),
+    benefit: benefitValueSchema,
     description: requiredText(4000, "Describe the benefit"),
-    usageRules: z.string().trim().max(4000, "At most 4000 characters"),
+    usageRules: optionalText(4000),
+    terms: optionalText(4000),
     validFrom: z.string().min(1, "Choose when the benefit starts"),
     validUntil: z.string(),
     maxClaims: z
@@ -35,11 +46,15 @@ export const benefitSchema = z
   });
 export type BenefitValues = z.infer<typeof benefitSchema>;
 
-// The editor starts the limit at one use; it is a form value, not a server default.
+// The editor starts the limit at one use and the value as words; they are form values, not
+// server defaults.
 export const EMPTY_BENEFIT: BenefitValues = {
   title: "",
+  headline: "",
+  benefit: { ...EMPTY_BENEFIT_VALUE, type: "descriptive" },
   description: "",
   usageRules: "",
+  terms: "",
   validFrom: "",
   validUntil: "",
   maxClaims: "1",
@@ -49,35 +64,54 @@ export const EMPTY_BENEFIT: BenefitValues = {
 /** Request body field → form field, for placing 422 errors. */
 export const BENEFIT_FIELDS = {
   title: "title",
+  headline: "headline",
+  ...BENEFIT_VALUE_FIELDS,
   description: "description",
   usage_rules: "usageRules",
+  terms: "terms",
   valid_from: "validFrom",
   valid_until: "validUntil",
-  max_claims_per_employee: "maxClaims",
+  max_claims_per_beneficiary: "maxClaims",
   reason: "reason",
 } as const;
 
+export type BenefitContentBody = Omit<Schemas["BenefitContent"], "intent">;
+
 /** PUT semantics: every field is sent; an empty end date makes the benefit open-ended. */
-export function benefitBody(values: BenefitValues): Schemas["BenefitInput"] {
+export function benefitBody(values: BenefitValues): BenefitContentBody {
   return {
     title: values.title,
+    headline: values.headline,
+    benefit: benefitValueBody(values.benefit),
     description: values.description,
     usage_rules: values.usageRules,
+    terms: values.terms,
     valid_from: fromDateTimeLocal(values.validFrom) ?? "",
     valid_until: values.validUntil ? fromDateTimeLocal(values.validUntil) : null,
-    max_claims_per_employee: Number(values.maxClaims),
+    max_claims_per_beneficiary: Number(values.maxClaims),
     reason: values.reason,
   };
 }
 
+/** The terms an edit starts from: the live version, else the unpublished draft. */
+export function benefitVersion(benefit: Benefit) {
+  return benefit.current_version ?? benefit.working_version;
+}
+
 export function benefitValues(benefit: Benefit): BenefitValues {
+  const version = benefitVersion(benefit);
+  const policy = version?.benefit_policy;
+  if (!version || !policy) return EMPTY_BENEFIT;
   return {
-    title: benefit.title,
-    description: benefit.description,
-    usageRules: benefit.usage_rules,
-    validFrom: toDateTimeLocal(benefit.valid_from),
-    validUntil: toDateTimeLocal(benefit.valid_until),
-    maxClaims: String(benefit.max_claims_per_employee),
+    title: version.title,
+    headline: version.headline,
+    benefit: benefitValueValues(version.benefit),
+    description: version.description,
+    usageRules: policy.usage_rules,
+    terms: version.terms ?? "",
+    validFrom: toDateTimeLocal(version.valid_from),
+    validUntil: toDateTimeLocal(version.valid_until),
+    maxClaims: String(policy.max_claims_per_beneficiary),
     reason: "",
   };
 }

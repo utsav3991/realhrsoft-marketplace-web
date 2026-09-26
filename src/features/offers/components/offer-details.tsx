@@ -2,11 +2,14 @@
 
 import {
   AlertTriangle,
+  Archive,
   CheckCircle2,
   Clock,
   EyeOff,
+  FilePen,
   History,
   PauseCircle,
+  Undo2,
   XCircle,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -27,33 +30,63 @@ import { Detail, DetailList } from "@/shared/components/details";
 import { QueryDataTable, type ResultsQuery } from "@/shared/components/query-data-table";
 import type { PageState } from "@/shared/hooks/use-page-param";
 import { StatusBadge } from "@/shared/components/status-badge";
-import { formatDateTime } from "@/shared/lib/format";
+import { formatDate, formatDateTime } from "@/shared/lib/format";
 
-import type { Offer, OfferDecision, PostedVia } from "../api/queries";
-import { AUDIENCE_LABEL, REDEMPTION_LABEL } from "../schemas/offer";
+import type { Availability, Offer, OfferDecision, OfferVersion, PostedVia } from "../api/queries";
+import { benefitSummary } from "../schemas/benefit-value";
+import { ACCEPTANCE_LABEL, AUDIENCE_LABEL, presentationLabel } from "../schemas/offer";
 
 export const POSTED_VIA_LABEL: Record<PostedVia, string> = {
   partner_portal: "Partner portal",
+  employer_portal: "Employer portal",
   admin_on_behalf: "Aayulogic on behalf",
+};
+
+export const AVAILABILITY_LABEL: Record<Availability, string> = {
+  enabled: "Enabled",
+  paused: "Paused",
+  retired: "Retired",
+};
+
+const DECISION_VIA_LABEL: Record<OfferDecision["via"], string> = {
+  review: "Review",
+  admin_publish: "Published by Aayulogic",
+  owner_publish: "Published by the owner",
+  moderation: "Moderation",
 };
 
 const empty = (value: string | null | undefined) => value || "—";
 
-/** Whether the offer can be edited now: never while in review or suspended. */
+// --- Lifecycle guards: mirror the API's conflicts; the API still decides ---------------
+
+const isRetired = (offer: Offer) => offer.availability === "retired";
+export const isSuspended = (offer: Offer) => Boolean(offer.suspended_at);
+const workingState = (offer: Offer) => offer.working_version?.state ?? null;
+
+/**
+ * Whether an edit can be saved: never once retired or while a version is under review (retract
+ * it first). Saving a frozen working version or the live one starts a new draft.
+ */
 export function isEditable(offer: Offer): boolean {
-  return offer.status !== "pending_review" && offer.status !== "suspended";
+  return !isRetired(offer) && workingState(offer) !== "in_review";
 }
 
-export function isSubmittable(offer: Offer): boolean {
-  return ["draft", "changes_requested", "rejected"].includes(offer.status);
-}
+export const isSubmittable = (offer: Offer) =>
+  !isRetired(offer) && workingState(offer) === "draft";
+export const isInReview = (offer: Offer) => workingState(offer) === "in_review";
+export const isPublished = (offer: Offer) => offer.current_version !== null;
+export const isPausable = (offer: Offer) => offer.availability === "enabled";
+export const isResumable = (offer: Offer) => offer.availability === "paused";
+export const isRetirable = (offer: Offer) => !isRetired(offer);
 
-export function isWithdrawable(offer: Offer): boolean {
-  return offer.status === "pending_review" || offer.status === "approved";
+/** Administrators publish any unpublished working version directly, in review or not. */
+export function isAdminPublishable(offer: Offer): boolean {
+  const state = workingState(offer);
+  return !isRetired(offer) && state !== null && state !== "approved";
 }
 
 /** Only a badge: employees see the offer only while every publishing gate passes. */
-export function VisibilityBadge({ offer }: { offer: Offer }) {
+export function VisibilityBadge({ offer }: { offer: Pick<Offer, "visible_to_employees"> }) {
   return offer.visible_to_employees ? (
     <Badge intent="success" title="Every publishing gate passes now">
       Visible to employees
@@ -66,41 +99,120 @@ export function VisibilityBadge({ offer }: { offer: Offer }) {
   );
 }
 
-export function OfferContentCard({ offer, action }: { offer: Offer; action?: ReactNode }) {
+/** "1 Oct 2026 – 31 Dec 2026", or "From 1 Oct 2026" when open-ended. */
+export function validity(validFrom: string, validUntil: string | null): string {
+  return validUntil
+    ? `${formatDate(validFrom)} – ${formatDate(validUntil)}`
+    : `From ${formatDate(validFrom)}`;
+}
+
+/** The version employees see, else the one being prepared; what lists and headers name. */
+export function shownVersion(offer: Offer): OfferVersion | null {
+  return offer.current_version ?? offer.working_version;
+}
+
+/**
+ * One version's terms, including how the benefit is applied: owners and administrators only;
+ * employees receive the codes, links and instructions with an issued voucher.
+ */
+export function VersionTermsCard({
+  version,
+  title,
+  description,
+  action,
+}: {
+  version: OfferVersion;
+  title: string;
+  description?: ReactNode;
+  action?: ReactNode;
+}) {
+  const policy = version.marketplace_policy;
   return (
     <Card>
       <CardHeader className="flex-row items-start justify-between gap-4">
         <div className="space-y-1.5">
-          <CardTitle>Offer</CardTitle>
-          <CardDescription>
-            Revision {offer.revision}. Any content change needs a new approval.
-          </CardDescription>
+          <CardTitle className="flex flex-wrap items-center gap-2">
+            {title}
+            <StatusBadge domain="offerVersion" status={version.state} />
+          </CardTitle>
+          {description ? <CardDescription>{description}</CardDescription> : null}
         </div>
         {action}
       </CardHeader>
       <CardContent>
         <DetailList>
-          <Detail label="Title">{offer.title}</Detail>
-          <Detail label="Benefit">{offer.benefit}</Detail>
-          <Detail label="Category">
-            {offer.category.name}
-            {offer.category.is_active ? null : (
-              <StatusBadge domain="offerCategory" status="retired" className="ml-2" />
-            )}
+          <Detail label="Title">{version.title}</Detail>
+          <Detail label="Headline">{version.headline}</Detail>
+          <Detail label="Benefit">
+            {benefitSummary(version.benefit)}
+            {version.benefit.type !== "descriptive" && version.benefit.description ? (
+              <span className="text-muted-foreground block text-xs">
+                {version.benefit.description}
+              </span>
+            ) : null}
           </Detail>
-          <Detail label="Valid from">{formatDateTime(offer.valid_from)}</Detail>
-          <Detail label="Valid until">{formatDateTime(offer.valid_until)}</Detail>
-          <Detail label="Audience">
-            {AUDIENCE_LABEL[offer.audience_type]}
-            {offer.audience_organizations.length > 0
-              ? `: ${offer.audience_organizations.map((o) => o.name).join(", ")}`
-              : null}
+          {policy ? (
+            <Detail label="Category">
+              {policy.category.name}
+              {policy.category.is_active ? null : (
+                <StatusBadge domain="offerCategory" status="retired" className="ml-2" />
+              )}
+            </Detail>
+          ) : null}
+          <Detail label="Valid from">{formatDateTime(version.valid_from)}</Detail>
+          <Detail label="Valid until">
+            {version.valid_until ? formatDateTime(version.valid_until) : "Open-ended"}
           </Detail>
+          {policy ? (
+            <>
+              <Detail label="Audience">
+                {AUDIENCE_LABEL[policy.audience_type]}
+                {policy.audience_organizations.length > 0
+                  ? `: ${policy.audience_organizations.map((o) => o.name).join(", ")}`
+                  : null}
+              </Detail>
+              <Detail label="Claims">
+                {ACCEPTANCE_LABEL[policy.acceptance_mode]}
+                {policy.approval_ttl_hours
+                  ? ` within ${policy.approval_ttl_hours} hours`
+                  : null}
+              </Detail>
+              <Detail label="Applied by">
+                {presentationLabel(policy.presentation_method, policy.custom_method_name)}
+              </Detail>
+              {policy.presentation_method === "promo_code" ? (
+                <Detail label="Promo code">
+                  <span className="font-mono">{empty(policy.promo_code)}</span>
+                </Detail>
+              ) : null}
+              {policy.presentation_method === "booking_link" ? (
+                <Detail label="Booking link">
+                  {policy.redemption_url ? (
+                    <a
+                      href={policy.redemption_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary break-all hover:underline"
+                    >
+                      {policy.redemption_url}
+                    </a>
+                  ) : (
+                    "—"
+                  )}
+                </Detail>
+              ) : null}
+              {policy.redemption_instructions ? (
+                <Detail label="Instructions" className="sm:col-span-2 lg:col-span-3">
+                  <RichText value={policy.redemption_instructions} />
+                </Detail>
+              ) : null}
+            </>
+          ) : null}
           <Detail label="Description" className="sm:col-span-2 lg:col-span-3">
-            <RichText value={offer.description} />
+            <RichText value={version.description} />
           </Detail>
           <Detail label="Terms and conditions" className="sm:col-span-2 lg:col-span-3">
-            <RichText value={offer.terms} />
+            {version.terms ? <RichText value={version.terms} /> : "—"}
           </Detail>
         </DetailList>
       </CardContent>
@@ -108,49 +220,40 @@ export function OfferContentCard({ offer, action }: { offer: Offer; action?: Rea
   );
 }
 
-/** Redemption secrets: owners and administrators only; employees get them by claiming. */
-export function RedemptionCard({ offer }: { offer: Offer }) {
-  const method = offer.redemption_method;
+/**
+ * The live version and, when one is being prepared, the working version. While a replacement
+ * is drafted or reviewed the live version stays live (D05), so both are shown.
+ */
+export function OfferVersions({ offer, editAction }: { offer: Offer; editAction?: ReactNode }) {
+  const live = offer.current_version;
+  const working = offer.working_version;
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Redemption</CardTitle>
-        <CardDescription>Employees receive these details only after they claim.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <DetailList>
-          <Detail label="Method">
-            {method === "custom" ? empty(offer.custom_method_name) : REDEMPTION_LABEL[method]}
-          </Detail>
-          {method === "promo_code" || method === "qr_code" ? (
-            <Detail label={method === "qr_code" ? "QR code value" : "Promo code"}>
-              <span className="font-mono">{empty(offer.redemption_code)}</span>
-            </Detail>
-          ) : null}
-          {method === "booking_link" ? (
-            <Detail label="Booking link">
-              {offer.redemption_url ? (
-                <a
-                  href={offer.redemption_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  {offer.redemption_url}
-                </a>
-              ) : (
-                "—"
-              )}
-            </Detail>
-          ) : null}
-          {offer.redemption_instructions ? (
-            <Detail label="Instructions" className="sm:col-span-2 lg:col-span-3">
-              <RichText value={offer.redemption_instructions} />
-            </Detail>
-          ) : null}
-        </DetailList>
-      </CardContent>
-    </Card>
+    <>
+      {working ? (
+        <VersionTermsCard
+          version={working}
+          title={live ? `Pending changes · version ${working.number}` : `Version ${working.number}`}
+          description={
+            working.state === "draft"
+              ? live
+                ? "A draft replacing the live version. Employees keep seeing the live terms until it is approved."
+                : "Editable until it is submitted."
+              : working.state === "in_review"
+                ? "Frozen while Aayulogic reviews it."
+                : "Frozen. Editing starts a new draft copied from it."
+          }
+          action={editAction}
+        />
+      ) : null}
+      {live ? (
+        <VersionTermsCard
+          version={live}
+          title={`Live · version ${live.number}`}
+          description="The approved terms employees see. Claims keep the version they accepted."
+          action={working ? undefined : editAction}
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -169,22 +272,24 @@ export function PublicationCard({ offer, partner }: { offer: Offer; partner?: Re
           <Detail label="Employees">
             <VisibilityBadge offer={offer} />
           </Detail>
+          <Detail label="Availability">{AVAILABILITY_LABEL[offer.availability]}</Detail>
           {partner ? <Detail label="Partner">{partner}</Detail> : null}
           <Detail label="Posted via">{POSTED_VIA_LABEL[offer.posted_via]}</Detail>
           <Detail label="Featured">{offer.is_featured ? "Yes" : "No"}</Detail>
-          <Detail label="Submitted">
-            {offer.submitted_at ? formatDateTime(offer.submitted_at) : "—"}
-          </Detail>
-          <Detail label="Approved">
-            {offer.approved_at
-              ? `${formatDateTime(offer.approved_at)} (revision ${offer.approved_revision})`
-              : "—"}
+          <Detail label="Live version">
+            {offer.current_version ? offer.current_version.number : "None"}
           </Detail>
           <Detail label="First published">
             {offer.first_published_at ? formatDateTime(offer.first_published_at) : "—"}
           </Detail>
-          <Detail label="Version">{offer.version}</Detail>
+          {offer.suspended_at ? (
+            <Detail label="Suspended">{formatDateTime(offer.suspended_at)}</Detail>
+          ) : null}
+          {offer.retired_at ? (
+            <Detail label="Retired">{formatDateTime(offer.retired_at)}</Detail>
+          ) : null}
           <Detail label="Last updated">{formatDateTime(offer.updated_at)}</Detail>
+          <Detail label="Record version">{offer.version}</Detail>
         </DetailList>
       </CardContent>
     </Card>
@@ -192,102 +297,154 @@ export function PublicationCard({ offer, partner }: { offer: Offer; partner?: Re
 }
 
 /**
- * What the status means for the reader right now. Returned and rejected offers show the
- * reviewer's feedback (latest_decision.reason), which the partner addresses before resubmitting.
+ * What the offer's state means for the reader right now. Returned and rejected versions show
+ * the reviewer's feedback (latest_decision.reason), which the partner addresses in a new draft.
  */
 export function OfferStatusCallout({
   offer,
   audience,
-  action,
 }: {
   offer: Offer;
   audience: "partner" | "reviewer";
-  action?: ReactNode;
 }) {
-  const feedback = offer.latest_decision?.reason || "No feedback was recorded.";
   const partner = audience === "partner";
-  switch (offer.status) {
-    case "changes_requested":
-    case "rejected":
-      return (
-        <Alert variant={offer.status === "rejected" ? "destructive" : "default"}>
-          {offer.status === "rejected" ? <XCircle aria-hidden /> : <AlertTriangle aria-hidden />}
-          <AlertTitle>
-            {offer.status === "rejected" ? "Offer rejected" : "Changes requested"}
-          </AlertTitle>
-          <AlertDescription className="space-y-3">
-            <p className="whitespace-pre-line">{feedback}</p>
-            <p>
-              {partner
-                ? "Edit the offer to address this feedback, then submit it for review again."
-                : "The partner can edit the offer and resubmit it."}
-            </p>
-            {action}
-          </AlertDescription>
-        </Alert>
-      );
-    case "pending_review":
+  const live = offer.current_version;
+  const working = offer.working_version;
+  const liveNote = live ? ` The live version ${live.number} stays live meanwhile.` : "";
+
+  if (isRetired(offer)) {
+    return (
+      <Alert>
+        <Archive aria-hidden />
+        <AlertTitle>Retired</AlertTitle>
+        <AlertDescription>
+          Final: no new claims or edits. Accepted claims and issued vouchers are kept.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  if (isSuspended(offer)) {
+    return (
+      <Alert variant="destructive">
+        <PauseCircle aria-hidden />
+        <AlertTitle>Suspended by Aayulogic</AlertTitle>
+        <AlertDescription className="space-y-2">
+          <p className="whitespace-pre-line">{offer.suspension_reason || "No reason recorded."}</p>
+          <p>
+            Hidden from employees. Editing, resuming or publishing does not lift it; only a
+            reinstatement does.
+          </p>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  if (offer.availability === "paused") {
+    return (
+      <Alert>
+        <PauseCircle aria-hidden />
+        <AlertTitle>Paused</AlertTitle>
+        <AlertDescription>
+          {partner
+            ? "Hidden from employees until you resume it. Accepted claims and vouchers are unaffected."
+            : "The partner paused it; employees cannot see or claim it until it is resumed."}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  switch (working?.state) {
+    case "in_review":
       return (
         <Alert>
           <Clock aria-hidden />
-          <AlertTitle>{partner ? "Awaiting Aayulogic review" : "Awaiting your review"}</AlertTitle>
+          <AlertTitle>
+            {partner ? "Awaiting Aayulogic review" : "Awaiting your review"}
+          </AlertTitle>
           <AlertDescription>
-            Submitted {offer.submitted_at ? formatDateTime(offer.submitted_at) : ""}.{" "}
+            Version {working.number} was submitted{" "}
+            {working.submitted_at ? formatDateTime(working.submitted_at) : ""}.
+            {liveNote}{" "}
             {partner
-              ? "Withdraw it to draft if you need to change it."
-              : "Approve, request changes or reject it at its current version."}
+              ? "Retract it if you need to change it."
+              : "Approve, request changes or reject this version."}
           </AlertDescription>
         </Alert>
       );
-    case "suspended":
+    case "changes_requested":
+    case "rejected": {
+      const rejected = working.state === "rejected";
       return (
-        <Alert variant="destructive">
-          <PauseCircle aria-hidden />
-          <AlertTitle>Suspended by Aayulogic</AlertTitle>
-          <AlertDescription className="space-y-2">
-            <p className="whitespace-pre-line">{feedback}</p>
-            <p>Hidden from employees and locked for editing until it is reinstated.</p>
+        <Alert variant={rejected ? "destructive" : "default"}>
+          {rejected ? <XCircle aria-hidden /> : <AlertTriangle aria-hidden />}
+          <AlertTitle>{rejected ? "Version rejected" : "Changes requested"}</AlertTitle>
+          <AlertDescription className="space-y-3">
+            <p className="whitespace-pre-line">
+              {offer.latest_decision?.reason || "No feedback was recorded."}
+            </p>
+            <p>
+              {partner
+                ? "Edit the offer to start a new draft that addresses this feedback, then submit it."
+                : "The partner can edit it into a new draft and resubmit."}
+              {liveNote}
+            </p>
           </AlertDescription>
         </Alert>
       );
-    case "approved":
-      return offer.visible_to_employees ? (
+    }
+    case "retracted":
+      return (
         <Alert>
-          <CheckCircle2 aria-hidden />
-          <AlertTitle>Live for employees</AlertTitle>
+          <Undo2 aria-hidden />
+          <AlertTitle>Taken out of review</AlertTitle>
           <AlertDescription>
-            {partner
-              ? "Editing it sends the new content for review and hides it until approved again."
-              : "Employees in its audience can find and claim it now."}
-          </AlertDescription>
-        </Alert>
-      ) : (
-        <Alert>
-          <EyeOff aria-hidden />
-          <AlertTitle>Approved, not visible</AlertTitle>
-          <AlertDescription>
-            {offer.display_status === "scheduled"
-              ? `It becomes visible on ${formatDateTime(offer.valid_from)}.`
-              : offer.display_status === "expired"
-                ? "Its end date has passed."
-                : offer.partner.status !== "verified"
-                  ? "The partner is no longer verified; it shows again once re-verified."
-                  : "Another publishing gate does not pass."}
+            Version {working.number} was retracted. Edit it to start a new draft.{liveNote}
           </AlertDescription>
         </Alert>
       );
     case "draft":
       return (
         <Alert>
-          <Clock aria-hidden />
-          <AlertTitle>Draft</AlertTitle>
+          <FilePen aria-hidden />
+          <AlertTitle>{live ? "Unsubmitted changes" : "Draft"}</AlertTitle>
           <AlertDescription>
-            Not visible to employees.{" "}
+            {live
+              ? `Version ${working.number} is a draft; employees keep seeing version ${live.number}.`
+              : "Not visible to employees."}{" "}
             {partner ? "Submit it for Aayulogic review when it is ready." : null}
           </AlertDescription>
         </Alert>
       );
+    default:
+      break;
   }
+  if (!live) return null;
+  if (offer.visible_to_employees) {
+    return (
+      <Alert>
+        <CheckCircle2 aria-hidden />
+        <AlertTitle>Live for employees</AlertTitle>
+        <AlertDescription>
+          {partner
+            ? "Edits go into a new draft for review; employees keep the live terms until it is approved."
+            : "Employees in its audience can find and claim it now."}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  return (
+    <Alert>
+      <EyeOff aria-hidden />
+      <AlertTitle>Published, not visible</AlertTitle>
+      <AlertDescription>
+        {offer.display_status === "scheduled"
+          ? `It becomes visible on ${formatDateTime(live.valid_from)}.`
+          : offer.display_status === "expired"
+            ? "Its end date has passed."
+            : offer.partner && offer.partner.status !== "verified"
+              ? "The partner is no longer verified; it shows again once re-verified."
+              : "Another publishing gate does not pass."}
+      </AlertDescription>
+    </Alert>
+  );
 }
 
 const DECISION_COLUMNS: DataTableColumns<OfferDecision> = [
@@ -297,9 +454,9 @@ const DECISION_COLUMNS: DataTableColumns<OfferDecision> = [
     cell: (decision) => (
       <>
         <StatusBadge domain="offerDecision" status={decision.outcome} />
-        {decision.via === "admin_publish" ? (
-          <span className="text-muted-foreground ml-2 text-xs">Published directly</span>
-        ) : null}
+        <span className="text-muted-foreground ml-2 text-xs">
+          {DECISION_VIA_LABEL[decision.via]}
+        </span>
       </>
     ),
   },
@@ -310,10 +467,10 @@ const DECISION_COLUMNS: DataTableColumns<OfferDecision> = [
     cell: (decision) => empty(decision.reason),
   },
   {
-    id: "revision",
-    header: "Revision",
+    id: "version",
+    header: "Version",
     cellClassName: "text-muted-foreground",
-    cell: (decision) => decision.offer_revision,
+    cell: (decision) => decision.version_number ?? "—",
   },
   {
     id: "decided",
@@ -323,7 +480,7 @@ const DECISION_COLUMNS: DataTableColumns<OfferDecision> = [
   },
 ];
 
-/** Every moderation decision, newest first, with the revision it covered. */
+/** Every publication and moderation decision, newest first, with the version it covered. */
 export function OfferDecisionHistory({
   decisions,
   paging,
@@ -335,7 +492,7 @@ export function OfferDecisionHistory({
     <Card>
       <CardHeader>
         <CardTitle>Decision history</CardTitle>
-        <CardDescription>Every moderation decision, newest first.</CardDescription>
+        <CardDescription>Every publication and moderation decision, newest first.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <QueryDataTable
@@ -347,6 +504,76 @@ export function OfferDecisionHistory({
           skeletonRows={2}
           className="rounded-lg"
           empty={<EmptyState icon={History} title="No decisions yet" className="py-8" />}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
+const VERSION_COLUMNS: DataTableColumns<OfferVersion> = [
+  {
+    id: "number",
+    header: "Version",
+    cellClassName: "tabular-nums",
+    cell: (version) => version.number,
+  },
+  {
+    id: "state",
+    header: "State",
+    cell: (version) => <StatusBadge domain="offerVersion" status={version.state} />,
+  },
+  {
+    id: "terms",
+    header: "Terms",
+    cell: (version) => (
+      <>
+        <p className="font-medium">{version.headline}</p>
+        <p className="text-muted-foreground text-xs">{benefitSummary(version.benefit)}</p>
+      </>
+    ),
+  },
+  {
+    id: "valid",
+    header: "Valid",
+    className: "hidden md:table-cell",
+    cellClassName: "text-muted-foreground",
+    cell: (version) => validity(version.valid_from, version.valid_until),
+  },
+  {
+    id: "frozen",
+    header: "Frozen",
+    className: "hidden lg:table-cell",
+    cellClassName: "text-muted-foreground",
+    cell: (version) => (version.frozen_at ? formatDateTime(version.frozen_at) : "—"),
+  },
+];
+
+/** Every version with its frozen terms, newest first; claims keep the version they accepted. */
+export function OfferVersionHistory({
+  versions,
+  paging,
+}: {
+  versions: ResultsQuery<OfferVersion>;
+  paging: PageState;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Version history</CardTitle>
+        <CardDescription>
+          Frozen versions never change; claims keep the version they accepted.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <QueryDataTable
+          aria-label="Version history"
+          query={versions}
+          paging={paging}
+          columns={VERSION_COLUMNS}
+          rowKey={(version) => version.id}
+          skeletonRows={2}
+          className="rounded-lg"
+          empty={<EmptyState icon={History} title="No versions yet" className="py-8" />}
         />
       </CardContent>
     </Card>

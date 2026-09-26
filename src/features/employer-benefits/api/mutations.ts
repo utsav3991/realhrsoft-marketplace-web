@@ -12,10 +12,13 @@ function useInvalidateOwnBenefits(organizationId: string) {
   return () => queryClient.invalidateQueries({ queryKey: benefitKeys.own(organizationId) });
 }
 
-/** Creates a draft owned by the selected organization; its employees are the only audience. */
+/**
+ * Creates a benefit owned by the selected organization, saved as a draft or published at once
+ * (intent). Its employees are the only audience.
+ */
 export function useCreateOwnBenefit(organizationId: string) {
   return useMutation({
-    mutationFn: (body: Schemas["BenefitInput"]) =>
+    mutationFn: (body: Schemas["BenefitContent"]) =>
       unwrap(
         api.POST("/employer/benefits", {
           params: { header: organizationHeader(organizationId) },
@@ -26,15 +29,18 @@ export function useCreateOwnBenefit(organizationId: string) {
   });
 }
 
-/** Refetch on failure too: a 409 means the loaded version is stale. */
+/**
+ * Saves the terms: an unpublished benefit's draft, or a live benefit's new version, which is
+ * published at once. Refetch on failure too: a 409 means the loaded version is stale.
+ */
 export function useUpdateOwnBenefit(organizationId: string, benefitId: string) {
   return useMutation({
     mutationFn: (body: Schemas["BenefitUpdate"]) =>
       unwrap(
-        api.PUT("/employer/benefits/{benefit_id}", {
+        api.PUT("/employer/benefits/{offer_id}", {
           params: {
             header: organizationHeader(organizationId),
-            path: { benefit_id: pathId(benefitId) },
+            path: { offer_id: pathId(benefitId) },
           },
           body,
         }),
@@ -43,7 +49,7 @@ export function useUpdateOwnBenefit(organizationId: string, benefitId: string) {
   });
 }
 
-export type OwnBenefitAction = "publish" | "retire";
+export type OwnBenefitAction = "publish" | "unpublish" | "pause" | "resume" | "retire";
 
 // Literal paths keep every call visible to the contract-coverage test.
 function postOwnBenefitAction(
@@ -54,13 +60,19 @@ function postOwnBenefitAction(
 ) {
   const params = {
     header: organizationHeader(organizationId),
-    path: { benefit_id: pathId(benefitId) },
+    path: { offer_id: pathId(benefitId) },
   };
   switch (action) {
     case "publish":
-      return api.POST("/employer/benefits/{benefit_id}/publish", { params, body });
+      return api.POST("/employer/benefits/{offer_id}/publish", { params, body });
+    case "unpublish":
+      return api.POST("/employer/benefits/{offer_id}/unpublish", { params, body });
+    case "pause":
+      return api.POST("/employer/benefits/{offer_id}/pause", { params, body });
+    case "resume":
+      return api.POST("/employer/benefits/{offer_id}/resume", { params, body });
     case "retire":
-      return api.POST("/employer/benefits/{benefit_id}/retire", { params, body });
+      return api.POST("/employer/benefits/{offer_id}/retire", { params, body });
   }
 }
 
@@ -81,12 +93,12 @@ function postAdminBenefitAction(
   benefitId: string,
   body: Schemas["ExpectedVersionReason"],
 ) {
-  const params = { path: { benefit_id: pathId(benefitId) } };
+  const params = { path: { offer_id: pathId(benefitId) } };
   switch (action) {
     case "suspend":
-      return api.POST("/admin/company-benefits/{benefit_id}/suspend", { params, body });
+      return api.POST("/admin/company-benefits/{offer_id}/suspend", { params, body });
     case "reinstate":
-      return api.POST("/admin/company-benefits/{benefit_id}/reinstate", { params, body });
+      return api.POST("/admin/company-benefits/{offer_id}/reinstate", { params, body });
   }
 }
 
@@ -105,20 +117,28 @@ export function useAdminBenefitAction(benefitId: string) {
 // --- Employee ----------------------------------------------------------------------------
 
 /**
- * Claims (uses) a benefit once. The caller supplies the Idempotency-Key and keeps it for
- * retries of the same attempt, so a lost response replays the same claim (200) instead of
- * using the benefit twice. Refetch on failure too: a 409 means the counts changed.
+ * Uses a benefit once: the claim is accepted at once and records one use. It names the version
+ * the employee read (OFFER_VERSION_CHANGED if another went live). The caller supplies the
+ * Idempotency-Key and keeps it for retries of the same attempt, so a lost response replays
+ * the same use instead of using the benefit twice. Refetch on failure too: a 409 means the
+ * counts or terms changed.
  */
 export function useClaimBenefit() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ benefitId, idempotencyKey }: { benefitId: string; idempotencyKey: string }) =>
+    mutationFn: ({
+      benefitId,
+      versionId,
+      idempotencyKey,
+    }: {
+      benefitId: string;
+      versionId: string;
+      idempotencyKey: string;
+    }) =>
       unwrap(
-        api.POST("/marketplace/company-benefits/{benefit_id}/claim", {
-          params: {
-            header: { "Idempotency-Key": idempotencyKey },
-            path: { benefit_id: pathId(benefitId) },
-          },
+        api.POST("/marketplace/benefit-claims", {
+          params: { header: { "Idempotency-Key": idempotencyKey } },
+          body: { offer_id: benefitId, version_id: versionId },
         }),
       ),
     onSettled: () => queryClient.invalidateQueries({ queryKey: benefitKeys.mine() }),

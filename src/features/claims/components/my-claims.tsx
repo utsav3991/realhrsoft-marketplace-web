@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowLeft, Store, Ticket } from "lucide-react";
+import { ArrowLeft, Ban, Store, Ticket } from "lucide-react";
 import Link from "next/link";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 
-import { RichText } from "@/design-system/components/rich-text-editor";
 import { type DataTableColumns } from "@/design-system/components/data-table";
 import { EmptyState } from "@/design-system/components/empty-state";
 import { PageHeader } from "@/design-system/components/page-header";
@@ -17,6 +18,7 @@ import {
 } from "@/design-system/primitives/card";
 import { Skeleton } from "@/design-system/primitives/skeleton";
 import { ApiError } from "@/shared/api";
+import { ConfirmDialog } from "@/shared/components/confirm-dialog";
 import { Detail, DetailList } from "@/shared/components/details";
 import { QueryDataTable, type RowOf } from "@/shared/components/query-data-table";
 import { useSortParam } from "@/shared/hooks/use-sort-param";
@@ -25,17 +27,18 @@ import { formatDate, formatDateTime } from "@/shared/lib/format";
 import { usePageParam } from "@/shared/hooks/use-page-param";
 import { useUrlParams } from "@/shared/hooks/use-url-params";
 
-import { CLAIM_SORTS, useMyClaim, useMyClaims, type EmployeeClaim } from "../api/queries";
+import { useCancelClaim } from "../api/mutations";
+import { CLAIM_SORTS, useMyClaim, useMyClaims, type OwnClaim } from "../api/queries";
 import {
   CLAIM_STATUSES,
   ClaimStatusCallout,
   claimStatusFrom,
+  DecisionFacts,
   MarketplaceErrorState,
-  RedemptionDetails,
-  ReferenceCode,
+  VoucherDetails,
 } from "./claim-details";
 
-/** My offers: every claim with its status; the status tab lives in the URL. */
+/** My offers: every request and claim with its decision; the status tab lives in the URL. */
 export function MyClaims() {
   const { searchParams, set } = useUrlParams();
   const status = claimStatusFrom(searchParams.get("status"));
@@ -51,22 +54,14 @@ export function MyClaims() {
     {
       id: "offer",
       header: "Offer",
-      sortKey: "title",
       cell: (claim) => (
         <>
           <Link href={`/marketplace/claims/${claim.id}`} className="font-medium hover:underline">
             {claim.title}
           </Link>
-          <p className="text-muted-foreground text-xs">{claim.partner_name}</p>
+          <p className="text-muted-foreground text-xs">{claim.partner}</p>
         </>
       ),
-    },
-    {
-      id: "reference",
-      header: "Reference",
-      sortKey: "reference",
-      cellClassName: "font-mono",
-      cell: (claim) => claim.reference,
     },
     {
       id: "status",
@@ -74,19 +69,29 @@ export function MyClaims() {
       cell: (claim) => <StatusBadge domain="claim" status={claim.status} />,
     },
     {
-      id: "claimed",
-      header: "Claimed",
-      sortKey: "claimed_at",
+      id: "voucher",
+      header: "Voucher",
+      className: "hidden sm:table-cell",
+      cell: (claim) =>
+        claim.voucher ? (
+          <StatusBadge domain="voucher" status={claim.voucher.status} />
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
+    },
+    {
+      id: "requested",
+      header: "Requested",
+      sortKey: "requested_at",
       className: "hidden md:table-cell",
       cellClassName: "text-muted-foreground",
-      cell: (claim) => formatDate(claim.claimed_at),
+      cell: (claim) => formatDate(claim.requested_at),
     },
     {
       id: "use-by",
       header: "Use by",
-      sortKey: "expires_at",
       cellClassName: "text-muted-foreground",
-      cell: (claim) => formatDate(claim.expires_at),
+      cell: (claim) => (claim.voucher ? formatDate(claim.voucher.valid_until) : "—"),
     },
   ];
   return (
@@ -147,7 +152,7 @@ function BackToMyClaims() {
   );
 }
 
-/** One claim: the reference to show the partner and the redemption details issued with it. */
+/** One claim: its decision and, once accepted, the voucher to show the business. */
 export function MyClaim({ claimId }: { claimId: string }) {
   const claim = useMyClaim(claimId);
 
@@ -175,57 +180,103 @@ export function MyClaim({ claimId }: { claimId: string }) {
   return <LoadedClaim claim={claim.data} />;
 }
 
-function LoadedClaim({ claim }: { claim: EmployeeClaim }) {
-  const active = claim.status === "active";
+/**
+ * A request can be withdrawn while it awaits the partner. The API refuses one past its
+ * deadline (CLAIM_DEADLINE_PASSED), which the dialog shows.
+ */
+const isCancellable = (claim: OwnClaim) => claim.status === "requested";
+
+function LoadedClaim({ claim }: { claim: OwnClaim }) {
+  const voucher = claim.voucher;
+  const usable = voucher?.status === "available";
   return (
     <div className="space-y-6">
       <BackToMyClaims />
       <PageHeader
         title={claim.title}
-        description={claim.partner_name}
-        actions={<StatusBadge domain="claim" status={claim.status} />}
+        description={claim.partner}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge domain="claim" status={claim.status} />
+            {isCancellable(claim) ? <CancelAction claim={claim} /> : null}
+          </div>
+        }
       />
       <ClaimStatusCallout claim={claim} audience="employee" />
+      {voucher ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Your voucher</CardTitle>
+            <CardDescription>
+              {usable
+                ? "Show the reference to the business. They confirm the use; showing a code or opening a link does not."
+                : "The voucher issued when your claim was accepted."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DetailList>
+              <VoucherDetails voucher={voucher} usable={usable} />
+            </DetailList>
+          </CardContent>
+        </Card>
+      ) : null}
       <Card>
         <CardHeader>
-          <CardTitle>Redeem</CardTitle>
+          <CardTitle>What you requested</CardTitle>
           <CardDescription>
-            {active
-              ? "Show this reference to the business. They confirm the redemption with it."
-              : "The details issued when you claimed the offer."}
+            The offer&apos;s terms at version {claim.version_number}; later changes by the business
+            do not affect your claim.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <DetailList>
-            <Detail label="Reference">
-              <ReferenceCode reference={claim.reference} copyable={active} />
-            </Detail>
-            <RedemptionDetails claim={claim} copyable={active} scannable={active} />
-          </DetailList>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>What you claimed</CardTitle>
-          <CardDescription>
-            The offer as it was when you claimed it; later changes by the business do not affect
-            your claim.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DetailList>
-            <Detail label="Benefit">{claim.benefit}</Detail>
-            <Detail label="Claimed">{formatDateTime(claim.claimed_at)}</Detail>
-            <Detail label="Use by">{formatDateTime(claim.expires_at)}</Detail>
-            {claim.used_at ? (
-              <Detail label="Redeemed">{formatDateTime(claim.used_at)}</Detail>
+            <Detail label="Offer">{claim.headline}</Detail>
+            <Detail label="Requested">{formatDateTime(claim.requested_at)}</Detail>
+            {claim.decision_deadline && claim.status === "requested" ? (
+              <Detail label="Decision due">{formatDateTime(claim.decision_deadline)}</Detail>
             ) : null}
-            <Detail label="Terms and conditions" className="sm:col-span-2 lg:col-span-3">
-              <RichText value={claim.terms} />
-            </Detail>
+            {claim.accepted_at ? (
+              <Detail label="Accepted">{formatDateTime(claim.accepted_at)}</Detail>
+            ) : null}
+            <DecisionFacts claim={claim} />
           </DetailList>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function CancelAction({ claim }: { claim: OwnClaim }) {
+  const cancel = useCancelClaim(claim.id);
+  const [open, setOpen] = useState(false);
+  // One key per cancel attempt, reused if the same attempt is retried.
+  const idempotencyKey = useRef<string | null>(null);
+  return (
+    <>
+      <Button
+        variant="outline"
+        onClick={() => {
+          idempotencyKey.current = crypto.randomUUID();
+          setOpen(true);
+        }}
+      >
+        <Ban aria-hidden />
+        Cancel request
+      </Button>
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Cancel this request?"
+        description="The business will not decide on it, and you cannot request this offer again."
+        confirmLabel="Cancel request"
+        destructive
+        onConfirm={async () => {
+          const key = idempotencyKey.current ?? crypto.randomUUID();
+          idempotencyKey.current = key;
+          await cancel.mutateAsync({ idempotencyKey: key });
+          toast.success("Request cancelled");
+        }}
+      />
+    </>
   );
 }

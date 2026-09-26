@@ -1,12 +1,12 @@
 "use client";
 
-import { BadgeCheck, ScanLine, SearchX, Ticket } from "lucide-react";
-import { useState, type FormEvent } from "react";
-import { toast } from "sonner";
+import { ArrowLeft, Check, Inbox, Ticket, X } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
 import { type DataTableColumns } from "@/design-system/components/data-table";
 import { EmptyState } from "@/design-system/components/empty-state";
-import { Field, fieldDescriptionIds } from "@/design-system/components/field";
+import { PageHeader } from "@/design-system/components/page-header";
 import { Button } from "@/design-system/primitives/button";
 import {
   Card,
@@ -15,7 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/design-system/primitives/card";
-import { Input } from "@/design-system/primitives/input";
 import {
   Select,
   SelectContent,
@@ -29,7 +28,6 @@ import { ApiError } from "@/shared/api";
 import { useSelectedOrganizationId } from "@/shared/auth";
 import { PartnerClaimPermission, useCanInOrganization } from "@/shared/authorization";
 import { Detail, DetailList } from "@/shared/components/details";
-import { ReasonDialog } from "@/shared/components/reason-dialog";
 import { StatusBadge } from "@/shared/components/status-badge";
 import { QueryDataTable, type RowOf } from "@/shared/components/query-data-table";
 import { useSortParam } from "@/shared/hooks/use-sort-param";
@@ -38,11 +36,9 @@ import { formatDate, formatDateTime } from "@/shared/lib/format";
 import { usePageParam } from "@/shared/hooks/use-page-param";
 import { useUrlParams } from "@/shared/hooks/use-url-params";
 
-import { useConfirmPartnerClaim } from "../api/mutations";
+import { useDecidePartnerClaim, type ClaimDecision } from "../api/mutations";
 import {
   CLAIM_SORTS,
-  normalizeReference,
-  REFERENCE_PATTERN,
   usePartnerClaim,
   usePartnerClaims,
   type PartnerClaim,
@@ -51,188 +47,176 @@ import {
   CLAIM_STATUSES,
   ClaimStatusCallout,
   claimStatusFrom,
-  methodLabel,
-  ReferenceCode,
+  DecisionDialog,
+  decisionAttempt,
+  DecisionFacts,
+  VoucherDetails,
+  type DecisionAttempt,
 } from "./claim-details";
 
 const ALL = "all";
 
 /**
- * Claim verification for the selected partner organization. Viewing
- * (claims.partner_claim.view) looks references up and lists claims; confirming
- * (claims.partner_claim.confirm) marks an active one used. Either opens the page, so a
- * member who may only confirm can still redeem the reference an employee shows.
+ * Claims of the selected partner organization's offers: the decision queue of requests that
+ * need approval, then every claim. Accepting issues the voucher; confirming its use is a
+ * separate step at the counter. Claimants are never named to the partner.
  */
 export function PartnerClaims() {
   const isPartner = useIsPartner();
-  const canView = useCanInOrganization(PartnerClaimPermission.CLAIM_VIEW);
 
   if (!isPartner) {
     return (
-      <NotAPartner description="Register the business and pass Aayulogic verification; employees can then claim your offers and you confirm them here." />
+      <NotAPartner description="Register the business and pass Aayulogic verification; employees can then claim your offers and you follow them here." />
     );
   }
   return (
     <div className="space-y-6">
-      <VerifyClaim />
-      {canView ? <ClaimsList /> : null}
+      <DecisionQueue />
+      <ClaimsList />
     </div>
   );
 }
 
-function VerifyClaim() {
-  const [draft, setDraft] = useState("");
-  const [error, setError] = useState<string>();
-  const [reference, setReference] = useState<string | null>(null);
-  const canView = useCanInOrganization(PartnerClaimPermission.CLAIM_VIEW);
+/** Whether the member may take each decision; the page opens with view alone. */
+function useDecisionPermissions() {
+  return {
+    accept: useCanInOrganization(PartnerClaimPermission.CLAIM_ACCEPT),
+    reject: useCanInOrganization(PartnerClaimPermission.CLAIM_REJECT),
+  };
+}
 
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const value = normalizeReference(draft);
-    if (!REFERENCE_PATTERN.test(value)) {
-      setError("A reference is 10 letters and digits");
-      return;
-    }
-    setError(undefined);
-    setDraft(value);
-    setReference(value);
-  }
+function DecisionButtons({
+  onDecide,
+  size = "sm",
+}: {
+  onDecide: (decision: ClaimDecision) => void;
+  size?: "sm" | "default";
+}) {
+  const can = useDecisionPermissions();
+  if (!can.accept && !can.reject) return null;
+  return (
+    <div className="flex flex-wrap justify-end gap-2">
+      {can.reject ? (
+        <Button variant="outline" size={size} onClick={() => onDecide("reject")}>
+          <X aria-hidden />
+          Reject
+        </Button>
+      ) : null}
+      {can.accept ? (
+        <Button variant={size === "sm" ? "outline" : "default"} size={size} onClick={() => onDecide("accept")}>
+          <Check aria-hidden />
+          Accept
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+function PartnerDecisionDialog({
+  claimId,
+  attempt,
+  onClose,
+}: {
+  claimId: string | null;
+  attempt: DecisionAttempt | null;
+  onClose: () => void;
+}) {
+  const organizationId = useSelectedOrganizationId();
+  const decide = useDecidePartnerClaim(organizationId);
+  return (
+    <DecisionDialog
+      attempt={attempt}
+      onClose={onClose}
+      onDecide={async (input) => {
+        if (claimId) await decide.mutateAsync({ claimId, ...input });
+      }}
+    />
+  );
+}
+
+/** Requests awaiting this partner, soonest deadline first. */
+function DecisionQueue() {
+  const organizationId = useSelectedOrganizationId();
+  const paging = usePageParam("queue_");
+  const claims = usePartnerClaims(organizationId, "requested", "decision_deadline", paging);
+  const [deciding, setDeciding] = useState<{ claimId: string; attempt: DecisionAttempt } | null>(
+    null,
+  );
+
+  const columns: DataTableColumns<RowOf<typeof claims>> = [
+    {
+      id: "offer",
+      header: "Offer",
+      cell: (claim) => (
+        <>
+          <Link href={`/partner/claims/${claim.id}`} className="font-medium hover:underline">
+            {claim.title}
+          </Link>
+          <p className="text-muted-foreground text-xs">
+            {claim.headline} · version {claim.version_number}
+          </p>
+        </>
+      ),
+    },
+    {
+      id: "requested",
+      header: "Requested",
+      className: "hidden md:table-cell",
+      cellClassName: "text-muted-foreground",
+      cell: (claim) => formatDateTime(claim.requested_at),
+    },
+    {
+      id: "deadline",
+      header: "Decide by",
+      cell: (claim) => (claim.decision_deadline ? formatDateTime(claim.decision_deadline) : "—"),
+    },
+    {
+      id: "actions",
+      header: <span className="sr-only">Decision</span>,
+      cell: (claim) => (
+        <DecisionButtons
+          onDecide={(decision) =>
+            setDeciding({ claimId: claim.id, attempt: decisionAttempt(decision) })
+          }
+        />
+      ),
+    },
+  ];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Redeem a claim</CardTitle>
+        <CardTitle>Awaiting your decision</CardTitle>
         <CardDescription>
-          {canView
-            ? "Enter the reference the employee shows you, check it, then confirm the redemption."
-            : "Enter the reference the employee shows you and confirm the redemption."}
+          Requests for offers that need your approval. Undecided requests expire at their
+          deadline without a voucher.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <form onSubmit={onSubmit} noValidate className="flex max-w-md items-start gap-2">
-          <Field id="claim-reference" label="Reference" error={error} className="flex-1">
-            <Input
-              id="claim-reference"
-              autoComplete="off"
-              spellCheck={false}
-              maxLength={20}
-              placeholder="e.g. 7KX2MQ9RTP"
-              className="font-mono uppercase"
-              aria-invalid={error ? true : undefined}
-              aria-describedby={fieldDescriptionIds("claim-reference", { error })}
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
+        <QueryDataTable
+          aria-label="Requests awaiting your decision"
+          query={claims}
+          columns={columns}
+          paging={paging}
+          rowKey={(claim) => claim.id}
+          skeletonRows={2}
+          className="rounded-lg"
+          empty={
+            <EmptyState
+              icon={Inbox}
+              title="Nothing to decide"
+              description="Requests appear here when employees ask for an offer that needs your approval."
+              className="py-8"
             />
-          </Field>
-          <Button type="submit" variant="outline" className="mt-5.5">
-            <ScanLine aria-hidden />
-            {canView ? "Look up" : "Continue"}
-          </Button>
-        </form>
-        {reference === null ? null : canView ? (
-          <LookedUpClaim key={reference} reference={reference} />
-        ) : (
-          <ConfirmWithoutLookup key={reference} reference={reference} />
-        )}
+          }
+        />
       </CardContent>
+      <PartnerDecisionDialog
+        claimId={deciding?.claimId ?? null}
+        attempt={deciding?.attempt ?? null}
+        onClose={() => setDeciding(null)}
+      />
     </Card>
-  );
-}
-
-function LookedUpClaim({ reference }: { reference: string }) {
-  const organizationId = useSelectedOrganizationId();
-  const claim = usePartnerClaim(organizationId, reference);
-
-  if (claim.isPending) return <Skeleton className="h-40 w-full" />;
-  if (claim.isError) {
-    return claim.error instanceof ApiError && claim.error.isNotFound ? (
-      <EmptyState
-        icon={SearchX}
-        title="No claim with this reference"
-        description="Check the reference with the employee. Only claims of your own offers can be found."
-        className="py-8"
-      />
-    ) : (
-      <ErrorState error={claim.error} onRetry={() => void claim.refetch()} />
-    );
-  }
-  return <ClaimSummary claim={claim.data} />;
-}
-
-/** The claim's facts. The partner never sees who the employee is or who employs them. */
-function ClaimSummary({ claim }: { claim: PartnerClaim }) {
-  return (
-    <div className="space-y-4 rounded-lg border p-4">
-      <ClaimStatusCallout claim={claim} audience="partner" />
-      <DetailList>
-        <Detail label="Reference">
-          <ReferenceCode reference={claim.reference} />
-        </Detail>
-        <Detail label="Status">
-          <StatusBadge domain="claim" status={claim.status} />
-        </Detail>
-        <Detail label="Offer">{claim.title}</Detail>
-        <Detail label="Benefit">{claim.benefit}</Detail>
-        <Detail label="Method">{methodLabel(claim)}</Detail>
-        <Detail label="Claimed">{formatDateTime(claim.claimed_at)}</Detail>
-        <Detail label="Use by">{formatDateTime(claim.expires_at)}</Detail>
-        {claim.used_at ? <Detail label="Redeemed">{formatDateTime(claim.used_at)}</Detail> : null}
-      </DetailList>
-      {claim.status === "active" ? <ConfirmButton reference={claim.reference} /> : null}
-    </div>
-  );
-}
-
-function ConfirmButton({
-  reference,
-  onConfirmed,
-}: {
-  reference: string;
-  onConfirmed?: (claim: PartnerClaim) => void;
-}) {
-  const organizationId = useSelectedOrganizationId();
-  const canConfirm = useCanInOrganization(PartnerClaimPermission.CLAIM_CONFIRM);
-  const confirm = useConfirmPartnerClaim(organizationId);
-  const [open, setOpen] = useState(false);
-  if (!canConfirm) return null;
-  return (
-    <>
-      <Button onClick={() => setOpen(true)}>
-        <BadgeCheck aria-hidden />
-        Confirm redemption
-      </Button>
-      <ReasonDialog
-        open={open}
-        onOpenChange={setOpen}
-        optional
-        title="Confirm this redemption?"
-        description={
-          <>
-            Confirm only when the employee is redeeming the offer with you now. Claim{" "}
-            <span className="font-mono">{reference}</span> is marked used and cannot be redeemed
-            again.
-          </>
-        }
-        confirmLabel="Confirm redemption"
-        onConfirm={async (reason) => {
-          const claim = await confirm.mutateAsync({ reference, reason });
-          toast.success(`Claim ${claim.reference} redeemed`);
-          onConfirmed?.(claim);
-        }}
-      />
-    </>
-  );
-}
-
-/** A member who may confirm but not view: the confirmation's answer is the only readout. */
-function ConfirmWithoutLookup({ reference }: { reference: string }) {
-  const [confirmed, setConfirmed] = useState<PartnerClaim | null>(null);
-  if (confirmed) return <ClaimSummary claim={confirmed} />;
-  return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border p-4">
-      <ReferenceCode reference={reference} />
-      <ConfirmButton reference={reference} onConfirmed={setConfirmed} />
-    </div>
   );
 }
 
@@ -245,20 +229,14 @@ function ClaimsList() {
   const claims = usePartnerClaims(organizationId, status, sort.value, paging);
   const columns: DataTableColumns<RowOf<typeof claims>> = [
     {
-      id: "reference",
-      header: "Reference",
-      sortKey: "reference",
-      cellClassName: "font-mono",
-      cell: (claim) => claim.reference,
-    },
-    {
       id: "offer",
       header: "Offer",
-      sortKey: "title",
       cell: (claim) => (
         <>
-          <p className="font-medium">{claim.title}</p>
-          <p className="text-muted-foreground text-xs">{methodLabel(claim)}</p>
+          <Link href={`/partner/claims/${claim.id}`} className="font-medium hover:underline">
+            {claim.title}
+          </Link>
+          <p className="text-muted-foreground text-xs">Version {claim.version_number}</p>
         </>
       ),
     },
@@ -268,26 +246,33 @@ function ClaimsList() {
       cell: (claim) => <StatusBadge domain="claim" status={claim.status} />,
     },
     {
-      id: "claimed",
-      header: "Claimed",
-      sortKey: "claimed_at",
+      id: "voucher",
+      header: "Voucher",
+      className: "hidden sm:table-cell",
+      cell: (claim) =>
+        claim.voucher ? (
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="font-mono text-xs">{claim.voucher.reference}</span>
+            <StatusBadge domain="voucher" status={claim.voucher.status} />
+          </span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
+    },
+    {
+      id: "requested",
+      header: "Requested",
+      sortKey: "requested_at",
       className: "hidden md:table-cell",
       cellClassName: "text-muted-foreground",
-      cell: (claim) => formatDate(claim.claimed_at),
+      cell: (claim) => formatDate(claim.requested_at),
     },
     {
-      id: "use-by",
-      header: "Use by",
-      sortKey: "expires_at",
+      id: "accepted",
+      header: "Accepted",
+      sortKey: "accepted_at",
       cellClassName: "text-muted-foreground",
-      cell: (claim) => formatDate(claim.expires_at),
-    },
-    {
-      id: "redeemed",
-      header: "Redeemed",
-      sortKey: "used_at",
-      cellClassName: "text-muted-foreground",
-      cell: (claim) => (claim.used_at ? formatDate(claim.used_at) : "—"),
+      cell: (claim) => (claim.accepted_at ? formatDate(claim.accepted_at) : "—"),
     },
   ];
 
@@ -306,7 +291,7 @@ function ClaimsList() {
             set({ status: value === ALL ? null : value });
           }}
         >
-          <SelectTrigger className="w-44" aria-label="Filter by status">
+          <SelectTrigger className="w-48" aria-label="Filter by status">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -326,7 +311,7 @@ function ClaimsList() {
           columns={columns}
           sort={sort}
           paging={paging}
-          rowKey={(claim) => claim.reference}
+          rowKey={(claim) => claim.id}
           skeletonRows={3}
           className="rounded-lg"
           empty={
@@ -340,5 +325,110 @@ function ClaimsList() {
         />
       </CardContent>
     </Card>
+  );
+}
+
+function BackToClaims() {
+  return (
+    <Button asChild variant="ghost" size="sm" className="-ml-3">
+      <Link href="/partner/claims">
+        <ArrowLeft aria-hidden />
+        Claims
+      </Link>
+    </Button>
+  );
+}
+
+/** One claim of the partner's offer: its decision and, once accepted, the voucher. */
+export function PartnerClaimRecord({ claimId }: { claimId: string }) {
+  const organizationId = useSelectedOrganizationId();
+  const claim = usePartnerClaim(organizationId, claimId);
+
+  if (claim.isPending) {
+    return (
+      <div className="space-y-6">
+        <BackToClaims />
+        <Skeleton className="h-8 w-72" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    );
+  }
+  if (claim.isError) {
+    return (
+      <div className="space-y-6">
+        <BackToClaims />
+        {claim.error instanceof ApiError && claim.error.isNotFound ? (
+          <EmptyState icon={Ticket} title="Claim not found" />
+        ) : (
+          <ErrorState error={claim.error} onRetry={() => void claim.refetch()} />
+        )}
+      </div>
+    );
+  }
+  return <LoadedPartnerClaim claim={claim.data} />;
+}
+
+function LoadedPartnerClaim({ claim }: { claim: PartnerClaim }) {
+  const [attempt, setAttempt] = useState<DecisionAttempt | null>(null);
+  return (
+    <div className="space-y-6">
+      <BackToClaims />
+      <PageHeader
+        title={claim.title}
+        description={claim.headline}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge domain="claim" status={claim.status} />
+            {claim.status === "requested" ? (
+              <DecisionButtons
+                size="default"
+                onDecide={(decision) => setAttempt(decisionAttempt(decision))}
+              />
+            ) : null}
+          </div>
+        }
+      />
+      <ClaimStatusCallout claim={claim} audience="partner" />
+      <Card>
+        <CardHeader>
+          <CardTitle>Claim</CardTitle>
+          <CardDescription>
+            The terms of version {claim.version_number} apply, whatever changed since.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DetailList>
+            <Detail label="Requested">{formatDateTime(claim.requested_at)}</Detail>
+            {claim.decision_deadline ? (
+              <Detail label="Decide by">{formatDateTime(claim.decision_deadline)}</Detail>
+            ) : null}
+            {claim.accepted_at ? (
+              <Detail label="Accepted">{formatDateTime(claim.accepted_at)}</Detail>
+            ) : null}
+            <DecisionFacts claim={claim} />
+          </DetailList>
+        </CardContent>
+      </Card>
+      {claim.voucher ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Voucher</CardTitle>
+            <CardDescription>
+              Issued on acceptance. Its use is confirmed separately when the employee presents it.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DetailList>
+              <VoucherDetails voucher={claim.voucher} />
+            </DetailList>
+          </CardContent>
+        </Card>
+      ) : null}
+      <PartnerDecisionDialog
+        claimId={claim.id}
+        attempt={attempt}
+        onClose={() => setAttempt(null)}
+      />
+    </div>
   );
 }

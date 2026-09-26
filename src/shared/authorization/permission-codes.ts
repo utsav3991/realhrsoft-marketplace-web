@@ -84,7 +84,11 @@ export const PartnerOfferPermission = {
   OFFER_CREATE: "offers.partner_offer.create",
   OFFER_UPDATE: "offers.partner_offer.update",
   OFFER_SUBMIT: "offers.partner_offer.submit",
+  /** Retracts a version under review and unpublishes the live one. */
   OFFER_WITHDRAW: "offers.partner_offer.withdraw",
+  /** Pauses and resumes. */
+  OFFER_PAUSE: "offers.partner_offer.pause",
+  OFFER_RETIRE: "offers.partner_offer.retire",
   OFFER_DECISION_VIEW: "offers.partner_offer_decision.view",
 } as const;
 
@@ -98,19 +102,24 @@ export const EmploymentAdminPermission = {
   EMPLOYMENT_END: "employee_access.employment.end",
 } as const;
 
-/** Global: every employee's claims (/admin/claims), and confirming one on a partner's behalf. */
+/**
+ * Global: every claim of both kinds (/admin/claims), and deciding a pending one on a partner's
+ * behalf. Accepting a claim is not confirming its use: that is a redemption permission.
+ */
 export const ClaimAdminPermission = {
-  CLAIM_VIEW: "claims.claim.view",
-  CLAIM_CONFIRM: "claims.claim.confirm",
+  CLAIM_VIEW: "offers.claim.view",
+  CLAIM_ACCEPT: "offers.claim.accept",
+  CLAIM_REJECT: "offers.claim.reject",
 } as const;
 
 /**
- * Organization: claims of the selected partner organization's offers (/partner/claims), looked
- * up by the reference the employee shows. Employees need no code to claim: eligibility is theirs.
+ * Organization: claims of the selected partner organization's offers (/partner/claims) and the
+ * decision queue of offers that need partner approval. Employees need no code to claim.
  */
 export const PartnerClaimPermission = {
-  CLAIM_VIEW: "claims.partner_claim.view",
-  CLAIM_CONFIRM: "claims.partner_claim.confirm",
+  CLAIM_VIEW: "offers.partner_claim.view",
+  CLAIM_ACCEPT: "offers.partner_claim.accept",
+  CLAIM_REJECT: "offers.partner_claim.reject",
 } as const;
 
 /** Global: marketplace-wide offer performance (/admin/reports), incl. the employer breakdown. */
@@ -125,8 +134,8 @@ export const PartnerAnalyticsPermission = {
 
 /** Global: moderation of every employer's Company Benefits (/admin/company-benefits). */
 export const BenefitAdminPermission = {
-  BENEFIT_VIEW: "employer_benefits.benefit.view",
-  BENEFIT_SUSPEND: "employer_benefits.benefit.suspend",
+  BENEFIT_VIEW: "offers.benefit.view",
+  BENEFIT_SUSPEND: "offers.benefit.suspend",
 } as const;
 
 /**
@@ -134,11 +143,14 @@ export const BenefitAdminPermission = {
  * also needs the organization's Employer capacity; employees need no code to claim.
  */
 export const EmployerBenefitPermission = {
-  BENEFIT_VIEW: "employer_benefits.own_benefit.view",
-  BENEFIT_CREATE: "employer_benefits.own_benefit.create",
-  BENEFIT_UPDATE: "employer_benefits.own_benefit.update",
-  BENEFIT_PUBLISH: "employer_benefits.own_benefit.publish",
-  BENEFIT_RETIRE: "employer_benefits.own_benefit.retire",
+  BENEFIT_VIEW: "offers.own_benefit.view",
+  BENEFIT_CREATE: "offers.own_benefit.create",
+  BENEFIT_UPDATE: "offers.own_benefit.update",
+  /** Publishes a draft and unpublishes the live version. */
+  BENEFIT_PUBLISH: "offers.own_benefit.publish",
+  /** Pauses and resumes. */
+  BENEFIT_PAUSE: "offers.own_benefit.pause",
+  BENEFIT_RETIRE: "offers.own_benefit.retire",
 } as const;
 
 /** Organization: the selected employer's benefit usage (/employer/reports), as counts. */
