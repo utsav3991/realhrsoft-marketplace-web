@@ -1,7 +1,7 @@
 "use client";
 
-import { Plus, Search } from "lucide-react";
-import { useState, type KeyboardEvent } from "react";
+import { Plus } from "lucide-react";
+import { useEffect, useState, type KeyboardEvent } from "react";
 
 import { Button } from "@/design-system/primitives/button";
 import { Input } from "@/design-system/primitives/input";
@@ -14,6 +14,7 @@ import {
   useCan,
 } from "@/shared/authorization";
 import { StatusBadge } from "@/shared/components/status-badge";
+import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
 
 import type { AudienceOrganization } from "../schemas/offer";
 
@@ -71,28 +72,27 @@ function IdEntry({
   );
 }
 
-function SearchBox({ label, onSearch }: { label: string; onSearch: (value: string) => void }) {
+/** Searches as the user types; an empty box clears the results. */
+function SearchBox({
+  label,
+  onSearch,
+}: {
+  label: string;
+  onSearch: (value: string | null) => void;
+}) {
   const [draft, setDraft] = useState("");
+  const debounced = useDebouncedValue(draft.trim(), 300);
+  useEffect(() => onSearch(debounced || null), [debounced, onSearch]);
   return (
-    <div className="flex max-w-md gap-2">
-      <Input
-        type="search"
-        aria-label={label}
-        placeholder={label}
-        value={draft}
-        onChange={(event) => setDraft(event.target.value)}
-        onKeyDown={onEnter(() => onSearch(draft.trim()))}
-      />
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        aria-label="Search"
-        onClick={() => onSearch(draft.trim())}
-      >
-        <Search aria-hidden />
-      </Button>
-    </div>
+    <Input
+      type="search"
+      aria-label={label}
+      placeholder={label}
+      className="max-w-md"
+      value={draft}
+      onChange={(event) => setDraft(event.target.value)}
+      onKeyDown={onEnter(() => {})}
+    />
   );
 }
 

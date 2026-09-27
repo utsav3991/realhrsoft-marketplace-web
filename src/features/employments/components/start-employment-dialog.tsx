@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Search, X } from "lucide-react";
-import { useState, type KeyboardEvent } from "react";
+import { Loader2, X } from "lucide-react";
+import { useEffect, useState, type KeyboardEvent } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -33,6 +33,7 @@ import { useOrganizations } from "@/features/organizations/api/queries";
 import { errorMessage, FIRST_PAGE } from "@/shared/api";
 import { IdentityPermission, OrganizationAdminPermission, useCan } from "@/shared/authorization";
 import { applyApiFieldErrors } from "@/shared/forms/api-field-errors";
+import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
 
 import { useStartEmployment } from "../api/mutations";
 import { startEmploymentSchema, type StartEmploymentValues } from "../schemas/employment";
@@ -202,34 +203,29 @@ function ChosenValue({ chosen, onClear }: { chosen: Chosen; onClear: () => void 
   );
 }
 
-/** Enter searches without submitting the dialog form. */
-function SearchInput({ label, onSearch }: { label: string; onSearch: (value: string) => void }) {
+/** Searches as the user types; Enter never submits the dialog form. */
+function SearchInput({
+  label,
+  onSearch,
+}: {
+  label: string;
+  onSearch: (value: string | null) => void;
+}) {
   const [draft, setDraft] = useState("");
+  const debounced = useDebouncedValue(draft.trim(), 300);
+  useEffect(() => onSearch(debounced || null), [debounced, onSearch]);
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "Enter") return;
-    event.preventDefault();
-    onSearch(draft.trim());
+    if (event.key === "Enter") event.preventDefault();
   };
   return (
-    <div className="flex gap-2">
-      <Input
-        type="search"
-        aria-label={label}
-        placeholder={label}
-        value={draft}
-        onChange={(event) => setDraft(event.target.value)}
-        onKeyDown={onKeyDown}
-      />
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        aria-label="Search"
-        onClick={() => onSearch(draft.trim())}
-      >
-        <Search aria-hidden />
-      </Button>
-    </div>
+    <Input
+      type="search"
+      aria-label={label}
+      placeholder={label}
+      value={draft}
+      onChange={(event) => setDraft(event.target.value)}
+      onKeyDown={onKeyDown}
+    />
   );
 }
 
