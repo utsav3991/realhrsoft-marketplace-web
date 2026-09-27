@@ -1863,6 +1863,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my notifications
+         * @description Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Your inbox, newest first (by created_at, then id). Items are created in the background shortly after the business event commits, so a new one can take a few seconds to appear. In-app notifications cannot be turned off by users. Filter with unread=true|false and category. Offset pagination: limit (default 20), offset (default 0). Poll the unread count rather than this list to refresh a badge.
+         */
+        get: operations["v1_me_notifications_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/notifications/{notification_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read one of my notifications
+         * @description Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Reading it does not mark it read; call read for that. 404 for another account's item. To act on it, open target_type/target_id, which shows that resource's current state.
+         */
+        get: operations["v1_me_notifications_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/notifications/{notification_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark one of my notifications read
+         * @description Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Idempotent: marking an already-read item again keeps its first read_at. Returns the item. 404 for another account's item.
+         */
+        post: operations["v1_me_notifications_read_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark my notifications read
+         * @description Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Marks the item up_to_id and every older unread item read. Send the id of the newest item you displayed, so items that arrived since stay unread. Idempotent; already-read items keep their read_at. 404 if up_to_id is not in your inbox.
+         */
+        post: operations["v1_me_notifications_read_all_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Count my unread notifications
+         * @description Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. For the bell badge. Cheap to poll: while the app is visible, about every 30 seconds and on focus is enough.
+         */
+        get: operations["v1_me_notifications_unread_count_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/partner/analytics/offers": {
         parameters: {
             query?: never;
@@ -3621,6 +3721,22 @@ export interface components {
             email: string;
             password: string;
         };
+        /**
+         * @description A Serializer that takes an additional `fields` argument that
+         *     controls which fields should be displayed.
+         */
+        MarkAllRead: {
+            /** @description Items this request marked read. */
+            marked: number;
+        };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        MarkAllReadInput: {
+            /**
+             * Format: uuid
+             * @description id of the newest item you displayed (the first of the list). It and every older unread item are marked read; newer items are not.
+             */
+            up_to_id: string;
+        };
         /** @description Employee catalogue card. Never carries promo codes, links or instructions. */
         MarketplaceOffer: {
             /**
@@ -3764,6 +3880,42 @@ export interface components {
             claims: number;
             /** @description Voucher uses a partner member or administrator confirmed in the period, counted at confirmed_at (not when the claim was made). Gross: a later reversal does not remove the original use. */
             redemptions: number;
+        };
+        /** @description One inbox item. Content is fixed when created; only read_at changes. */
+        Notification: {
+            /**
+             * Format: uuid
+             * @description Notification UUID.
+             */
+            id: string;
+            /** @description What it is about: voucher, redemption, claim, benefit or offer. */
+            category: string;
+            /** @description Plain-text headline, up to 200 chars. */
+            title: string;
+            /** @description Plain-text message, up to 1000 chars. */
+            body: string;
+            /** @description Kind of resource to open (e.g. voucher), or empty when none. */
+            target_type: string;
+            /**
+             * Format: uuid
+             * @description UUID of the resource to open, or null. It may since have changed state or become unavailable; load it to see its current status.
+             */
+            target_id: string | null;
+            /**
+             * Format: date-time
+             * @description When the business event happened; show this as the item's time.
+             */
+            occurred_at: string;
+            /**
+             * Format: date-time
+             * @description When the item reached the inbox; the list is ordered by it.
+             */
+            created_at: string;
+            /**
+             * Format: date-time
+             * @description When you first marked it read, or null if unread.
+             */
+            read_at: string | null;
         };
         /** @description Owner and administrator view of an offer and its live and working versions. */
         Offer: {
@@ -4678,6 +4830,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["MarketplaceOffer"][];
         };
+        PaginatedNotificationList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["Notification"][];
+        };
         PaginatedOfferCategoryList: {
             /** @example 123 */
             count: number;
@@ -5206,7 +5373,10 @@ export interface components {
             /** @description Why the use was corrected, or null. */
             reversal_reason: string | null;
         };
-        /** @description Partners see voucher state, never the owner's presentation details or reference. */
+        /**
+         * @description Partners see voucher state,
+         *     never the owner's presentation details or reference.
+         */
         PartnerVoucher: {
             /**
              * Format: uuid
@@ -5600,6 +5770,14 @@ export interface components {
          * @enum {string}
          */
         TypeEnum: "descriptive" | "percentage" | "fixed_amount" | "free_item";
+        /**
+         * @description A Serializer that takes an additional `fields` argument that
+         *     controls which fields should be displayed.
+         */
+        UnreadCount: {
+            /** @description Your unread inbox items. */
+            unread: number;
+        };
         UpdateOrganization: {
             /** @description Required nonblank display name; surrounding whitespace is trimmed. */
             name: string;
@@ -13160,6 +13338,218 @@ export interface operations {
             };
             /** @description Too many requests; retry after Retry-After seconds (RATE_LIMITED). */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_me_notifications_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Only items about this kind of thing.
+                 *
+                 *     * `voucher` - Voucher
+                 *     * `redemption` - Redemption
+                 *     * `claim` - Claim
+                 *     * `benefit` - Benefit
+                 *     * `offer` - Offer
+                 */
+                category?: "benefit" | "claim" | "offer" | "redemption" | "voucher";
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /** @description true: only unread items; false: only read items. */
+                unread?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedNotificationList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_me_notifications_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Notification"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No such item in your inbox (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_me_notifications_read_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Notification"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No such item in your inbox (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_me_notifications_read_all_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkAllReadInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["MarkAllReadInput"];
+                "multipart/form-data": components["schemas"]["MarkAllReadInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkAllRead"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No such item in your inbox (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_me_notifications_unread_count_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnreadCount"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

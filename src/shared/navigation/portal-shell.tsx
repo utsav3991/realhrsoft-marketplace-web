@@ -203,10 +203,7 @@ function AccountMenu() {
               Signed in as <span className="font-mono">{actorType}</span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              variant="destructive"
-              onSelect={() => void signOut()}
-            >
+            <DropdownMenuItem variant="destructive" onSelect={() => void signOut()}>
               <LogOut aria-hidden />
               Sign out
             </DropdownMenuItem>
@@ -242,13 +239,14 @@ function ThemeToggle() {
   );
 }
 
-function TopBar({ portal }: { portal: Portal }) {
+function TopBar({ portal, actions }: { portal: Portal; actions?: ReactNode }) {
   const signOut = useSignOut();
   return (
     <header className="bg-background/80 sticky top-0 z-10 flex min-h-14 items-center gap-2 border-b px-3 py-2 backdrop-blur sm:px-4">
       <SidebarTrigger />
       {portal.capacity ? <OrganizationSwitcher capacity={portal.capacity} /> : null}
       <div className="ml-auto flex items-center gap-2">
+        {actions}
         <ThemeToggle />
         <Button
           variant="ghost"
@@ -277,12 +275,17 @@ function PortalMain({ children }: { children: ReactNode }) {
   );
 }
 
-/** Gate + chrome for one portal. Each portal's layout.tsx renders exactly this. */
+/**
+ * Gate + chrome for one portal. Each portal's layout.tsx renders exactly this. `actions` go in
+ * the top bar (the notification bell), passed in by the route since features sit above shared.
+ */
 export function PortalLayout({
   portal: portalId,
+  actions,
   children,
 }: {
   portal: PortalId;
+  actions?: ReactNode;
   children: ReactNode;
 }) {
   const portal = getPortal(portalId);
@@ -301,7 +304,7 @@ export function PortalLayout({
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
-          <TopBar portal={portal} />
+          <TopBar portal={portal} actions={actions} />
           <PortalMain>{children}</PortalMain>
         </SidebarInset>
       </SidebarProvider>

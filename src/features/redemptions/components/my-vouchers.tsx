@@ -2,18 +2,22 @@
 
 import { Store, TicketCheck } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 import { type DataTableColumns } from "@/design-system/components/data-table";
 import { EmptyState } from "@/design-system/components/empty-state";
 import { Button } from "@/design-system/primitives/button";
 import { MarketplaceErrorState } from "@/features/claims/components/claim-details";
+import { isUuid } from "@/shared/api";
 import { QueryDataTable, type RowOf } from "@/shared/components/query-data-table";
 import { StatusBadge } from "@/shared/components/status-badge";
+import { LoadingState } from "@/shared/feedback/states";
 import { usePageParam } from "@/shared/hooks/use-page-param";
 import { useUrlParams } from "@/shared/hooks/use-url-params";
 import { formatDate, formatDateTime } from "@/shared/lib/format";
 
-import { useMyVouchers } from "../api/queries";
+import { useMyVoucher, useMyVouchers } from "../api/queries";
 
 import { BenefitText, VOUCHER_STATUSES, voucherStatusFrom } from "./redemption-details";
 
@@ -107,4 +111,25 @@ export function MyVouchers() {
       />
     </div>
   );
+}
+
+/**
+ * A link to one voucher (from a notification) opens its claim, where the voucher and its QR
+ * live. The API answers only for the signed-in owner's vouchers; anyone else gets its error.
+ */
+export function OpenVoucher({ voucherId }: { voucherId: string }) {
+  const router = useRouter();
+  const voucher = useMyVoucher(voucherId);
+  const claimId = voucher.data?.claim_id;
+
+  useEffect(() => {
+    if (claimId && isUuid(claimId)) router.replace(`/marketplace/claims/${claimId}`);
+  }, [claimId, router]);
+
+  if (voucher.isError) {
+    return (
+      <MarketplaceErrorState history error={voucher.error} onRetry={() => void voucher.refetch()} />
+    );
+  }
+  return <LoadingState label="Opening your voucher…" />;
 }

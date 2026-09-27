@@ -11,6 +11,8 @@ import { describe, expect, it } from "vitest";
 const NOT_CALLED: Readonly<Record<string, string>> = {
   "GET /marketplace/benefit-claims/{claim_id}":
     "Benefit uses have no detail view: history rows already carry every field of the use.",
+  "GET /me/notifications/{notification_id}":
+    "Inbox rows already carry every field of an item, and opening one goes to its target.",
 };
 
 const root = process.cwd();

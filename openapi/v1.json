@@ -9744,7 +9744,7 @@
           }
         ],
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
@@ -9754,7 +9754,7 @@
             },
             "description": ""
           },
-          "201": {
+          "200": {
             "content": {
               "application/json": {
                 "schema": {
@@ -11995,7 +11995,7 @@
           }
         ],
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
@@ -12035,7 +12035,7 @@
             },
             "description": ""
           },
-          "201": {
+          "200": {
             "content": {
               "application/json": {
                 "schema": {
@@ -12411,7 +12411,7 @@
           }
         ],
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
@@ -12462,7 +12462,7 @@
             },
             "description": ""
           },
-          "201": {
+          "200": {
             "content": {
               "application/json": {
                 "schema": {
@@ -13549,6 +13549,408 @@
               }
             },
             "description": "Too many requests; retry after Retry-After seconds (RATE_LIMITED)."
+          }
+        }
+      }
+    },
+    "/api/v1/me/notifications": {
+      "get": {
+        "operationId": "v1_me_notifications_list",
+        "description": "Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Your inbox, newest first (by created_at, then id). Items are created in the background shortly after the business event commits, so a new one can take a few seconds to appear. In-app notifications cannot be turned off by users. Filter with unread=true|false and category. Offset pagination: limit (default 20), offset (default 0). Poll the unread count rather than this list to refresh a badge.",
+        "summary": "List my notifications",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "category",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "benefit",
+                "claim",
+                "offer",
+                "redemption",
+                "voucher"
+              ]
+            },
+            "description": "Only items about this kind of thing.\n\n* `voucher` - Voucher\n* `redemption` - Redemption\n* `claim` - Claim\n* `benefit` - Benefit\n* `offer` - Offer"
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "The initial index from which to return the results.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "unread",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "true: only unread items; false: only read items."
+          }
+        ],
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedNotificationList"
+                },
+                "examples": {
+                  "InboxPage": {
+                    "value": {
+                      "count": 123,
+                      "next": "http://api.example.org/accounts/?offset=400&limit=100",
+                      "previous": "http://api.example.org/accounts/?offset=200&limit=100",
+                      "results": [
+                        {
+                          "count": 1,
+                          "next": null,
+                          "previous": null,
+                          "results": [
+                            {
+                              "id": "5f0c2b7e-9a41-4d8e-b3c6-2e7f1a9d4c80",
+                              "category": "voucher",
+                              "title": "Voucher issued: 20% off at Himalayan Java",
+                              "body": "Your claim for 20% off at Himalayan Java was accepted and a voucher was issued. Open it to see its current status and how to use it.",
+                              "target_type": "voucher",
+                              "target_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+                              "occurred_at": "2026-10-02T12:00:00Z",
+                              "created_at": "2026-10-02T12:00:04Z",
+                              "read_at": null
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "summary": "Inbox page"
+                  }
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid authentication (AUTHENTICATION_FAILED)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Invalid, missing or unknown fields or query parameters (VALIDATION_ERROR)."
+          }
+        }
+      }
+    },
+    "/api/v1/me/notifications/{notification_id}": {
+      "get": {
+        "operationId": "v1_me_notifications_retrieve",
+        "description": "Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Reading it does not mark it read; call read for that. 404 for another account's item. To act on it, open target_type/target_id, which shows that resource's current state.",
+        "summary": "Read one of my notifications",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notification_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Notification"
+                },
+                "examples": {
+                  "Item": {
+                    "value": {
+                      "id": "5f0c2b7e-9a41-4d8e-b3c6-2e7f1a9d4c80",
+                      "category": "voucher",
+                      "title": "Voucher issued: 20% off at Himalayan Java",
+                      "body": "Your claim for 20% off at Himalayan Java was accepted and a voucher was issued. Open it to see its current status and how to use it.",
+                      "target_type": "voucher",
+                      "target_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+                      "occurred_at": "2026-10-02T12:00:00Z",
+                      "created_at": "2026-10-02T12:00:04Z",
+                      "read_at": null
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid authentication (AUTHENTICATION_FAILED)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "No such item in your inbox (NOT_FOUND)."
+          }
+        }
+      }
+    },
+    "/api/v1/me/notifications/{notification_id}/read": {
+      "post": {
+        "operationId": "v1_me_notifications_read_create",
+        "description": "Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Idempotent: marking an already-read item again keeps its first read_at. Returns the item. 404 for another account's item.",
+        "summary": "Mark one of my notifications read",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notification_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Notification"
+                },
+                "examples": {
+                  "Read": {
+                    "value": {
+                      "id": "5f0c2b7e-9a41-4d8e-b3c6-2e7f1a9d4c80",
+                      "category": "voucher",
+                      "title": "Voucher issued: 20% off at Himalayan Java",
+                      "body": "Your claim for 20% off at Himalayan Java was accepted and a voucher was issued. Open it to see its current status and how to use it.",
+                      "target_type": "voucher",
+                      "target_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+                      "occurred_at": "2026-10-02T12:00:00Z",
+                      "created_at": "2026-10-02T12:00:04Z",
+                      "read_at": "2026-10-02T12:05:00Z"
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid authentication (AUTHENTICATION_FAILED)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "No such item in your inbox (NOT_FOUND)."
+          }
+        }
+      }
+    },
+    "/api/v1/me/notifications/read-all": {
+      "post": {
+        "operationId": "v1_me_notifications_read_all_create",
+        "description": "Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Marks the item up_to_id and every older unread item read. Send the id of the newest item you displayed, so items that arrived since stay unread. Idempotent; already-read items keep their read_at. 404 if up_to_id is not in your inbox.",
+        "summary": "Mark my notifications read",
+        "tags": [
+          "Notifications"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkAllReadInput"
+              },
+              "examples": {
+                "NewestDisplayed": {
+                  "value": {
+                    "up_to_id": "5f0c2b7e-9a41-4d8e-b3c6-2e7f1a9d4c80"
+                  },
+                  "summary": "Newest displayed"
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkAllReadInput"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkAllReadInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkAllRead"
+                },
+                "examples": {
+                  "Marked": {
+                    "value": {
+                      "marked": 3
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid authentication (AUTHENTICATION_FAILED)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "No such item in your inbox (NOT_FOUND)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Invalid, missing or unknown fields or query parameters (VALIDATION_ERROR)."
+          }
+        }
+      }
+    },
+    "/api/v1/me/notifications/unread-count": {
+      "get": {
+        "operationId": "v1_me_notifications_unread_count_retrieve",
+        "description": "Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. For the bell badge. Cheap to poll: while the app is visible, about every 30 seconds and on focus is enough.",
+        "summary": "Count my unread notifications",
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnreadCount"
+                },
+                "examples": {
+                  "Count": {
+                    "value": {
+                      "unread": 3
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid authentication (AUTHENTICATION_FAILED)."
           }
         }
       }
@@ -17814,7 +18216,7 @@
           }
         ],
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
@@ -17840,7 +18242,7 @@
             },
             "description": ""
           },
-          "201": {
+          "200": {
             "content": {
               "application/json": {
                 "schema": {
@@ -20879,6 +21281,33 @@
           "password"
         ]
       },
+      "MarkAllRead": {
+        "type": "object",
+        "description": "A Serializer that takes an additional `fields` argument that\ncontrols which fields should be displayed.",
+        "properties": {
+          "marked": {
+            "type": "integer",
+            "description": "Items this request marked read."
+          }
+        },
+        "required": [
+          "marked"
+        ]
+      },
+      "MarkAllReadInput": {
+        "type": "object",
+        "description": "Reject body/query keys the serializer does not declare as writable (422).",
+        "properties": {
+          "up_to_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "id of the newest item you displayed (the first of the list). It and every older unread item are marked read; newer items are not."
+          }
+        },
+        "required": [
+          "up_to_id"
+        ]
+      },
       "MarketplaceOffer": {
         "type": "object",
         "description": "Employee catalogue card. Never carries promo codes, links or instructions.",
@@ -21168,6 +21597,66 @@
           "claims",
           "redemptions",
           "views"
+        ]
+      },
+      "Notification": {
+        "type": "object",
+        "description": "One inbox item. Content is fixed when created; only read_at changes.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Notification UUID."
+          },
+          "category": {
+            "type": "string",
+            "description": "What it is about: voucher, redemption, claim, benefit or offer."
+          },
+          "title": {
+            "type": "string",
+            "description": "Plain-text headline, up to 200 chars."
+          },
+          "body": {
+            "type": "string",
+            "description": "Plain-text message, up to 1000 chars."
+          },
+          "target_type": {
+            "type": "string",
+            "description": "Kind of resource to open (e.g. voucher), or empty when none."
+          },
+          "target_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "UUID of the resource to open, or null. It may since have changed state or become unavailable; load it to see its current status."
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the business event happened; show this as the item's time."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the item reached the inbox; the list is ordered by it."
+          },
+          "read_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "When you first marked it read, or null if unread."
+          }
+        },
+        "required": [
+          "body",
+          "category",
+          "created_at",
+          "id",
+          "occurred_at",
+          "read_at",
+          "target_id",
+          "target_type",
+          "title"
         ]
       },
       "Offer": {
@@ -22941,6 +23430,37 @@
           }
         }
       },
+      "PaginatedNotificationList": {
+        "type": "object",
+        "required": [
+          "count",
+          "results"
+        ],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "example": 123
+          },
+          "next": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?offset=400&limit=100"
+          },
+          "previous": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?offset=200&limit=100"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Notification"
+            }
+          }
+        }
+      },
       "PaginatedOfferCategoryList": {
         "type": "object",
         "required": [
@@ -24012,7 +24532,7 @@
       },
       "PartnerVoucher": {
         "type": "object",
-        "description": "Partners see voucher state, never the owner's presentation details or reference.",
+        "description": "Partners see voucher state,\nnever the owner's presentation details or reference.",
         "properties": {
           "id": {
             "type": "string",
@@ -24840,6 +25360,19 @@
         ],
         "type": "string",
         "description": "* `descriptive` - Descriptive\n* `percentage` - Percentage off\n* `fixed_amount` - Fixed amount off\n* `free_item` - Free item"
+      },
+      "UnreadCount": {
+        "type": "object",
+        "description": "A Serializer that takes an additional `fields` argument that\ncontrols which fields should be displayed.",
+        "properties": {
+          "unread": {
+            "type": "integer",
+            "description": "Your unread inbox items."
+          }
+        },
+        "required": [
+          "unread"
+        ]
       },
       "UpdateOrganization": {
         "type": "object",

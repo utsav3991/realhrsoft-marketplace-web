@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { PortalLayout } from "@/shared/navigation/portal-shell";
 
 export const metadata: Metadata = {
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function Layout({ children }: { children: ReactNode }) {
-  return <PortalLayout portal="admin">{children}</PortalLayout>;
+  return (
+    <PortalLayout portal="admin" actions={<NotificationBell inboxHref="/admin/notifications" />}>
+      {children}
+    </PortalLayout>
+  );
 }
