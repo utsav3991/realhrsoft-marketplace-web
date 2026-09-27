@@ -34,6 +34,7 @@ export interface FilterComboboxProps {
   onSearch: (search: string) => void;
   onChange: (value: string | null) => void;
   className?: string;
+  fullWidth?: boolean;
 }
 
 /**
@@ -50,6 +51,7 @@ export function FilterCombobox({
   onSearch,
   onChange,
   className,
+  fullWidth,
 }: FilterComboboxProps) {
   const [open, setOpen] = useState(false);
   const listId = useId();
@@ -84,7 +86,8 @@ export function FilterCombobox({
             aria-controls={listId}
             aria-label={chosen ? `${label}: ${chosen}` : `Filter by ${label.toLowerCase()}`}
             className={cn(
-              "border-input bg-card shadow-ring hover:bg-surface-soft focus-visible:border-ring focus-visible:ring-ring/50 flex h-11 max-w-64 min-w-44 items-center justify-between gap-2 rounded-md border px-4 text-sm font-semibold outline-none focus-visible:ring-[3px]",
+              "border-input bg-card shadow-ring hover:bg-surface-soft focus-visible:border-ring focus-visible:ring-ring/50 flex h-11 items-center justify-between gap-2 rounded-md border px-4 text-sm font-semibold outline-none focus-visible:ring-[3px]",
+              fullWidth ? "w-full" : "max-w-64 min-w-44",
               chosen && "pr-9",
             )}
           >
@@ -94,7 +97,11 @@ export function FilterCombobox({
             {chosen ? null : <ChevronDown className="size-4 shrink-0 opacity-50" aria-hidden />}
           </button>
         </PopoverTrigger>
-        <PopoverContent id={listId} align="start" className="w-72 p-0">
+        <PopoverContent 
+          id={listId} 
+          align="start" 
+          className={cn("p-0", fullWidth ? "w-[var(--radix-popover-trigger-width)]" : "w-72")}
+        >
           <Command shouldFilter={false}>
             <CommandInput
               placeholder={`Search ${label.toLowerCase()}s`}

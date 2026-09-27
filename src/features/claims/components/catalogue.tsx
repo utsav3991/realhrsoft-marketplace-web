@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   ArrowRight,
   CalendarClock,
-  Search,
   ShieldCheck,
   Star,
   Store,
@@ -12,7 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useRef, useState, type FormEvent } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { RichText } from "@/design-system/components/rich-text-editor";
@@ -28,7 +27,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/design-system/primitives/card";
-import { Input } from "@/design-system/primitives/input";
 import { Skeleton } from "@/design-system/primitives/skeleton";
 import {
   useCatalogue,
@@ -41,6 +39,7 @@ import { presentationLabel } from "@/features/offers/schemas/offer";
 import { ApiError, isUuid } from "@/shared/api";
 import { ConfirmDialog } from "@/shared/components/confirm-dialog";
 import { Detail, DetailList } from "@/shared/components/details";
+import { SearchField } from "@/shared/components/search-field";
 import { StatusBadge } from "@/shared/components/status-badge";
 import { ListSkeleton } from "@/shared/feedback/list-skeleton";
 import { formatDate, formatDateTime } from "@/shared/lib/format";
@@ -57,7 +56,6 @@ export function Catalogue() {
   const categoryParam = searchParams.get("category");
   const categoryId = categoryParam && isUuid(categoryParam) ? categoryParam : null;
   const featured = searchParams.get("featured") === "true" ? true : null;
-  const [draft, setDraft] = useState(search);
   const offers = useCatalogue({ search, categoryId, featured });
   const categories = useCatalogueCategories();
 
@@ -67,11 +65,6 @@ export function Catalogue() {
     else params.delete(name);
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname);
-  }
-
-  function onSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setParam("search", draft.trim() || null);
   }
 
   // One 403 explains everything: the viewer is not an eligible employee.
@@ -84,19 +77,11 @@ export function Catalogue() {
 
   return (
     <div className="space-y-4">
-      <form onSubmit={onSearch} role="search" className="flex w-full max-w-md gap-2">
-        <Input
-          type="search"
-          maxLength={255}
-          placeholder="Search offers or businesses"
-          aria-label="Search offers by title, headline or business"
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-        />
-        <Button type="submit" variant="outline" size="icon" aria-label="Search">
-          <Search aria-hidden />
-        </Button>
-      </form>
+      <SearchField 
+        placeholder="Search offers or businesses" 
+        aria-label="Search offers by title, headline or business" 
+        className="max-w-md"
+      />
 
       <div className="flex flex-wrap gap-2" role="group" aria-label="Filter offers">
         <Button

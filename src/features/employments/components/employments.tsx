@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowLeft, BriefcaseBusiness, Plus, Search, Ticket, X } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, Plus, Ticket, X } from "lucide-react";
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import type { DataTableColumn, DataTableColumns } from "@/design-system/components/data-table";
@@ -17,7 +17,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/design-system/primitives/card";
-import { Input } from "@/design-system/primitives/input";
 import {
   Select,
   SelectContent,
@@ -37,6 +36,7 @@ import {
 import { Detail, DetailList } from "@/shared/components/details";
 import { ReasonDialog } from "@/shared/components/reason-dialog";
 import { QueryDataTable, resultRows } from "@/shared/components/query-data-table";
+import { SearchField } from "@/shared/components/search-field";
 import { StatusBadge } from "@/shared/components/status-badge";
 import { ErrorState } from "@/shared/feedback/states";
 import { usePageParam } from "@/shared/hooks/use-page-param";
@@ -152,7 +152,6 @@ export function EmploymentsDirectory() {
   const organizationParam = searchParams.get("organization_id");
   const userId = userParam && isUuid(userParam) ? userParam : null;
   const organizationId = organizationParam && isUuid(organizationParam) ? organizationParam : null;
-  const [draft, setDraft] = useState(search);
   const sort = useSortParam(EMPLOYMENT_SORTS);
   const paging = usePageParam();
   const employments = useEmployments(
@@ -165,11 +164,6 @@ export function EmploymentsDirectory() {
 
   function setParam(name: string, value: string | null) {
     set({ [name]: value });
-  }
-
-  function onSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setParam("search", draft.trim() || null);
   }
 
   const filtered = Boolean(search || current || userId || organizationId);
@@ -230,19 +224,11 @@ export function EmploymentsDirectory() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <form onSubmit={onSearch} role="search" className="flex w-full max-w-sm gap-2">
-            <Input
-              type="search"
-              maxLength={254}
-              placeholder="Search employee email"
-              aria-label="Search employments by employee email"
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-            />
-            <Button type="submit" variant="outline" size="icon" aria-label="Search">
-              <Search aria-hidden />
-            </Button>
-          </form>
+          <SearchField 
+            placeholder="Search employee email" 
+            aria-label="Search employments by employee email" 
+            className="max-w-sm"
+          />
           <Select
             value={current?.value ?? ALL}
             onValueChange={(value) => setParam("status", value === ALL ? null : value)}

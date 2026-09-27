@@ -79,6 +79,8 @@ function ChooseOrganization() {
             onChange={(organizationId) => {
               if (organizationId) choose(organizationId);
             }}
+            fullWidth
+            className="w-full"
           />
         ) : (
           <OrganizationIdForm onChoose={choose} />

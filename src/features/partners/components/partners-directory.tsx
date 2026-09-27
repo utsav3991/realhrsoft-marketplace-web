@@ -1,13 +1,11 @@
 "use client";
 
-import { Handshake, Plus, Search } from "lucide-react";
+import { Handshake, Plus } from "lucide-react";
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
 
 import { type DataTableColumns } from "@/design-system/components/data-table";
 import { EmptyState } from "@/design-system/components/empty-state";
 import { Button } from "@/design-system/primitives/button";
-import { Input } from "@/design-system/primitives/input";
 import {
   Select,
   SelectContent,
@@ -17,6 +15,7 @@ import {
 } from "@/design-system/primitives/select";
 import { PartnerAdminPermission, useCan } from "@/shared/authorization";
 import { QueryDataTable, type RowOf } from "@/shared/components/query-data-table";
+import { SearchField } from "@/shared/components/search-field";
 import { useSortParam } from "@/shared/hooks/use-sort-param";
 import { StatusBadge } from "@/shared/components/status-badge";
 import { formatDateTime } from "@/shared/lib/format";
@@ -55,7 +54,6 @@ export function PartnersDirectory() {
   );
   const intakePath = oneOf(searchParams.get("intake_path"), INTAKE_PATHS);
   const source = oneOf(searchParams.get("source"), SOURCES);
-  const [draft, setDraft] = useState(search);
   const sort = useSortParam(PARTNER_SORTS);
   const paging = usePageParam();
   const partners = usePartners(
@@ -66,11 +64,6 @@ export function PartnersDirectory() {
 
   function setParam(name: string, value: string | null) {
     set({ [name]: value });
-  }
-
-  function onSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setParam("search", draft.trim() || null);
   }
 
   const columns: DataTableColumns<RowOf<typeof partners>> = [
@@ -124,19 +117,11 @@ export function PartnersDirectory() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <form onSubmit={onSearch} role="search" className="flex w-full max-w-sm gap-2">
-            <Input
-              type="search"
-              maxLength={255}
-              placeholder="Search business or organization"
-              aria-label="Search partners by business or organization name"
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-            />
-            <Button type="submit" variant="outline" size="icon" aria-label="Search">
-              <Search aria-hidden />
-            </Button>
-          </form>
+          <SearchField 
+            placeholder="Search business or organization" 
+            aria-label="Search partners by business or organization name" 
+            className="max-w-sm"
+          />
           <Select
             value={status ?? ALL}
             onValueChange={(value) => setParam("status", value === ALL ? null : value)}

@@ -1,13 +1,11 @@
 "use client";
 
-import { ClipboardCheck, Plus, Search, Star, Tag } from "lucide-react";
+import { ClipboardCheck, Plus, Star, Tag } from "lucide-react";
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
 
 import { type DataTableColumns } from "@/design-system/components/data-table";
 import { EmptyState } from "@/design-system/components/empty-state";
 import { Button } from "@/design-system/primitives/button";
-import { Input } from "@/design-system/primitives/input";
 import {
   Select,
   SelectContent,
@@ -18,6 +16,7 @@ import {
 import { SOURCE_LABEL } from "@/features/partners/components/partner-details";
 import { OfferAdminPermission, useCan } from "@/shared/authorization";
 import { QueryDataTable, type RowOf } from "@/shared/components/query-data-table";
+import { SearchField } from "@/shared/components/search-field";
 import { useSortParam } from "@/shared/hooks/use-sort-param";
 import { StatusBadge } from "@/shared/components/status-badge";
 import { formatDate } from "@/shared/lib/format";
@@ -78,7 +77,6 @@ export function OffersDirectory() {
   const acceptanceMode = oneOf(searchParams.get("acceptance_mode"), ACCEPTANCE_MODES);
   const partnerId = uuidParam(searchParams.get("partner_id"));
   const organizationId = uuidParam(searchParams.get("organization_id"));
-  const [draft, setDraft] = useState(search);
   const sort = useSortParam(OFFER_SORTS);
   const paging = usePageParam();
   const offers = useOffers(
@@ -101,11 +99,6 @@ export function OffersDirectory() {
 
   function setParam(name: string, value: string | null) {
     set({ [name]: value });
-  }
-
-  function onSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setParam("search", draft.trim() || null);
   }
 
   const columns: DataTableColumns<RowOf<typeof offers>> = [
@@ -202,19 +195,11 @@ export function OffersDirectory() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <form onSubmit={onSearch} role="search" className="flex w-full max-w-sm gap-2">
-            <Input
-              type="search"
-              maxLength={255}
-              placeholder="Search title, headline or partner"
-              aria-label="Search offers by title, headline or partner name"
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-            />
-            <Button type="submit" variant="outline" size="icon" aria-label="Search">
-              <Search aria-hidden />
-            </Button>
-          </form>
+          <SearchField 
+            placeholder="Search title, headline or partner" 
+            aria-label="Search offers by title, headline or partner name" 
+            className="max-w-sm"
+          />
           <Select
             value={status ?? ALL}
             onValueChange={(value) => setParam("status", value === ALL ? null : value)}

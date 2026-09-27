@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { type DataTableColumns } from "@/design-system/components/data-table";
@@ -37,7 +36,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/design-system/primitives/dropdown-menu";
-import { Input } from "@/design-system/primitives/input";
 import {
   Select,
   SelectContent,
@@ -55,8 +53,8 @@ import {
   useCanInOrganization,
   type OrganizationPermissionCode,
 } from "@/shared/authorization";
-import { ConfirmDialog } from "@/shared/components/confirm-dialog";
 import { QueryDataTable, type RowOf } from "@/shared/components/query-data-table";
+import { SearchField } from "@/shared/components/search-field";
 import { StatusBadge } from "@/shared/components/status-badge";
 import { ErrorState } from "@/shared/feedback/states";
 import { formatDate, formatDateTime } from "@/shared/lib/format";
@@ -113,7 +111,6 @@ export function OwnBenefits() {
   const organizationId = useSelectedOrganizationId();
   const search = searchParams.get("search") ?? "";
   const status = benefitStatusFrom(searchParams.get("status"));
-  const [draft, setDraft] = useState(search);
   const sort = useSortParam(BENEFIT_SORTS);
   const paging = usePageParam();
   const benefits = useOwnBenefits(organizationId, { search, status, ordering: sort.value }, paging);
@@ -122,11 +119,6 @@ export function OwnBenefits() {
 
   function setParam(name: string, value: string | null) {
     set({ [name]: value });
-  }
-
-  function onSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setParam("search", draft.trim() || null);
   }
 
   const columns: DataTableColumns<RowOf<typeof benefits>> = [
@@ -182,19 +174,11 @@ export function OwnBenefits() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <form onSubmit={onSearch} role="search" className="flex w-full max-w-sm gap-2">
-            <Input
-              type="search"
-              maxLength={150}
-              placeholder="Search titles"
-              aria-label="Search benefits by title"
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-            />
-            <Button type="submit" variant="outline" size="icon" aria-label="Search">
-              <Search aria-hidden />
-            </Button>
-          </form>
+          <SearchField 
+            placeholder="Search titles" 
+            aria-label="Search benefits by title" 
+            className="max-w-sm"
+          />
           <Select
             value={status ?? ALL}
             onValueChange={(value) => setParam("status", value === ALL ? null : value)}

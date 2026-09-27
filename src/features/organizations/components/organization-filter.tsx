@@ -16,6 +16,8 @@ interface OrganizationFilterProps {
   /** The organization id in the URL, or `null` for every organization. */
   value: string | null;
   onChange: (organizationId: string | null) => void;
+  className?: string;
+  fullWidth?: boolean;
 }
 
 /**
@@ -32,6 +34,8 @@ function OrganizationCombobox({
   allLabel = "All organizations",
   value,
   onChange,
+  className,
+  fullWidth,
 }: OrganizationFilterProps) {
   const [search, setSearch] = useState("");
   const debounced = useDebouncedValue(search);
@@ -50,6 +54,8 @@ function OrganizationCombobox({
       }))}
       onSearch={setSearch}
       onChange={onChange}
+      className={className}
+      fullWidth={fullWidth}
     />
   );
 }

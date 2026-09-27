@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Archive, Loader2, Pencil, Plus, RotateCcw, Search, Tags } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { Archive, Loader2, Pencil, Plus, RotateCcw, Tags } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -28,7 +28,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/design-system/primitives/form";
-import { Input } from "@/design-system/primitives/input";
 import {
   Select,
   SelectContent,
@@ -42,6 +41,7 @@ import { errorMessage } from "@/shared/api";
 import { OfferAdminPermission, useCan } from "@/shared/authorization";
 import { ReasonDialog } from "@/shared/components/reason-dialog";
 import { QueryDataTable, type RowOf } from "@/shared/components/query-data-table";
+import { SearchField } from "@/shared/components/search-field";
 import { useSortParam } from "@/shared/hooks/use-sort-param";
 import { StatusBadge } from "@/shared/components/status-badge";
 import { ErrorState } from "@/shared/feedback/states";
@@ -72,7 +72,6 @@ export function CategoriesManager() {
   const search = searchParams.get("search") ?? "";
   const state = searchParams.get("state");
   const isActive = state === "active" ? true : state === "retired" ? false : null;
-  const [draft, setDraft] = useState(search);
   const sort = useSortParam(CATEGORY_SORTS);
   const paging = usePageParam();
   const categories = useCategories({ search, isActive, ordering: sort.value }, paging);
@@ -86,11 +85,6 @@ export function CategoriesManager() {
 
   function setParam(name: string, value: string | null) {
     set({ [name]: value });
-  }
-
-  function onSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setParam("search", draft.trim() || null);
   }
 
   const columns: DataTableColumns<RowOf<typeof categories>> = [
@@ -167,19 +161,11 @@ export function CategoriesManager() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <form onSubmit={onSearch} role="search" className="flex w-full max-w-sm gap-2">
-            <Input
-              type="search"
-              maxLength={100}
-              placeholder="Search categories"
-              aria-label="Search categories by name"
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-            />
-            <Button type="submit" variant="outline" size="icon" aria-label="Search">
-              <Search aria-hidden />
-            </Button>
-          </form>
+          <SearchField 
+            placeholder="Search categories" 
+            aria-label="Search categories by name" 
+            className="max-w-sm"
+          />
           <Select
             value={state === "active" || state === "retired" ? state : ALL}
             onValueChange={(value) => setParam("state", value === ALL ? null : value)}

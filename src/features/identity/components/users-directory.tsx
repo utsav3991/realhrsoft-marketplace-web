@@ -1,16 +1,15 @@
 "use client";
 
-import { Search, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
 
 import { type DataTableColumns } from "@/design-system/components/data-table";
 import { EmptyState } from "@/design-system/components/empty-state";
 import { Button } from "@/design-system/primitives/button";
-import { Input } from "@/design-system/primitives/input";
 import type { Schemas } from "@/shared/api";
 import { StatusBadge } from "@/shared/components/status-badge";
 import { QueryDataTable } from "@/shared/components/query-data-table";
+import { SearchField } from "@/shared/components/search-field";
 import { formatPersonName } from "@/shared/lib/format";
 import { useUrlParams } from "@/shared/hooks/use-url-params";
 import { useSortParam } from "@/shared/hooks/use-sort-param";
@@ -64,7 +63,6 @@ export function UsersDirectory() {
   const { searchParams, set } = useUrlParams();
   const status = parseStatus(searchParams.get("status"));
   const q = searchParams.get("q") ?? "";
-  const [draft, setDraft] = useState(q);
 
   const sort = useSortParam(USER_SORTS);
   const paging = usePageParam();
@@ -74,27 +72,19 @@ export function UsersDirectory() {
     set(changes);
   }
 
-  function onSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    updateUrl({ q: draft.trim() || undefined });
+  function updateUrl(changes: Record<string, string | undefined>) {
+    set(changes);
   }
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <form onSubmit={onSearch} role="search" className="flex w-full max-w-sm gap-2">
-          <Input
-            type="search"
-            maxLength={320}
-            placeholder="Search by email"
-            aria-label="Search users by email"
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-          />
-          <Button type="submit" variant="outline" size="icon" aria-label="Search">
-            <Search aria-hidden />
-          </Button>
-        </form>
+        <SearchField 
+          paramName="q"
+          placeholder="Search by email" 
+          aria-label="Search users by email" 
+          className="max-w-sm"
+        />
         <div role="group" aria-label="Filter by status" className="flex gap-1">
           {STATUS_FILTERS.map((filter) => (
             <Button
