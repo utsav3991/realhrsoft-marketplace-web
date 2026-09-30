@@ -71,26 +71,33 @@ const ALL = "all";
 export const KIND_LABEL: Record<ClaimKind, string> = {
   marketplace_offer: "Offer",
   employer_benefit: "Company benefit",
+  business_offer: "Business offer",
 };
 const KINDS = Object.keys(KIND_LABEL) as ClaimKind[];
 
 const uuidParam = (value: string | null) => (value && isUuid(value) ? value : null);
 
+const SOURCE_PATH: Record<ClaimKind, string> = {
+  marketplace_offer: "/admin/offers",
+  employer_benefit: "/admin/company-benefits",
+  business_offer: "/admin/business-offers",
+};
+
 /** Where the claimed offer or benefit is administered. */
 function sourceHref(claim: Pick<Claim, "kind" | "offer_id">): string {
-  return claim.kind === "employer_benefit"
-    ? `/admin/company-benefits/${claim.offer_id}`
-    : `/admin/offers/${claim.offer_id}`;
+  return `${SOURCE_PATH[claim.kind]}/${claim.offer_id}`;
 }
 
-function useCanViewSource() {
+function useCanViewSource(): Record<ClaimKind, boolean> {
+  const canViewOffers = useCan(OfferAdminPermission.OFFER_VIEW);
   return {
-    marketplace_offer: useCan(OfferAdminPermission.OFFER_VIEW),
+    marketplace_offer: canViewOffers,
     employer_benefit: useCan(BenefitAdminPermission.BENEFIT_VIEW),
+    business_offer: canViewOffers,
   };
 }
 
-/** Every claim of both kinds; filters live in the URL. */
+/** Every claim of every kind; filters live in the URL. */
 export function AdminClaims() {
   const { searchParams, set } = useUrlParams();
   const sort = useSortParam(CLAIM_SORTS);

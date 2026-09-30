@@ -34,7 +34,12 @@ import { formatDate, formatDateTime } from "@/shared/lib/format";
 
 import type { Availability, Offer, OfferDecision, OfferVersion, PostedVia } from "../api/queries";
 import { benefitSummary } from "../schemas/benefit-value";
-import { ACCEPTANCE_LABEL, AUDIENCE_LABEL, presentationLabel } from "../schemas/offer";
+import {
+  ACCEPTANCE_LABEL,
+  AUDIENCE_LABEL,
+  BUSINESS_AUDIENCE_LABEL,
+  presentationLabel,
+} from "../schemas/offer";
 
 export const POSTED_VIA_LABEL: Record<PostedVia, string> = {
   partner_portal: "Partner portal",
@@ -85,11 +90,22 @@ export function isAdminPublishable(offer: Offer): boolean {
   return !isRetired(offer) && state !== null && state !== "approved";
 }
 
-/** Only a badge: employees see the offer only while every publishing gate passes. */
-export function VisibilityBadge({ offer }: { offer: Pick<Offer, "visible_to_employees"> }) {
-  return offer.visible_to_employees ? (
+/**
+ * Only a badge: the offer's readers see it only while every publishing gate passes. Pass the
+ * offer for employees, or `visible` with the readers it describes.
+ */
+export function VisibilityBadge({
+  offer,
+  visible = offer?.visible_to_employees ?? false,
+  viewers = "employees",
+}: {
+  offer?: Pick<Offer, "visible_to_employees">;
+  visible?: boolean;
+  viewers?: string;
+}) {
+  return visible ? (
     <Badge intent="success" title="Every publishing gate passes now">
-      Visible to employees
+      Visible to {viewers}
     </Badge>
   ) : (
     <Badge intent="outline" title="At least one publishing gate does not pass">
@@ -127,6 +143,8 @@ export function VersionTermsCard({
   action?: ReactNode;
 }) {
   const policy = version.marketplace_policy;
+  const business = version.business_policy;
+  const category = (business ?? policy)?.category;
   return (
     <Card>
       <CardHeader className="flex-row items-start justify-between gap-4">
@@ -151,10 +169,10 @@ export function VersionTermsCard({
               </span>
             ) : null}
           </Detail>
-          {policy ? (
+          {category ? (
             <Detail label="Category">
-              {policy.category.name}
-              {policy.category.is_active ? null : (
+              {category.name}
+              {category.is_active ? null : (
                 <StatusBadge domain="offerCategory" status="retired" className="ml-2" />
               )}
             </Detail>
@@ -163,14 +181,34 @@ export function VersionTermsCard({
           <Detail label="Valid until">
             {version.valid_until ? formatDateTime(version.valid_until) : "Open-ended"}
           </Detail>
-          {policy ? (
+          {business ? (
             <>
-              <Detail label="Audience">
-                {AUDIENCE_LABEL[policy.audience_type]}
-                {policy.audience_organizations.length > 0
-                  ? `: ${policy.audience_organizations.map((o) => o.name).join(", ")}`
+              <Detail label="Business audience">
+                {BUSINESS_AUDIENCE_LABEL[business.audience_type]}
+                {business.audience_organizations.length > 0
+                  ? `: ${business.audience_organizations.map((o) => o.name).join(", ")}`
                   : null}
               </Detail>
+              <Detail label="Employees">
+                {business.show_to_employees
+                  ? "Shown to the audience's employees"
+                  : "Organizations only"}
+              </Detail>
+              <Detail label="Enquiry instructions" className="sm:col-span-2 lg:col-span-3">
+                <span className="whitespace-pre-line">{empty(business.enquiry_instructions)}</span>
+              </Detail>
+            </>
+          ) : null}
+          {policy ? (
+            <>
+              {business ? null : (
+                <Detail label="Audience">
+                  {AUDIENCE_LABEL[policy.audience_type]}
+                  {policy.audience_organizations.length > 0
+                    ? `: ${policy.audience_organizations.map((o) => o.name).join(", ")}`
+                    : null}
+                </Detail>
+              )}
               <Detail label="Claims">
                 {ACCEPTANCE_LABEL[policy.acceptance_mode]}
                 {policy.approval_ttl_hours
@@ -227,6 +265,7 @@ export function VersionTermsCard({
 export function OfferVersions({ offer, editAction }: { offer: Offer; editAction?: ReactNode }) {
   const live = offer.current_version;
   const working = offer.working_version;
+  const viewers = offer.kind === "business_offer" ? "Organizations" : "Employees";
   return (
     <>
       {working ? (
@@ -236,7 +275,7 @@ export function OfferVersions({ offer, editAction }: { offer: Offer; editAction?
           description={
             working.state === "draft"
               ? live
-                ? "A draft replacing the live version. Employees keep seeing the live terms until it is approved."
+                ? `A draft replacing the live version. ${viewers} keep seeing the live terms until it is approved.`
                 : "Editable until it is submitted."
               : working.state === "in_review"
                 ? "Frozen while Aayulogic reviews it."
@@ -249,7 +288,7 @@ export function OfferVersions({ offer, editAction }: { offer: Offer; editAction?
         <VersionTermsCard
           version={live}
           title={`Live · version ${live.number}`}
-          description="The approved terms employees see. Claims keep the version they accepted."
+          description={`The approved terms ${viewers.toLowerCase()} see. Enquiries and claims keep the version they were made on.`}
           action={working ? undefined : editAction}
         />
       ) : null}
@@ -259,6 +298,7 @@ export function OfferVersions({ offer, editAction }: { offer: Offer; editAction?
 
 /** Lifecycle facts, provenance and the version every write must send. */
 export function PublicationCard({ offer, partner }: { offer: Offer; partner?: ReactNode }) {
+  const business = offer.kind === "business_offer";
   return (
     <Card>
       <CardHeader>
@@ -269,13 +309,21 @@ export function PublicationCard({ offer, partner }: { offer: Offer; partner?: Re
           <Detail label="Status">
             <StatusBadge domain="offer" status={offer.display_status} />
           </Detail>
+          {business ? (
+            <Detail label="Organizations">
+              <VisibilityBadge visible={offer.visible_to_businesses} viewers="organizations" />
+            </Detail>
+          ) : null}
           <Detail label="Employees">
             <VisibilityBadge offer={offer} />
           </Detail>
           <Detail label="Availability">{AVAILABILITY_LABEL[offer.availability]}</Detail>
+          {business ? (
+            <Detail label="Provider">{offer.provider_organization.name}</Detail>
+          ) : null}
           {partner ? <Detail label="Partner">{partner}</Detail> : null}
           <Detail label="Posted via">{POSTED_VIA_LABEL[offer.posted_via]}</Detail>
-          <Detail label="Featured">{offer.is_featured ? "Yes" : "No"}</Detail>
+          {business ? null : <Detail label="Featured">{offer.is_featured ? "Yes" : "No"}</Detail>}
           <Detail label="Live version">
             {offer.current_version ? offer.current_version.number : "None"}
           </Detail>
@@ -311,6 +359,11 @@ export function OfferStatusCallout({
   const live = offer.current_version;
   const working = offer.working_version;
   const liveNote = live ? ` The live version ${live.number} stays live meanwhile.` : "";
+  // A business offer is seen by organizations (and, with the switch on, their employees).
+  const business = offer.kind === "business_offer";
+  const viewers = business ? "organizations" : "employees";
+  const owner = business ? "owner" : "partner";
+  const visible = business ? offer.visible_to_businesses : offer.visible_to_employees;
 
   if (isRetired(offer)) {
     return (
@@ -318,7 +371,9 @@ export function OfferStatusCallout({
         <Archive aria-hidden />
         <AlertTitle>Retired</AlertTitle>
         <AlertDescription>
-          Final: no new claims or edits. Accepted claims and issued vouchers are kept.
+          {business
+            ? "Final: no new enquiries, claims or edits. Enquiries, claims and vouchers are kept."
+            : "Final: no new claims or edits. Accepted claims and issued vouchers are kept."}
         </AlertDescription>
       </Alert>
     );
@@ -331,7 +386,7 @@ export function OfferStatusCallout({
         <AlertDescription className="space-y-2">
           <p className="whitespace-pre-line">{offer.suspension_reason || "No reason recorded."}</p>
           <p>
-            Hidden from employees. Editing, resuming or publishing does not lift it; only a
+            Hidden from {viewers}. Editing, resuming or publishing does not lift it; only a
             reinstatement does.
           </p>
         </AlertDescription>
@@ -345,8 +400,8 @@ export function OfferStatusCallout({
         <AlertTitle>Paused</AlertTitle>
         <AlertDescription>
           {partner
-            ? "Hidden from employees until you resume it. Accepted claims and vouchers are unaffected."
-            : "The partner paused it; employees cannot see or claim it until it is resumed."}
+            ? `Hidden from ${viewers} until you resume it. Enquiries, accepted claims and vouchers are unaffected.`
+            : `The ${owner} paused it; ${viewers} cannot see it until it is resumed.`}
         </AlertDescription>
       </Alert>
     );
@@ -383,7 +438,7 @@ export function OfferStatusCallout({
             <p>
               {partner
                 ? "Edit the offer to start a new draft that addresses this feedback, then submit it."
-                : "The partner can edit it into a new draft and resubmit."}
+                : `The ${owner} can edit it into a new draft and resubmit.`}
               {liveNote}
             </p>
           </AlertDescription>
@@ -407,8 +462,8 @@ export function OfferStatusCallout({
           <AlertTitle>{live ? "Unsubmitted changes" : "Draft"}</AlertTitle>
           <AlertDescription>
             {live
-              ? `Version ${working.number} is a draft; employees keep seeing version ${live.number}.`
-              : "Not visible to employees."}{" "}
+              ? `Version ${working.number} is a draft; ${viewers} keep seeing version ${live.number}.`
+              : `Not visible to ${viewers}.`}{" "}
             {partner ? "Submit it for Aayulogic review when it is ready." : null}
           </AlertDescription>
         </Alert>
@@ -417,15 +472,17 @@ export function OfferStatusCallout({
       break;
   }
   if (!live) return null;
-  if (offer.visible_to_employees) {
+  if (visible) {
     return (
       <Alert>
         <CheckCircle2 aria-hidden />
-        <AlertTitle>Live for employees</AlertTitle>
+        <AlertTitle>Live for {viewers}</AlertTitle>
         <AlertDescription>
           {partner
-            ? "Edits go into a new draft for review; employees keep the live terms until it is approved."
-            : "Employees in its audience can find and claim it now."}
+            ? `Edits go into a new draft for review; ${viewers} keep the live terms until it is approved.`
+            : business
+              ? "Organizations in its audience can find it and enquire now."
+              : "Employees in its audience can find and claim it now."}
         </AlertDescription>
       </Alert>
     );
@@ -441,7 +498,9 @@ export function OfferStatusCallout({
             ? "Its end date has passed."
             : offer.partner && offer.partner.status !== "verified"
               ? "The partner is no longer verified; it shows again once re-verified."
-              : "Another publishing gate does not pass."}
+              : business && !offer.partner
+                ? "The provider's Employer capacity is off; it shows again once turned back on."
+                : "Another publishing gate does not pass."}
       </AlertDescription>
     </Alert>
   );

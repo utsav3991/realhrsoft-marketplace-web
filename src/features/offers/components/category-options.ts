@@ -30,8 +30,15 @@ export function useAdminCategoryOptions(current?: CategoryRef) {
   return { query: categories, options: withCurrent(active, current) };
 }
 
+/** Options from a portal's (unpaginated) list of active categories. */
+export function categoryOptions<Q extends { data?: readonly { id: string; name: string }[] }>(
+  query: Q,
+  current?: CategoryRef,
+) {
+  return { query, options: withCurrent(query.data ?? [], current) };
+}
+
 /** Partner portal: the active categories of the selected organization's catalogue. */
 export function useOwnCategoryOptions(organizationId: string, current?: CategoryRef) {
-  const categories = useOwnCategories(organizationId);
-  return { query: categories, options: withCurrent(categories.data ?? [], current) };
+  return categoryOptions(useOwnCategories(organizationId), current);
 }

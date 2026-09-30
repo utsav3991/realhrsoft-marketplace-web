@@ -16,21 +16,30 @@ import { isOrganizationDenied, subscribeActiveOrganization } from "@/shared/api"
 import { useActiveOrganization, useSession, type Capacity, type Membership } from "@/shared/auth";
 import { LoadingState } from "@/shared/feedback/states";
 
-/** A capacity the organization must already have, or "any" selectable membership. */
-export type OrganizationFilter = Capacity | "any";
+/**
+ * A capacity the organization must already have, "business" for either capacity (a partner or
+ * an employer: the Business portal), or "any" selectable membership.
+ */
+export type OrganizationFilter = Capacity | "business" | "any";
 
 const ORGANIZATIONS_LABEL: Record<OrganizationFilter, string> = {
   employer: "Employer organizations",
   partner: "Partner organizations",
+  business: "Business organizations",
   any: "organizations",
 };
+
+/** Whether the membership's organization passes the filter. */
+export function passesFilter(membership: Membership, capacity: OrganizationFilter): boolean {
+  if (capacity === "any") return true;
+  if (capacity === "business") return membership.partner || membership.employer;
+  return membership[capacity];
+}
 
 /** Organizations where the actor is a member and the organization passes the filter. */
 export function useCapableOrganizations(capacity: OrganizationFilter): readonly Membership[] {
   const { actor } = useSession();
-  return (actor?.memberships ?? []).filter(
-    (membership) => capacity === "any" || membership[capacity],
-  );
+  return (actor?.memberships ?? []).filter((membership) => passesFilter(membership, capacity));
 }
 
 function useDeniedFilter(memberships: readonly Membership[]) {

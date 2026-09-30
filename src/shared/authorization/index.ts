@@ -2,6 +2,8 @@ export { Can, useCan, useCanAny, useCanInOrganization } from "./can";
 export {
   AnalyticsAdminPermission,
   BenefitAdminPermission,
+  BusinessAdminPermission,
+  BusinessOfferPermission,
   ClaimAdminPermission,
   EmployerAnalyticsPermission,
   EmployerBenefitPermission,

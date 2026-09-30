@@ -45,6 +45,7 @@ function version(state: Schemas["OfferVersionStateEnum"]): Schemas["OfferVersion
     benefit: { schema_version: 1, type: "descriptive", description: "Free check-up" },
     marketplace_policy: null,
     benefit_policy: { usage_rules: "Book through HR three days ahead.", max_claims_per_beneficiary: 1 },
+    business_policy: null,
     edit_count: 1,
     frozen_at: state === "draft" ? null : "2026-10-01T00:00:00Z",
     frozen_by: null,

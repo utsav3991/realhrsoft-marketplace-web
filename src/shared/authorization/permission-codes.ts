@@ -93,6 +93,37 @@ export const PartnerOfferPermission = {
 } as const;
 
 /**
+ * Global: every organization's enquiries about business (B2B) offers (/admin/business-enquiries).
+ * Administrators moderate business offers themselves with the OfferAdminPermission codes.
+ */
+export const BusinessAdminPermission = {
+  ENQUIRY_VIEW: "offers.business_enquiry.view",
+} as const;
+
+/**
+ * Organization: the Business portal (/business). The selected organization must be a verified
+ * partner or an employer: its own business offers, the business catalogue of other
+ * organizations' offers, the enquiries it sent and the enquiries (leads) it received.
+ */
+export const BusinessOfferPermission = {
+  OFFER_VIEW: "offers.own_business_offer.view",
+  OFFER_CREATE: "offers.own_business_offer.create",
+  OFFER_UPDATE: "offers.own_business_offer.update",
+  OFFER_SUBMIT: "offers.own_business_offer.submit",
+  /** Retracts a version under review and unpublishes the live one. */
+  OFFER_WITHDRAW: "offers.own_business_offer.withdraw",
+  /** Pauses and resumes. */
+  OFFER_PAUSE: "offers.own_business_offer.pause",
+  OFFER_RETIRE: "offers.own_business_offer.retire",
+  CATALOGUE_VIEW: "offers.business_catalogue.view",
+  SENT_ENQUIRY_VIEW: "offers.sent_enquiry.view",
+  SENT_ENQUIRY_CREATE: "offers.sent_enquiry.create",
+  RECEIVED_ENQUIRY_VIEW: "offers.received_enquiry.view",
+  /** Closes a received enquiry once followed up. */
+  RECEIVED_ENQUIRY_MANAGE: "offers.received_enquiry.manage",
+} as const;
+
+/**
  * Global: interim employee eligibility (/admin/employments). An employee may use the
  * marketplace only while an administrator-recorded employment is current.
  */
@@ -228,6 +259,7 @@ export type GlobalPermissionCode =
   | ValueOf<typeof OrganizationAdminPermission>
   | ValueOf<typeof PartnerAdminPermission>
   | ValueOf<typeof OfferAdminPermission>
+  | ValueOf<typeof BusinessAdminPermission>
   | ValueOf<typeof EmploymentAdminPermission>
   | ValueOf<typeof ClaimAdminPermission>
   | ValueOf<typeof AnalyticsAdminPermission>
@@ -237,6 +269,7 @@ export type GlobalPermissionCode =
 export type OrganizationPermissionCode =
   | ValueOf<typeof PartnerPermission>
   | ValueOf<typeof PartnerOfferPermission>
+  | ValueOf<typeof BusinessOfferPermission>
   | ValueOf<typeof PartnerClaimPermission>
   | ValueOf<typeof PartnerAnalyticsPermission>
   | ValueOf<typeof EmployerBenefitPermission>
@@ -251,6 +284,7 @@ export const GLOBAL_PERMISSIONS: readonly GlobalPermissionCode[] = [
   ...Object.values(OrganizationAdminPermission),
   ...Object.values(PartnerAdminPermission),
   ...Object.values(OfferAdminPermission),
+  ...Object.values(BusinessAdminPermission),
   ...Object.values(EmploymentAdminPermission),
   ...Object.values(ClaimAdminPermission),
   ...Object.values(AnalyticsAdminPermission),

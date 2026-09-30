@@ -61,6 +61,314 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/business-enquiries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all business enquiries
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.business_enquiry.view. Every organization's enquiries. Filter by status, offer_id, organization_id and provider_organization_id. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         */
+        get: operations["v1_admin_business_enquiries_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/business-enquiries/{enquiry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a business enquiry
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.business_enquiry.view.
+         */
+        get: operations["v1_admin_business_enquiries_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/business-offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all business offers
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.view. Every organization's business offers in any state, with live and working versions. The review queue is in_review=true. Filter by display_status, availability, in_review, category_id, audience_type, show_to_employees, posted_via and (administrators) partner_id and organization_id; search matches the live or working title or the provider name (case-insensitive substring). Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         */
+        get: operations["v1_admin_business_offers_list"];
+        put?: never;
+        /**
+         * Post a business offer on behalf of an organization
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.create, plus offers.offer.submit for intent=submit or offers.offer.publish for intent=publish. Creates the offer with draft version 1, posted_via=admin_on_behalf, in the Partner capacity of partner_id (must be verified) or the Employer capacity of provider_organization_id (must be on); give exactly one. intent=save keeps the draft; submit sends it to review; publish approves it at once. Offer, version, decision, audit and OfferVersionPublished commit together. Business (B2B) offers are made by one organization to other organizations: a verified partner or an employer (Employer capacity on) posts them, and Aayulogic reviews every version before it goes live, as for marketplace offers. Organizations in the audience that are businesses themselves (a verified partner or an employer) see it in /business/offers and enquire; the provider follows up outside the platform. The show_to_employees switch also lists the live version in the employee marketplace for the audience's employees, who claim it for a voucher like a marketplace offer; only an offer posted as a verified partner can use it. Organizations see a business offer only while every gate passes: a live (approved, current) version, not paused, retired or suspended, its capacity in standing (a verified partner, or the Employer capacity) and now inside the version's window; the business audience then applies, and the provider never sees its own offer in the catalogue.
+         */
+        post: operations["v1_admin_business_offers_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/business-offers/{offer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a business offer
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.view. Read version (the concurrency token) and the working version's id before any write or decision.
+         */
+        get: operations["v1_admin_business_offers_retrieve"];
+        /**
+         * Edit a business offer's draft on behalf of its owner
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.update, plus offers.offer.submit or offers.offer.publish for those intents. Replaces the working draft's terms (omitted optional fields are cleared), or starts a new draft when there is none. A live version stays live. 409 while a version is in review or when retired. An unchanged save is a no-op. Lifecycle: save (draft) -> submit (in_review) -> approve (live) | request-changes | reject; retract withdraws a version under review. The live version stays live while its replacement is edited and reviewed. unpublish takes the live version offline and keeps a draft; pause/resume and retire (final) are owner controls; suspend/reinstate are administrator moderation.
+         */
+        put: operations["v1_admin_business_offers_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/business-offers/{offer_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve a business offer version under review
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.approve. Only the in_review working version you name (409 if it changed). It becomes the live version atomically; the replaced version stays in the history. Reason optional. The offer is posted in the organization's Partner capacity when its partner is verified, otherwise in its Employer capacity (409 when it has neither). The capacity must stay in standing to edit, submit, publish or reinstate. Organizations see a business offer only while every gate passes: a live (approved, current) version, not paused, retired or suspended, its capacity in standing (a verified partner, or the Employer capacity) and now inside the version's window; the business audience then applies, and the provider never sees its own offer in the catalogue.
+         */
+        post: operations["v1_admin_business_offers_approve_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/business-offers/{offer_id}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a business offer's decisions
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer_decision.view. Every approval, rejection, change request, suspension and reinstatement. Newest first. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_admin_business_offers_decisions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/business-offers/{offer_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish a business offer version directly
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.publish. Approves the named working version (draft, in_review, changes_requested, rejected or retracted) without a separate review and makes it live, recording an approved decision with via=admin_publish. The offer is posted in the organization's Partner capacity when its partner is verified, otherwise in its Employer capacity (409 when it has neither). The capacity must stay in standing to edit, submit, publish or reinstate. Organizations see a business offer only while every gate passes: a live (approved, current) version, not paused, retired or suspended, its capacity in standing (a verified partner, or the Employer capacity) and now inside the version's window; the business audience then applies, and the provider never sees its own offer in the catalogue.
+         */
+        post: operations["v1_admin_business_offers_publish_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/business-offers/{offer_id}/reinstate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reinstate a suspended business offer
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.reinstate. Lifts the suspension; the offer is visible again if every other gate passes. Reason required. The offer is posted in the organization's Partner capacity when its partner is verified, otherwise in its Employer capacity (409 when it has neither). The capacity must stay in standing to edit, submit, publish or reinstate.
+         */
+        post: operations["v1_admin_business_offers_reinstate_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/business-offers/{offer_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reject a business offer version under review
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.reject. Only the in_review working version you name. It becomes rejected; the reason is the feedback the owner sees. A live version stays live.
+         */
+        post: operations["v1_admin_business_offers_reject_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/business-offers/{offer_id}/request-changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request changes to a business offer version under review
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.request_changes. Only the in_review working version you name. It becomes changes_requested; the reason tells the owner what to change in a new draft.
+         */
+        post: operations["v1_admin_business_offers_request_changes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/business-offers/{offer_id}/retract": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retract a business offer version under review
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.withdraw. The in_review working version becomes retracted (frozen); edit to start a new draft. A live version stays live. Reason required.
+         */
+        post: operations["v1_admin_business_offers_retract_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/business-offers/{offer_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit a business offer's draft on its owner's behalf
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.submit. Freezes the working draft and moves it to in_review. The category must be active and valid_until, when set, in the future. The offer is posted in the organization's Partner capacity when its partner is verified, otherwise in its Employer capacity (409 when it has neither). The capacity must stay in standing to edit, submit, publish or reinstate.
+         */
+        post: operations["v1_admin_business_offers_submit_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/business-offers/{offer_id}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suspend a business offer
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.suspend. Hides the offer from organizations and employees whatever its owner does; only reinstatement lifts it. Issued vouchers keep their terms. Reason required.
+         */
+        post: operations["v1_admin_business_offers_suspend_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/business-offers/{offer_id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unpublish a business offer on its owner's behalf
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.withdraw. Takes the live version offline (organizations stop seeing it, no new employee claims) and keeps a draft copy. Open enquiries, accepted claims and vouchers are unaffected. Reason required.
+         */
+        post: operations["v1_admin_business_offers_unpublish_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/business-offers/{offer_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a business offer's versions
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.view. Every version with its frozen terms. Newest first. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_admin_business_offers_versions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/company-benefits": {
         parameters: {
             query?: never;
@@ -1893,6 +2201,434 @@ export interface paths {
         put?: never;
         /** @description Authenticated by the refresh cookie, so a stale bearer header must not 401. */
         post: operations["v1_auth_refresh_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/enquiries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my organization's sent enquiries
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.sent_enquiry.view in the selected organization. Every enquiry it sent, open or closed, kept after the offer ends. Filter by status, offer_id, organization_id and provider_organization_id. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         */
+        get: operations["v1_business_enquiries_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/enquiries/{enquiry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read one of my organization's sent enquiries
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.sent_enquiry.view in the selected organization. closing_note carries the provider's note once closed.
+         */
+        get: operations["v1_business_enquiries_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/offer-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List categories of my organization's business catalogue
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.business_catalogue.view in the selected organization, which must be a verified partner or an employer (403 otherwise). Only other organizations' live business offers whose audience covers yours. Categories with at least one such offer now, for the category_id filter; not paginated. Ordered by sort_order then name.
+         */
+        get: operations["v1_business_offer_categories_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Browse business offers available to my organization
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.business_catalogue.view in the selected organization, which must be a verified partner or an employer (403 otherwise). Only other organizations' live business offers whose audience covers yours. Filter by category_id and provider_organization_id; search matches the title or the provider name. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given. Organizations see a business offer only while every gate passes: a live (approved, current) version, not paused, retired or suspended, its capacity in standing (a verified partner, or the Employer capacity) and now inside the version's window; the business audience then applies, and the provider never sees its own offer in the catalogue.
+         */
+        get: operations["v1_business_offers_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/offers/{offer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a business offer available to my organization
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.business_catalogue.view in the selected organization, which must be a verified partner or an employer (403 otherwise). Only other organizations' live business offers whose audience covers yours. 404 when it is not live or not available to your organization.
+         */
+        get: operations["v1_business_offers_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/offers/{offer_id}/enquire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enquire about a business offer
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.sent_enquiry.create in the selected organization, which must be a verified partner or an employer. Sends the provider an enquiry on your organization's behalf about the offer's live version; its members with offers.received_enquiry.view are notified and follow up with the contact you give. One open enquiry per organization and offer; after the provider closes it you may enquire again. No voucher or claim is created.
+         */
+        post: operations["v1_business_offers_enquire_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/organizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List businesses to choose as a business offer's audience
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.view in the selected organization, which must be a verified partner or an employer (403 otherwise). Other businesses (verified partners and employers), never the selected organization, with their names only: the choices for audience_organization_ids. search matches the name (case-insensitive substring). Offset pagination: limit (default 20), offset (default 0). Ordered by name.
+         */
+        get: operations["v1_business_organizations_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/own-offer-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List categories for authoring business offers
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.view in the selected organization. Every active category, ordered by sort_order then name; not paginated. Use the id as category_id when creating or editing a business offer.
+         */
+        get: operations["v1_business_own_offer_categories_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/own-offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my organization's business offers
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.view in the selected organization. Its business offers in any state, including those posted by administrators on its behalf. Filter by display_status, availability, in_review, category_id, audience_type, show_to_employees, posted_via and (administrators) partner_id and organization_id; search matches the live or working title or the provider name (case-insensitive substring). Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         */
+        get: operations["v1_business_own_offers_list"];
+        put?: never;
+        /**
+         * Create a business offer for my organization
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.create in the selected organization, plus offers.own_business_offer.submit for intent=submit. Creates the offer with draft version 1; intent=submit also sends it for Aayulogic review. Only administrators publish. The offer is posted in the organization's Partner capacity when its partner is verified, otherwise in its Employer capacity (409 when it has neither). The capacity must stay in standing to edit, submit, publish or reinstate. Business (B2B) offers are made by one organization to other organizations: a verified partner or an employer (Employer capacity on) posts them, and Aayulogic reviews every version before it goes live, as for marketplace offers. Organizations in the audience that are businesses themselves (a verified partner or an employer) see it in /business/offers and enquire; the provider follows up outside the platform. The show_to_employees switch also lists the live version in the employee marketplace for the audience's employees, who claim it for a voucher like a marketplace offer; only an offer posted as a verified partner can use it. Organizations see a business offer only while every gate passes: a live (approved, current) version, not paused, retired or suspended, its capacity in standing (a verified partner, or the Employer capacity) and now inside the version's window; the business audience then applies, and the provider never sees its own offer in the catalogue.
+         */
+        post: operations["v1_business_own_offers_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/own-offers/{offer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read one of my organization's business offers
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.view in the selected organization. 404 for another organization's offer. latest_decision holds review feedback.
+         */
+        get: operations["v1_business_own_offers_retrieve"];
+        /**
+         * Edit one of my organization's business offer drafts
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.update in the selected organization, plus offers.own_business_offer.submit for intent=submit. Replaces the working draft's terms, or starts a new draft from your edit when there is none. The live version stays live until the replacement is approved; turning show_to_employees on or off takes effect only then. Once published with employee terms, the promo code cannot change. 409 while a version is in review (retract it first) or when retired. Lifecycle: save (draft) -> submit (in_review) -> approve (live) | request-changes | reject; retract withdraws a version under review. The live version stays live while its replacement is edited and reviewed. unpublish takes the live version offline and keeps a draft; pause/resume and retire (final) are owner controls; suspend/reinstate are administrator moderation. The offer is posted in the organization's Partner capacity when its partner is verified, otherwise in its Employer capacity (409 when it has neither). The capacity must stay in standing to edit, submit, publish or reinstate.
+         */
+        put: operations["v1_business_own_offers_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/own-offers/{offer_id}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List one of my organization's business offer decisions
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.view in the selected organization. Every decision with its feedback. Newest first. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_business_own_offers_decisions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/own-offers/{offer_id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pause one of my organization's business offers
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.pause in the selected organization. enabled -> paused: hidden from organizations and employees until resumed.
+         */
+        post: operations["v1_business_own_offers_pause_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/own-offers/{offer_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resume one of my organization's paused business offers
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.pause in the selected organization. paused -> enabled. An administrator suspension still applies.
+         */
+        post: operations["v1_business_own_offers_resume_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/own-offers/{offer_id}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retire one of my organization's business offers
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.retire in the selected organization. Final: no new enquiries, claims or edits. Enquiries, claims, vouchers and history are kept.
+         */
+        post: operations["v1_business_own_offers_retire_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/own-offers/{offer_id}/retract": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retract my organization's business offer version under review
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.withdraw in the selected organization. The in_review version becomes retracted; edit to start a new draft. A live version stays live.
+         */
+        post: operations["v1_business_own_offers_retract_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/own-offers/{offer_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit my organization's business offer draft for review
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.submit in the selected organization. Freezes the working draft and moves it to in_review. The category must be active and valid_until, when set, in the future. The offer is posted in the organization's Partner capacity when its partner is verified, otherwise in its Employer capacity (409 when it has neither). The capacity must stay in standing to edit, submit, publish or reinstate.
+         */
+        post: operations["v1_business_own_offers_submit_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/own-offers/{offer_id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unpublish one of my organization's business offers
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.withdraw in the selected organization. Takes the live version offline and keeps a draft copy to edit and resubmit. Open enquiries, accepted claims and vouchers are unaffected. Use retire to end the offer for good.
+         */
+        post: operations["v1_business_own_offers_unpublish_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/own-offers/{offer_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List one of my organization's business offer versions
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.view in the selected organization. Newest first. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_business_own_offers_versions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/received-enquiries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List enquiries about my organization's business offers
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.received_enquiry.view in the selected organization. Every enquiry other organizations sent about its business offers, with their contact details; status=open is the follow-up queue. Filter by status, offer_id, organization_id and provider_organization_id. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         */
+        get: operations["v1_business_received_enquiries_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/received-enquiries/{enquiry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read an enquiry about my organization's business offer
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.received_enquiry.view in the selected organization.
+         */
+        get: operations["v1_business_received_enquiries_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/business/received-enquiries/{enquiry_id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Close an enquiry once followed up
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.received_enquiry.manage (and .view) in the selected organization. open -> closed (final); the enquirer is notified and sees closing_note. Their organization may then enquire again. 409 ENQUIRY_CLOSED when already closed.
+         */
+        post: operations["v1_business_received_enquiries_close_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3917,6 +4653,150 @@ export interface components {
              */
             partner_id: string;
         };
+        /** @description A version's common terms. PUT semantics: omitted optional fields are cleared. */
+        AdminBusinessOfferCreate: {
+            /** @description Required, 1-150 chars. */
+            title: string;
+            /** @description Required card headline, e.g. '20% off all drinks'. */
+            headline: string;
+            /** @description Required full description, up to 4000 chars. */
+            description: string;
+            /**
+             * @description Terms and conditions, up to 4000 chars.
+             * @default
+             */
+            terms: string;
+            /**
+             * Format: date-time
+             * @description Required ISO 8601 start with timezone; claimable from then.
+             */
+            valid_from: string;
+            /** @description Required benefit value, e.g. {"type": "percentage", "percent": "20"} or {"type": "descriptive", "description": "Free annual check-up"}. */
+            benefit: components["schemas"]["BenefitValueInput"];
+            /**
+             * @description Optional audit note, up to 500 characters.
+             * @default
+             */
+            reason: string;
+            /**
+             * Format: date-time
+             * @description ISO 8601 end with timezone, after valid_from. Optional (null is open-ended) unless show_to_employees is true: employees' vouchers expire then, so it is required.
+             */
+            valid_until?: string | null;
+            /**
+             * Format: uuid
+             * @description Required active category UUID.
+             */
+            category_id: string;
+            /**
+             * @description all_businesses: every other verified partner and employer organization. selected_organizations: only audience_organization_ids. Your own organization never sees its own offer in the catalogue.
+             *
+             *     * `all_businesses` - All businesses
+             *     * `selected_organizations` - Selected organizations
+             */
+            audience_type: components["schemas"]["BusinessAudienceTypeEnum"];
+            /** @description 1-200 organization UUIDs for selected_organizations; empty otherwise. Only those that are businesses see the offer. */
+            audience_organization_ids?: string[];
+            /**
+             * @description What an enquiring organization should include (quantities, locations, timelines), up to 2000 chars.
+             * @default
+             */
+            enquiry_instructions: string;
+            /**
+             * @description The employee switch. false (default): only organizations see the offer and enquire. true: it is also listed in the employee marketplace for the audience's employees (every employee for all_businesses, the selected organizations' employees otherwise), who claim it for a voucher; needs employee_terms and valid_until, and the offer must be posted as a verified partner, who confirms the vouchers.
+             * @default false
+             */
+            show_to_employees: boolean;
+            /** @description Required when show_to_employees is true, and must be null or omitted otherwise: presentation method, its fields and acceptance mode, as for a marketplace offer. */
+            employee_terms?: components["schemas"]["EmployeeTermsInput"] | null;
+            /**
+             * @description save (default) stores the draft; submit also sends it for Aayulogic review; publish approves the draft and makes it live at once.
+             *
+             *     * `save` - save
+             *     * `submit` - submit
+             *     * `publish` - publish
+             * @default save
+             */
+            intent: components["schemas"]["AdminOfferIntentEnum"];
+            /**
+             * Format: uuid
+             * @description Post in this verified partner's capacity. Give exactly one of partner_id or provider_organization_id.
+             */
+            partner_id?: string | null;
+            /**
+             * Format: uuid
+             * @description Post in this organization's Employer capacity (it cannot be shown to employees). Give exactly one of partner_id or provider_organization_id.
+             */
+            provider_organization_id?: string | null;
+        };
+        /** @description A version's common terms. PUT semantics: omitted optional fields are cleared. */
+        AdminBusinessOfferUpdate: {
+            /** @description Required, 1-150 chars. */
+            title: string;
+            /** @description Required card headline, e.g. '20% off all drinks'. */
+            headline: string;
+            /** @description Required full description, up to 4000 chars. */
+            description: string;
+            /**
+             * @description Terms and conditions, up to 4000 chars.
+             * @default
+             */
+            terms: string;
+            /**
+             * Format: date-time
+             * @description Required ISO 8601 start with timezone; claimable from then.
+             */
+            valid_from: string;
+            /** @description Required benefit value, e.g. {"type": "percentage", "percent": "20"} or {"type": "descriptive", "description": "Free annual check-up"}. */
+            benefit: components["schemas"]["BenefitValueInput"];
+            /**
+             * @description Optional audit note, up to 500 characters.
+             * @default
+             */
+            reason: string;
+            /**
+             * Format: date-time
+             * @description ISO 8601 end with timezone, after valid_from. Optional (null is open-ended) unless show_to_employees is true: employees' vouchers expire then, so it is required.
+             */
+            valid_until?: string | null;
+            /**
+             * Format: uuid
+             * @description Required active category UUID.
+             */
+            category_id: string;
+            /**
+             * @description all_businesses: every other verified partner and employer organization. selected_organizations: only audience_organization_ids. Your own organization never sees its own offer in the catalogue.
+             *
+             *     * `all_businesses` - All businesses
+             *     * `selected_organizations` - Selected organizations
+             */
+            audience_type: components["schemas"]["BusinessAudienceTypeEnum"];
+            /** @description 1-200 organization UUIDs for selected_organizations; empty otherwise. Only those that are businesses see the offer. */
+            audience_organization_ids?: string[];
+            /**
+             * @description What an enquiring organization should include (quantities, locations, timelines), up to 2000 chars.
+             * @default
+             */
+            enquiry_instructions: string;
+            /**
+             * @description The employee switch. false (default): only organizations see the offer and enquire. true: it is also listed in the employee marketplace for the audience's employees (every employee for all_businesses, the selected organizations' employees otherwise), who claim it for a voucher; needs employee_terms and valid_until, and the offer must be posted as a verified partner, who confirms the vouchers.
+             * @default false
+             */
+            show_to_employees: boolean;
+            /** @description Required when show_to_employees is true, and must be null or omitted otherwise: presentation method, its fields and acceptance mode, as for a marketplace offer. */
+            employee_terms?: components["schemas"]["EmployeeTermsInput"] | null;
+            /**
+             * @description save (default) stores the draft; submit also sends it for Aayulogic review; publish approves the draft and makes it live at once.
+             *
+             *     * `save` - save
+             *     * `submit` - submit
+             *     * `publish` - publish
+             * @default save
+             */
+            intent: components["schemas"]["AdminOfferIntentEnum"];
+            /** @description Required current version; stale versions return 409. */
+            expected_version: number;
+        };
         /** @description PUT semantics: omitted optional fields and flights are reset. */
         AdminCampaignCreate: {
             /** @description Required, 1-150 characters. */
@@ -3994,25 +4874,6 @@ export interface components {
              */
             reason: string;
             /**
-             * Format: date-time
-             * @description Required ISO 8601 end with timezone, after valid_from. Vouchers issued from this version expire then.
-             */
-            valid_until: string;
-            /**
-             * Format: uuid
-             * @description Required active category UUID.
-             */
-            category_id: string;
-            /**
-             * @description all_eligible_users, or selected_organizations with audience_organization_ids. Own employees is an employer benefit.
-             *
-             *     * `all_eligible_users` - all_eligible_users
-             *     * `selected_organizations` - selected_organizations
-             */
-            audience_type: components["schemas"]["OfferInputAudienceTypeEnum"];
-            /** @description 1-200 organization UUIDs for selected_organizations; empty otherwise. */
-            audience_organization_ids?: string[];
-            /**
              * @description promo_code needs promo_code; booking_link needs redemption_url; in_store and custom need redemption_instructions; custom also needs custom_method_name. Fields the method does not use are stored empty.
              *
              *     * `promo_code` - Promo code
@@ -4023,7 +4884,7 @@ export interface components {
              */
             presentation_method: components["schemas"]["PresentationMethodEnum"];
             /**
-             * @description Shared cashier code, 3-64 letters, digits, - or _.
+             * @description Shared cashier code, 3-64 letters, digits, - or _. Letters are stored upper case. Fixed once the offer has been published.
              * @default
              */
             promo_code: string;
@@ -4052,6 +4913,25 @@ export interface components {
             acceptance_mode: components["schemas"]["AcceptanceModeEnum"];
             /** @description partner_approval_required only: decision window in hours (1-720, default 72), capped by valid_until. */
             approval_ttl_hours?: number | null;
+            /**
+             * Format: date-time
+             * @description Required ISO 8601 end with timezone, after valid_from. Vouchers issued from this version expire then.
+             */
+            valid_until: string;
+            /**
+             * Format: uuid
+             * @description Required active category UUID.
+             */
+            category_id: string;
+            /**
+             * @description all_eligible_users, or selected_organizations with audience_organization_ids. Own employees is an employer benefit.
+             *
+             *     * `all_eligible_users` - all_eligible_users
+             *     * `selected_organizations` - selected_organizations
+             */
+            audience_type: components["schemas"]["OfferInputAudienceTypeEnum"];
+            /** @description 1-200 organization UUIDs for selected_organizations; empty otherwise. */
+            audience_organization_ids?: string[];
             /**
              * @description save (default) stores the draft; submit also sends it for Aayulogic review; publish approves the draft and makes it live at once.
              *
@@ -4121,25 +5001,6 @@ export interface components {
              */
             reason: string;
             /**
-             * Format: date-time
-             * @description Required ISO 8601 end with timezone, after valid_from. Vouchers issued from this version expire then.
-             */
-            valid_until: string;
-            /**
-             * Format: uuid
-             * @description Required active category UUID.
-             */
-            category_id: string;
-            /**
-             * @description all_eligible_users, or selected_organizations with audience_organization_ids. Own employees is an employer benefit.
-             *
-             *     * `all_eligible_users` - all_eligible_users
-             *     * `selected_organizations` - selected_organizations
-             */
-            audience_type: components["schemas"]["OfferInputAudienceTypeEnum"];
-            /** @description 1-200 organization UUIDs for selected_organizations; empty otherwise. */
-            audience_organization_ids?: string[];
-            /**
              * @description promo_code needs promo_code; booking_link needs redemption_url; in_store and custom need redemption_instructions; custom also needs custom_method_name. Fields the method does not use are stored empty.
              *
              *     * `promo_code` - Promo code
@@ -4150,7 +5011,7 @@ export interface components {
              */
             presentation_method: components["schemas"]["PresentationMethodEnum"];
             /**
-             * @description Shared cashier code, 3-64 letters, digits, - or _.
+             * @description Shared cashier code, 3-64 letters, digits, - or _. Letters are stored upper case. Fixed once the offer has been published.
              * @default
              */
             promo_code: string;
@@ -4179,6 +5040,25 @@ export interface components {
             acceptance_mode: components["schemas"]["AcceptanceModeEnum"];
             /** @description partner_approval_required only: decision window in hours (1-720, default 72), capped by valid_until. */
             approval_ttl_hours?: number | null;
+            /**
+             * Format: date-time
+             * @description Required ISO 8601 end with timezone, after valid_from. Vouchers issued from this version expire then.
+             */
+            valid_until: string;
+            /**
+             * Format: uuid
+             * @description Required active category UUID.
+             */
+            category_id: string;
+            /**
+             * @description all_eligible_users, or selected_organizations with audience_organization_ids. Own employees is an employer benefit.
+             *
+             *     * `all_eligible_users` - all_eligible_users
+             *     * `selected_organizations` - selected_organizations
+             */
+            audience_type: components["schemas"]["OfferInputAudienceTypeEnum"];
+            /** @description 1-200 organization UUIDs for selected_organizations; empty otherwise. */
+            audience_organization_ids?: string[];
             /**
              * @description save (default) stores the draft; submit also sends it for Aayulogic review; publish approves the draft and makes it live at once.
              *
@@ -4755,6 +5635,259 @@ export interface components {
             /** @description Required, 1-500 characters; audited. */
             reason: string;
         };
+        /**
+         * @description * `all_businesses` - All businesses
+         *     * `selected_organizations` - Selected organizations
+         * @enum {string}
+         */
+        BusinessAudienceTypeEnum: "all_businesses" | "selected_organizations";
+        /**
+         * @description A business offer as another organization sees it. Never carries employee
+         *     promo codes, links or instructions.
+         */
+        BusinessCatalogueOffer: {
+            /**
+             * Format: uuid
+             * @description Offer UUID.
+             */
+            id: string;
+            /**
+             * Format: uuid
+             * @description The live version's UUID. Send it when claiming: if another version went live meanwhile the claim fails with OFFER_VERSION_CHANGED.
+             */
+            version_id: string;
+            /** @description The live version's number. */
+            version_number: number;
+            title: string;
+            /** @description Card headline. */
+            headline: string;
+            description: string;
+            terms: string;
+            /** Format: date-time */
+            valid_from: string;
+            /**
+             * Format: date-time
+             * @description End of availability; null for an open-ended benefit.
+             */
+            valid_until: string | null;
+            benefit: components["schemas"]["BenefitValue"];
+            /** @description The organization making the offer. */
+            provider_organization: components["schemas"]["OrganizationRef"];
+            /** @description The partner business, when the offer was posted as a partner; null when posted as an employer. */
+            partner: components["schemas"]["CataloguePartner"] | null;
+            /** @description The offer's category. */
+            category: components["schemas"]["CatalogueCategory"];
+            /** @description What to include when enquiring; may be empty. */
+            enquiry_instructions: string;
+            /** @description Your employees may also see and claim it in their marketplace. */
+            shown_to_employees: boolean;
+            /**
+             * Format: uuid
+             * @description Your organization's open enquiry about this offer, or null. While one is open, enquiring again fails with 409 ENQUIRY_ALREADY_OPEN.
+             */
+            my_open_enquiry_id: string | null;
+        };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        BusinessEnquiry: {
+            /**
+             * Format: uuid
+             * @description Enquiry UUID.
+             */
+            id: string;
+            /** @description The offer and version enquired about. */
+            readonly offer: components["schemas"]["EnquiryOffer"];
+            /** @description The organization that enquired. */
+            organization: components["schemas"]["OrganizationRef"];
+            /**
+             * Format: uuid
+             * @description Public UUID of the member who enquired.
+             */
+            enquirer_id: string;
+            /** @description The enquirer's message. */
+            message: string;
+            /** @description Who the provider should reach. */
+            contact_name: string;
+            /**
+             * Format: email
+             * @description Contact email.
+             */
+            contact_email: string;
+            /** @description E.164 phone, or empty. */
+            contact_phone: string;
+            /**
+             * @description open until the provider closes it; closed is final.
+             *
+             *     * `open` - Open
+             *     * `closed` - Closed by the provider
+             */
+            status: components["schemas"]["EnquiryStatusEnum"];
+            /**
+             * Format: date-time
+             * @description When the provider closed it, or null.
+             */
+            closed_at: string | null;
+            /** @description Public UUID of the member who closed it, or null. */
+            closed_by: string | null;
+            /** @description The provider's note to the enquirer; may be empty. */
+            closing_note: string;
+            /**
+             * Format: date-time
+             * @description When the enquiry was sent.
+             */
+            created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /** @description A version's common terms. PUT semantics: omitted optional fields are cleared. */
+        BusinessOfferInput: {
+            /** @description Required, 1-150 chars. */
+            title: string;
+            /** @description Required card headline, e.g. '20% off all drinks'. */
+            headline: string;
+            /** @description Required full description, up to 4000 chars. */
+            description: string;
+            /**
+             * @description Terms and conditions, up to 4000 chars.
+             * @default
+             */
+            terms: string;
+            /**
+             * Format: date-time
+             * @description Required ISO 8601 start with timezone; claimable from then.
+             */
+            valid_from: string;
+            /** @description Required benefit value, e.g. {"type": "percentage", "percent": "20"} or {"type": "descriptive", "description": "Free annual check-up"}. */
+            benefit: components["schemas"]["BenefitValueInput"];
+            /**
+             * @description Optional audit note, up to 500 characters.
+             * @default
+             */
+            reason: string;
+            /**
+             * Format: date-time
+             * @description ISO 8601 end with timezone, after valid_from. Optional (null is open-ended) unless show_to_employees is true: employees' vouchers expire then, so it is required.
+             */
+            valid_until?: string | null;
+            /**
+             * Format: uuid
+             * @description Required active category UUID.
+             */
+            category_id: string;
+            /**
+             * @description all_businesses: every other verified partner and employer organization. selected_organizations: only audience_organization_ids. Your own organization never sees its own offer in the catalogue.
+             *
+             *     * `all_businesses` - All businesses
+             *     * `selected_organizations` - Selected organizations
+             */
+            audience_type: components["schemas"]["BusinessAudienceTypeEnum"];
+            /** @description 1-200 organization UUIDs for selected_organizations; empty otherwise. Only those that are businesses see the offer. */
+            audience_organization_ids?: string[];
+            /**
+             * @description What an enquiring organization should include (quantities, locations, timelines), up to 2000 chars.
+             * @default
+             */
+            enquiry_instructions: string;
+            /**
+             * @description The employee switch. false (default): only organizations see the offer and enquire. true: it is also listed in the employee marketplace for the audience's employees (every employee for all_businesses, the selected organizations' employees otherwise), who claim it for a voucher; needs employee_terms and valid_until, and the offer must be posted as a verified partner, who confirms the vouchers.
+             * @default false
+             */
+            show_to_employees: boolean;
+            /** @description Required when show_to_employees is true, and must be null or omitted otherwise: presentation method, its fields and acceptance mode, as for a marketplace offer. */
+            employee_terms?: components["schemas"]["EmployeeTermsInput"] | null;
+            /**
+             * @description save (default) stores the draft; submit also sends it for Aayulogic review.
+             *
+             *     * `save` - save
+             *     * `submit` - submit
+             * @default save
+             */
+            intent: components["schemas"]["PortalOfferIntentEnum"];
+        };
+        /** @description A version's common terms. PUT semantics: omitted optional fields are cleared. */
+        BusinessOfferUpdate: {
+            /** @description Required, 1-150 chars. */
+            title: string;
+            /** @description Required card headline, e.g. '20% off all drinks'. */
+            headline: string;
+            /** @description Required full description, up to 4000 chars. */
+            description: string;
+            /**
+             * @description Terms and conditions, up to 4000 chars.
+             * @default
+             */
+            terms: string;
+            /**
+             * Format: date-time
+             * @description Required ISO 8601 start with timezone; claimable from then.
+             */
+            valid_from: string;
+            /** @description Required benefit value, e.g. {"type": "percentage", "percent": "20"} or {"type": "descriptive", "description": "Free annual check-up"}. */
+            benefit: components["schemas"]["BenefitValueInput"];
+            /**
+             * @description Optional audit note, up to 500 characters.
+             * @default
+             */
+            reason: string;
+            /**
+             * Format: date-time
+             * @description ISO 8601 end with timezone, after valid_from. Optional (null is open-ended) unless show_to_employees is true: employees' vouchers expire then, so it is required.
+             */
+            valid_until?: string | null;
+            /**
+             * Format: uuid
+             * @description Required active category UUID.
+             */
+            category_id: string;
+            /**
+             * @description all_businesses: every other verified partner and employer organization. selected_organizations: only audience_organization_ids. Your own organization never sees its own offer in the catalogue.
+             *
+             *     * `all_businesses` - All businesses
+             *     * `selected_organizations` - Selected organizations
+             */
+            audience_type: components["schemas"]["BusinessAudienceTypeEnum"];
+            /** @description 1-200 organization UUIDs for selected_organizations; empty otherwise. Only those that are businesses see the offer. */
+            audience_organization_ids?: string[];
+            /**
+             * @description What an enquiring organization should include (quantities, locations, timelines), up to 2000 chars.
+             * @default
+             */
+            enquiry_instructions: string;
+            /**
+             * @description The employee switch. false (default): only organizations see the offer and enquire. true: it is also listed in the employee marketplace for the audience's employees (every employee for all_businesses, the selected organizations' employees otherwise), who claim it for a voucher; needs employee_terms and valid_until, and the offer must be posted as a verified partner, who confirms the vouchers.
+             * @default false
+             */
+            show_to_employees: boolean;
+            /** @description Required when show_to_employees is true, and must be null or omitted otherwise: presentation method, its fields and acceptance mode, as for a marketplace offer. */
+            employee_terms?: components["schemas"]["EmployeeTermsInput"] | null;
+            /**
+             * @description save (default) stores the draft; submit also sends it for Aayulogic review.
+             *
+             *     * `save` - save
+             *     * `submit` - submit
+             * @default save
+             */
+            intent: components["schemas"]["PortalOfferIntentEnum"];
+            /** @description Required current version; stale versions return 409. */
+            expected_version: number;
+        };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        BusinessPolicy: {
+            /** @description The version's category. */
+            category: components["schemas"]["CategoryRef"];
+            /**
+             * @description all_businesses (every other verified partner and employer organization) or selected_organizations.
+             *
+             *     * `all_businesses` - All businesses
+             *     * `selected_organizations` - Selected organizations
+             */
+            audience_type: components["schemas"]["BusinessAudienceTypeEnum"];
+            /** @description Targeted organizations for selected_organizations; otherwise empty. */
+            audience_organizations: components["schemas"]["OrganizationRef"][];
+            /** @description Also listed in the employee marketplace for the audience's employees, who claim it for a voucher under marketplace_policy. */
+            show_to_employees: boolean;
+            /** @description What an enquiring organization should include; may be empty. */
+            enquiry_instructions: string;
+        };
         /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
         Campaign: {
             /**
@@ -5017,6 +6150,7 @@ export interface components {
              *
              *     * `marketplace_offer` - Marketplace offer
              *     * `employer_benefit` - Employer benefit
+             *     * `business_offer` - Business (B2B) offer
              */
             kind: components["schemas"]["OfferKindEnum"];
             /**
@@ -5110,6 +6244,14 @@ export interface components {
         ClaimDecisionSourceEnum: "policy" | "partner" | "admin" | "beneficiary" | "system";
         /** @enum {string} */
         ClaimStatusEnum: "requested" | "accepted" | "rejected" | "expired" | "cancelled";
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        CloseEnquiryInput: {
+            /**
+             * @description Optional note the enquirer sees, e.g. the outcome, up to 500 chars.
+             * @default
+             */
+            closing_note: string;
+        };
         /** @description Owner and administrator view of an offer and its live and working versions. */
         CompanyBenefit: {
             /**
@@ -5131,7 +6273,7 @@ export interface components {
             version: number;
             /** @description Badge: retired, suspended or paused first; then, when a version is live, scheduled/active/expired by its window; otherwise the working version's state (draft, in_review, changes_requested, rejected, retracted). */
             readonly display_status: components["schemas"]["DisplayStatusEnum"];
-            /** @description True only when every gate of the offer's kind passes now; the audience is then applied per employee. */
+            /** @description True only when every gate of the offer's kind passes now and employees are shown it; the audience is then applied per employee. A business offer is shown to employees only with show_to_employees. */
             readonly visible_to_employees: boolean;
             /** @description The approved version employees see, or null when unpublished. */
             current_version: components["schemas"]["OfferVersion"] | null;
@@ -5210,7 +6352,7 @@ export interface components {
             version: number;
             /** @description Badge: retired, suspended or paused first; then, when a version is live, scheduled/active/expired by its window; otherwise the working version's state (draft, in_review, changes_requested, rejected, retracted). */
             readonly display_status: components["schemas"]["DisplayStatusEnum"];
-            /** @description True only when every gate of the offer's kind passes now; the audience is then applied per employee. */
+            /** @description True only when every gate of the offer's kind passes now and employees are shown it; the audience is then applied per employee. A business offer is shown to employees only with show_to_employees. */
             readonly visible_to_employees: boolean;
             /** @description The approved version employees see, or null when unpublished. */
             current_version: components["schemas"]["OfferVersion"] | null;
@@ -5398,6 +6540,49 @@ export interface components {
         DestinationTypeEnum: "ad_page" | "external_url" | "offer";
         /** @enum {string} */
         DisplayStatusEnum: "draft" | "in_review" | "changes_requested" | "rejected" | "retracted" | "scheduled" | "active" | "expired" | "paused" | "suspended" | "retired";
+        /** @description How the audience's employees claim the offer when it is shown to them. */
+        EmployeeTermsInput: {
+            /**
+             * @description promo_code needs promo_code; booking_link needs redemption_url; in_store and custom need redemption_instructions; custom also needs custom_method_name. Fields the method does not use are stored empty.
+             *
+             *     * `promo_code` - Promo code
+             *     * `booking_link` - Booking / external link
+             *     * `show_employee_id` - Show employee ID
+             *     * `in_store` - In-store verification
+             *     * `custom` - Custom
+             */
+            presentation_method: components["schemas"]["PresentationMethodEnum"];
+            /**
+             * @description Shared cashier code, 3-64 letters, digits, - or _. Letters are stored upper case. Fixed once the offer has been published.
+             * @default
+             */
+            promo_code: string;
+            /**
+             * @description https link for booking_link.
+             * @default
+             */
+            redemption_url: string;
+            /**
+             * @description Steps the employee follows, up to 2000 chars.
+             * @default
+             */
+            redemption_instructions: string;
+            /**
+             * @description Name of a custom method; only for custom.
+             * @default
+             */
+            custom_method_name: string;
+            /**
+             * @description auto_accept (default) or partner_approval_required.
+             *
+             *     * `auto_accept` - Accepted automatically
+             *     * `partner_approval_required` - Partner approves
+             * @default auto_accept
+             */
+            acceptance_mode: components["schemas"]["AcceptanceModeEnum"];
+            /** @description partner_approval_required only: decision window in hours (1-720, default 72), capped by valid_until. */
+            approval_ttl_hours?: number | null;
+        };
         EmployerCapacity: {
             /** @description Required. true turns the Employer capacity on, false turns it off. */
             enabled: boolean;
@@ -5485,6 +6670,52 @@ export interface components {
             /** @description Required termination reason, 1-500 characters after trimming. */
             reason: string;
         };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        EnquiryInput: {
+            /** @description Required, up to 2000 chars: what your organization needs. */
+            message: string;
+            /** @description Required person the provider should contact. */
+            contact_name: string;
+            /**
+             * Format: email
+             * @description Required contact email.
+             */
+            contact_email: string;
+            /**
+             * @description Optional E.164 phone, e.g. +9779801234567.
+             * @default
+             */
+            contact_phone: string;
+            /**
+             * Format: uuid
+             * @description The live version you showed. If another version went live meanwhile the enquiry fails with 409 OFFER_VERSION_CHANGED.
+             */
+            version_id?: string | null;
+        };
+        /** @description The offer an enquiry is about, as it was when enquired. */
+        EnquiryOffer: {
+            /**
+             * Format: uuid
+             * @description Offer UUID.
+             */
+            id: string;
+            /**
+             * Format: uuid
+             * @description The live version enquired about.
+             */
+            version_id: string;
+            version_number: number;
+            title: string;
+            headline: string;
+            /** @description The organization making the offer. */
+            provider_organization: components["schemas"]["OrganizationRef"];
+        };
+        /**
+         * @description * `open` - Open
+         *     * `closed` - Closed by the provider
+         * @enum {string}
+         */
+        EnquiryStatusEnum: "open" | "closed";
         /** @description Body of a versioned state-change action with an optional audit note. */
         ExpectedVersion: {
             /** @description Required current version; stale versions return 409. */
@@ -5567,9 +6798,10 @@ export interface components {
         /**
          * @description * `claim_as_use` - The claim is the use
          *     * `voucher_confirmation` - Voucher confirmed at use
+         *     * `enquiry` - Enquiry followed up by the provider
          * @enum {string}
          */
-        FulfillmentModeEnum: "claim_as_use" | "voucher_confirmation";
+        FulfillmentModeEnum: "claim_as_use" | "voucher_confirmation" | "enquiry";
         Grant: {
             /** Format: uuid */
             assignment_id: string;
@@ -5870,15 +7102,16 @@ export interface components {
              */
             id: string;
             /**
-             * @description marketplace_offer or employer_benefit; never changes.
+             * @description marketplace_offer, employer_benefit or business_offer; never changes.
              *
              *     * `marketplace_offer` - Marketplace offer
              *     * `employer_benefit` - Employer benefit
+             *     * `business_offer` - Business (B2B) offer
              */
             kind: components["schemas"]["OfferKindEnum"];
             /** @description The organization that owns the offer. */
             provider_organization: components["schemas"]["OrganizationRef"];
-            /** @description The partner making a marketplace offer; null for a benefit. */
+            /** @description The partner capacity the offer was posted in: every marketplace offer, and a business offer posted as a partner. Null for a benefit and for a business offer posted as an employer. */
             partner: components["schemas"]["OfferPartner"] | null;
             /**
              * @description partner_portal, employer_portal or admin_on_behalf.
@@ -5902,8 +7135,10 @@ export interface components {
             version: number;
             /** @description Badge: retired, suspended or paused first; then, when a version is live, scheduled/active/expired by its window; otherwise the working version's state (draft, in_review, changes_requested, rejected, retracted). */
             readonly display_status: components["schemas"]["DisplayStatusEnum"];
-            /** @description True only when every gate of the offer's kind passes now; the audience is then applied per employee. */
+            /** @description True only when every gate of the offer's kind passes now and employees are shown it; the audience is then applied per employee. A business offer is shown to employees only with show_to_employees. */
             readonly visible_to_employees: boolean;
+            /** @description Business offers: true when every gate passes now, so the business audience's organizations see it. Always false for other kinds. */
+            readonly visible_to_businesses: boolean;
             /** @description The approved version employees see, or null when unpublished. */
             current_version: components["schemas"]["OfferVersion"] | null;
             /** @description The draft or review candidate, or null. While it is reviewed, current_version stays live. */
@@ -6060,25 +7295,6 @@ export interface components {
              */
             reason: string;
             /**
-             * Format: date-time
-             * @description Required ISO 8601 end with timezone, after valid_from. Vouchers issued from this version expire then.
-             */
-            valid_until: string;
-            /**
-             * Format: uuid
-             * @description Required active category UUID.
-             */
-            category_id: string;
-            /**
-             * @description all_eligible_users, or selected_organizations with audience_organization_ids. Own employees is an employer benefit.
-             *
-             *     * `all_eligible_users` - all_eligible_users
-             *     * `selected_organizations` - selected_organizations
-             */
-            audience_type: components["schemas"]["OfferInputAudienceTypeEnum"];
-            /** @description 1-200 organization UUIDs for selected_organizations; empty otherwise. */
-            audience_organization_ids?: string[];
-            /**
              * @description promo_code needs promo_code; booking_link needs redemption_url; in_store and custom need redemption_instructions; custom also needs custom_method_name. Fields the method does not use are stored empty.
              *
              *     * `promo_code` - Promo code
@@ -6089,7 +7305,7 @@ export interface components {
              */
             presentation_method: components["schemas"]["PresentationMethodEnum"];
             /**
-             * @description Shared cashier code, 3-64 letters, digits, - or _.
+             * @description Shared cashier code, 3-64 letters, digits, - or _. Letters are stored upper case. Fixed once the offer has been published.
              * @default
              */
             promo_code: string;
@@ -6119,6 +7335,25 @@ export interface components {
             /** @description partner_approval_required only: decision window in hours (1-720, default 72), capped by valid_until. */
             approval_ttl_hours?: number | null;
             /**
+             * Format: date-time
+             * @description Required ISO 8601 end with timezone, after valid_from. Vouchers issued from this version expire then.
+             */
+            valid_until: string;
+            /**
+             * Format: uuid
+             * @description Required active category UUID.
+             */
+            category_id: string;
+            /**
+             * @description all_eligible_users, or selected_organizations with audience_organization_ids. Own employees is an employer benefit.
+             *
+             *     * `all_eligible_users` - all_eligible_users
+             *     * `selected_organizations` - selected_organizations
+             */
+            audience_type: components["schemas"]["OfferInputAudienceTypeEnum"];
+            /** @description 1-200 organization UUIDs for selected_organizations; empty otherwise. */
+            audience_organization_ids?: string[];
+            /**
              * @description save (default) stores the draft; submit also sends it for Aayulogic review.
              *
              *     * `save` - save
@@ -6136,9 +7371,10 @@ export interface components {
         /**
          * @description * `marketplace_offer` - Marketplace offer
          *     * `employer_benefit` - Employer benefit
+         *     * `business_offer` - Business (B2B) offer
          * @enum {string}
          */
-        OfferKindEnum: "marketplace_offer" | "employer_benefit";
+        OfferKindEnum: "marketplace_offer" | "employer_benefit" | "business_offer";
         /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
         OfferPartner: {
             /**
@@ -6230,25 +7466,6 @@ export interface components {
              */
             reason: string;
             /**
-             * Format: date-time
-             * @description Required ISO 8601 end with timezone, after valid_from. Vouchers issued from this version expire then.
-             */
-            valid_until: string;
-            /**
-             * Format: uuid
-             * @description Required active category UUID.
-             */
-            category_id: string;
-            /**
-             * @description all_eligible_users, or selected_organizations with audience_organization_ids. Own employees is an employer benefit.
-             *
-             *     * `all_eligible_users` - all_eligible_users
-             *     * `selected_organizations` - selected_organizations
-             */
-            audience_type: components["schemas"]["OfferInputAudienceTypeEnum"];
-            /** @description 1-200 organization UUIDs for selected_organizations; empty otherwise. */
-            audience_organization_ids?: string[];
-            /**
              * @description promo_code needs promo_code; booking_link needs redemption_url; in_store and custom need redemption_instructions; custom also needs custom_method_name. Fields the method does not use are stored empty.
              *
              *     * `promo_code` - Promo code
@@ -6259,7 +7476,7 @@ export interface components {
              */
             presentation_method: components["schemas"]["PresentationMethodEnum"];
             /**
-             * @description Shared cashier code, 3-64 letters, digits, - or _.
+             * @description Shared cashier code, 3-64 letters, digits, - or _. Letters are stored upper case. Fixed once the offer has been published.
              * @default
              */
             promo_code: string;
@@ -6288,6 +7505,25 @@ export interface components {
             acceptance_mode: components["schemas"]["AcceptanceModeEnum"];
             /** @description partner_approval_required only: decision window in hours (1-720, default 72), capped by valid_until. */
             approval_ttl_hours?: number | null;
+            /**
+             * Format: date-time
+             * @description Required ISO 8601 end with timezone, after valid_from. Vouchers issued from this version expire then.
+             */
+            valid_until: string;
+            /**
+             * Format: uuid
+             * @description Required active category UUID.
+             */
+            category_id: string;
+            /**
+             * @description all_eligible_users, or selected_organizations with audience_organization_ids. Own employees is an employer benefit.
+             *
+             *     * `all_eligible_users` - all_eligible_users
+             *     * `selected_organizations` - selected_organizations
+             */
+            audience_type: components["schemas"]["OfferInputAudienceTypeEnum"];
+            /** @description 1-200 organization UUIDs for selected_organizations; empty otherwise. */
+            audience_organization_ids?: string[];
             /**
              * @description save (default) stores the draft; submit also sends it for Aayulogic review.
              *
@@ -6331,18 +7567,21 @@ export interface components {
              */
             valid_until: string | null;
             /**
-             * @description claim_as_use (employer benefits: a claim records one use) or voucher_confirmation (marketplace: a claim issues a voucher confirmed at the partner).
+             * @description claim_as_use (employer benefits: a claim records one use), voucher_confirmation (marketplace, and business offers shown to employees: a claim issues a voucher confirmed at the partner) or enquiry (business offers for organizations only: they enquire, nobody claims).
              *
              *     * `claim_as_use` - The claim is the use
              *     * `voucher_confirmation` - Voucher confirmed at use
+             *     * `enquiry` - Enquiry followed up by the provider
              */
             fulfillment_mode: components["schemas"]["FulfillmentModeEnum"];
             /** @description The benefit's value envelope. */
             benefit: components["schemas"]["BenefitValue"];
-            /** @description Marketplace terms; null for an employer benefit. */
+            /** @description Employee claim terms: every marketplace version, and a business version shown to employees (category and audience then mirror business_policy). Null otherwise. */
             readonly marketplace_policy: components["schemas"]["MarketplacePolicy"] | null;
-            /** @description Employer-benefit terms; null for a marketplace offer. */
+            /** @description Employer-benefit terms; null for the other kinds. */
             readonly benefit_policy: components["schemas"]["BenefitPolicy"] | null;
+            /** @description Business (B2B) terms; null for the other kinds. */
+            readonly business_policy: components["schemas"]["BusinessPolicy"] | null;
             /** @description Increments on every draft save. */
             edit_count: number;
             /**
@@ -6453,6 +7692,7 @@ export interface components {
              *
              *     * `marketplace_offer` - Marketplace offer
              *     * `employer_benefit` - Employer benefit
+             *     * `business_offer` - Business (B2B) offer
              */
             kind: components["schemas"]["OfferKindEnum"];
             /**
@@ -6503,6 +7743,7 @@ export interface components {
              *
              *     * `marketplace_offer` - Marketplace offer
              *     * `employer_benefit` - Employer benefit
+             *     * `business_offer` - Business (B2B) offer
              */
             kind: components["schemas"]["OfferKindEnum"];
             /**
@@ -6757,6 +7998,36 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Block"][];
         };
+        PaginatedBusinessCatalogueOfferList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["BusinessCatalogueOffer"][];
+        };
+        PaginatedBusinessEnquiryList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["BusinessEnquiry"][];
+        };
         PaginatedCampaignList: {
             /** @example 123 */
             count: number;
@@ -6951,6 +8222,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["OfferVersion"][];
+        };
+        PaginatedOrganizationRefList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["OrganizationRef"][];
         };
         PaginatedOwnClaimListItemList: {
             /** @example 123 */
@@ -8641,6 +9927,1427 @@ export interface operations {
                 };
             };
             /** @description Invalid query parameter: a malformed date or UUID, an unknown interval or ordering, start after end, a period over 366 days, or a missing or non-UUID X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_business_enquiries_list: {
+        parameters: {
+            query?: {
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description One offer. */
+                offer_id?: string;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by created_at, closed_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `closed_at` - Closed at
+                 *     * `-closed_at` - Closed at (descending)
+                 */
+                ordering?: ("-closed_at" | "-created_at" | "closed_at" | "created_at")[];
+                /** @description Received and administrator lists: one enquiring organization. */
+                organization_id?: string;
+                /** @description Sent and administrator lists: one provider organization. */
+                provider_organization_id?: string;
+                /** @description A search term. */
+                search?: string;
+                /**
+                 * @description open or closed.
+                 *
+                 *     * `open` - Open
+                 *     * `closed` - Closed by the provider
+                 */
+                status?: "closed" | "open";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBusinessEnquiryList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the organization is neither a verified partner nor an employer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_business_enquiries_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                enquiry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessEnquiry"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the organization is neither a verified partner nor an employer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Enquiry not found, or not your organization's (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_business_offers_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Live version's business audience: all_businesses or selected_organizations.
+                 *
+                 *     * `all_businesses` - All businesses
+                 *     * `selected_organizations` - Selected organizations
+                 */
+                audience_type?: "all_businesses" | "selected_organizations";
+                /**
+                 * @description enabled, paused or retired.
+                 *
+                 *     * `enabled` - Enabled
+                 *     * `paused` - Paused
+                 *     * `retired` - Retired
+                 */
+                availability?: "enabled" | "paused" | "retired";
+                /** @description Only offers whose live version is in this category. */
+                category_id?: string;
+                /**
+                 * @description The display_status badge, evaluated now.
+                 *
+                 *     * `draft` - draft
+                 *     * `in_review` - in_review
+                 *     * `changes_requested` - changes_requested
+                 *     * `rejected` - rejected
+                 *     * `retracted` - retracted
+                 *     * `scheduled` - scheduled
+                 *     * `active` - active
+                 *     * `expired` - expired
+                 *     * `paused` - paused
+                 *     * `suspended` - suspended
+                 *     * `retired` - retired
+                 */
+                display_status?: "active" | "changes_requested" | "draft" | "expired" | "in_review" | "paused" | "rejected" | "retired" | "retracted" | "scheduled" | "suspended";
+                /** @description true: only offers with a version awaiting review (the review queue); false: only offers without one. */
+                in_review?: boolean;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by first_published_at, created_at, updated_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `first_published_at` - First published at
+                 *     * `-first_published_at` - First published at (descending)
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `updated_at` - Updated at
+                 *     * `-updated_at` - Updated at (descending)
+                 */
+                ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
+                /** @description Administrators: only this provider organization's offers. */
+                organization_id?: string;
+                /** @description Administrators: only offers posted in this partner's capacity. */
+                partner_id?: string;
+                /**
+                 * @description partner_portal, employer_portal or admin_on_behalf.
+                 *
+                 *     * `partner_portal` - Partner portal
+                 *     * `employer_portal` - Employer portal
+                 *     * `admin_on_behalf` - Administrator on behalf
+                 */
+                posted_via?: "admin_on_behalf" | "employer_portal" | "partner_portal";
+                /** @description A search term. */
+                search?: string;
+                /** @description Live version is also listed for the audience's employees. */
+                show_to_employees?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedOfferList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_business_offers_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminBusinessOfferCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["AdminBusinessOfferCreate"];
+                "multipart/form-data": components["schemas"]["AdminBusinessOfferCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_business_offers_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_business_offers_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminBusinessOfferUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["AdminBusinessOfferUpdate"];
+                "multipart/form-data": components["schemas"]["AdminBusinessOfferUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_business_offers_approve_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionDecision"];
+                "application/x-www-form-urlencoded": components["schemas"]["VersionDecision"];
+                "multipart/form-data": components["schemas"]["VersionDecision"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_business_offers_decisions_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Live version's business audience: all_businesses or selected_organizations.
+                 *
+                 *     * `all_businesses` - All businesses
+                 *     * `selected_organizations` - Selected organizations
+                 */
+                audience_type?: "all_businesses" | "selected_organizations";
+                /**
+                 * @description enabled, paused or retired.
+                 *
+                 *     * `enabled` - Enabled
+                 *     * `paused` - Paused
+                 *     * `retired` - Retired
+                 */
+                availability?: "enabled" | "paused" | "retired";
+                /** @description Only offers whose live version is in this category. */
+                category_id?: string;
+                /**
+                 * @description The display_status badge, evaluated now.
+                 *
+                 *     * `draft` - draft
+                 *     * `in_review` - in_review
+                 *     * `changes_requested` - changes_requested
+                 *     * `rejected` - rejected
+                 *     * `retracted` - retracted
+                 *     * `scheduled` - scheduled
+                 *     * `active` - active
+                 *     * `expired` - expired
+                 *     * `paused` - paused
+                 *     * `suspended` - suspended
+                 *     * `retired` - retired
+                 */
+                display_status?: "active" | "changes_requested" | "draft" | "expired" | "in_review" | "paused" | "rejected" | "retired" | "retracted" | "scheduled" | "suspended";
+                /** @description true: only offers with a version awaiting review (the review queue); false: only offers without one. */
+                in_review?: boolean;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by first_published_at, created_at, updated_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `first_published_at` - First published at
+                 *     * `-first_published_at` - First published at (descending)
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `updated_at` - Updated at
+                 *     * `-updated_at` - Updated at (descending)
+                 */
+                ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
+                /** @description Administrators: only this provider organization's offers. */
+                organization_id?: string;
+                /** @description Administrators: only offers posted in this partner's capacity. */
+                partner_id?: string;
+                /**
+                 * @description partner_portal, employer_portal or admin_on_behalf.
+                 *
+                 *     * `partner_portal` - Partner portal
+                 *     * `employer_portal` - Employer portal
+                 *     * `admin_on_behalf` - Administrator on behalf
+                 */
+                posted_via?: "admin_on_behalf" | "employer_portal" | "partner_portal";
+                /** @description A search term. */
+                search?: string;
+                /** @description Live version is also listed for the audience's employees. */
+                show_to_employees?: boolean;
+            };
+            header?: never;
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedOfferDecisionList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_business_offers_publish_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionDecision"];
+                "application/x-www-form-urlencoded": components["schemas"]["VersionDecision"];
+                "multipart/form-data": components["schemas"]["VersionDecision"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_business_offers_reinstate_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersionReason"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersionReason"];
+                "multipart/form-data": components["schemas"]["ExpectedVersionReason"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_business_offers_reject_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionDecisionReason"];
+                "application/x-www-form-urlencoded": components["schemas"]["VersionDecisionReason"];
+                "multipart/form-data": components["schemas"]["VersionDecisionReason"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_business_offers_request_changes_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionDecisionReason"];
+                "application/x-www-form-urlencoded": components["schemas"]["VersionDecisionReason"];
+                "multipart/form-data": components["schemas"]["VersionDecisionReason"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_business_offers_retract_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersionReason"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersionReason"];
+                "multipart/form-data": components["schemas"]["ExpectedVersionReason"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_business_offers_submit_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_business_offers_suspend_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersionReason"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersionReason"];
+                "multipart/form-data": components["schemas"]["ExpectedVersionReason"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_business_offers_unpublish_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersionReason"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersionReason"];
+                "multipart/form-data": components["schemas"]["ExpectedVersionReason"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_business_offers_versions_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Live version's business audience: all_businesses or selected_organizations.
+                 *
+                 *     * `all_businesses` - All businesses
+                 *     * `selected_organizations` - Selected organizations
+                 */
+                audience_type?: "all_businesses" | "selected_organizations";
+                /**
+                 * @description enabled, paused or retired.
+                 *
+                 *     * `enabled` - Enabled
+                 *     * `paused` - Paused
+                 *     * `retired` - Retired
+                 */
+                availability?: "enabled" | "paused" | "retired";
+                /** @description Only offers whose live version is in this category. */
+                category_id?: string;
+                /**
+                 * @description The display_status badge, evaluated now.
+                 *
+                 *     * `draft` - draft
+                 *     * `in_review` - in_review
+                 *     * `changes_requested` - changes_requested
+                 *     * `rejected` - rejected
+                 *     * `retracted` - retracted
+                 *     * `scheduled` - scheduled
+                 *     * `active` - active
+                 *     * `expired` - expired
+                 *     * `paused` - paused
+                 *     * `suspended` - suspended
+                 *     * `retired` - retired
+                 */
+                display_status?: "active" | "changes_requested" | "draft" | "expired" | "in_review" | "paused" | "rejected" | "retired" | "retracted" | "scheduled" | "suspended";
+                /** @description true: only offers with a version awaiting review (the review queue); false: only offers without one. */
+                in_review?: boolean;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by first_published_at, created_at, updated_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `first_published_at` - First published at
+                 *     * `-first_published_at` - First published at (descending)
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `updated_at` - Updated at
+                 *     * `-updated_at` - Updated at (descending)
+                 */
+                ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
+                /** @description Administrators: only this provider organization's offers. */
+                organization_id?: string;
+                /** @description Administrators: only offers posted in this partner's capacity. */
+                partner_id?: string;
+                /**
+                 * @description partner_portal, employer_portal or admin_on_behalf.
+                 *
+                 *     * `partner_portal` - Partner portal
+                 *     * `employer_portal` - Employer portal
+                 *     * `admin_on_behalf` - Administrator on behalf
+                 */
+                posted_via?: "admin_on_behalf" | "employer_portal" | "partner_portal";
+                /** @description A search term. */
+                search?: string;
+                /** @description Live version is also listed for the audience's employees. */
+                show_to_employees?: boolean;
+            };
+            header?: never;
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedOfferVersionList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -12145,12 +14852,13 @@ export interface operations {
                 /** @description Claimants employed there when claiming. */
                 employer_id?: string;
                 /**
-                 * @description marketplace_offer or employer_benefit.
+                 * @description marketplace_offer, employer_benefit or business_offer (an employee's claim of a business offer shown to employees).
                  *
                  *     * `marketplace_offer` - Marketplace offer
                  *     * `employer_benefit` - Employer benefit
+                 *     * `business_offer` - Business (B2B) offer
                  */
-                kind?: "employer_benefit" | "marketplace_offer";
+                kind?: "business_offer" | "employer_benefit" | "marketplace_offer";
                 /** @description Number of results to return per page. */
                 limit?: number;
                 /** @description One offer. */
@@ -16200,6 +18908,1792 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+        };
+    };
+    v1_business_enquiries_list: {
+        parameters: {
+            query?: {
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description One offer. */
+                offer_id?: string;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by created_at, closed_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `closed_at` - Closed at
+                 *     * `-closed_at` - Closed at (descending)
+                 */
+                ordering?: ("-closed_at" | "-created_at" | "closed_at" | "created_at")[];
+                /** @description Received and administrator lists: one enquiring organization. */
+                organization_id?: string;
+                /** @description Sent and administrator lists: one provider organization. */
+                provider_organization_id?: string;
+                /** @description A search term. */
+                search?: string;
+                /**
+                 * @description open or closed.
+                 *
+                 *     * `open` - Open
+                 *     * `closed` - Closed by the provider
+                 */
+                status?: "closed" | "open";
+            };
+            header: {
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBusinessEnquiryList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the organization is neither a verified partner nor an employer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_enquiries_retrieve: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path: {
+                enquiry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessEnquiry"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the organization is neither a verified partner nor an employer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Enquiry not found, or not your organization's (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_offer_categories_list: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferCategoryOption"][];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_offers_list: {
+        parameters: {
+            query?: {
+                /** @description Only offers in this category. */
+                category_id?: string;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by first_published_at, valid_until; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `first_published_at` - First published at
+                 *     * `-first_published_at` - First published at (descending)
+                 *     * `valid_until` - Valid until
+                 *     * `-valid_until` - Valid until (descending)
+                 */
+                ordering?: ("-first_published_at" | "-valid_until" | "first_published_at" | "valid_until")[];
+                /** @description Only this provider organization's offers. */
+                provider_organization_id?: string;
+                /** @description A search term. */
+                search?: string;
+            };
+            header: {
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBusinessCatalogueOfferList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_offers_retrieve: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessCatalogueOffer"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_offers_enquire_create: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnquiryInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["EnquiryInput"];
+                "multipart/form-data": components["schemas"]["EnquiryInput"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessEnquiry"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the organization is neither a verified partner nor an employer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description OFFER_NOT_CLAIMABLE: the offer is not live or not available to your organization; OFFER_VERSION_CHANGED: another version went live since you saw it (current_version_id is included); ENQUIRY_ALREADY_OPEN: your organization already has an open enquiry about it (enquiry_id is included); ENQUIRY_CLOSED: the enquiry is already closed. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_organizations_list: {
+        parameters: {
+            query?: {
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /** @description A search term. */
+                search?: string;
+            };
+            header: {
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedOrganizationRefList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_own_offer_categories_list: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferCategoryOption"][];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_own_offers_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Live version's business audience: all_businesses or selected_organizations.
+                 *
+                 *     * `all_businesses` - All businesses
+                 *     * `selected_organizations` - Selected organizations
+                 */
+                audience_type?: "all_businesses" | "selected_organizations";
+                /**
+                 * @description enabled, paused or retired.
+                 *
+                 *     * `enabled` - Enabled
+                 *     * `paused` - Paused
+                 *     * `retired` - Retired
+                 */
+                availability?: "enabled" | "paused" | "retired";
+                /** @description Only offers whose live version is in this category. */
+                category_id?: string;
+                /**
+                 * @description The display_status badge, evaluated now.
+                 *
+                 *     * `draft` - draft
+                 *     * `in_review` - in_review
+                 *     * `changes_requested` - changes_requested
+                 *     * `rejected` - rejected
+                 *     * `retracted` - retracted
+                 *     * `scheduled` - scheduled
+                 *     * `active` - active
+                 *     * `expired` - expired
+                 *     * `paused` - paused
+                 *     * `suspended` - suspended
+                 *     * `retired` - retired
+                 */
+                display_status?: "active" | "changes_requested" | "draft" | "expired" | "in_review" | "paused" | "rejected" | "retired" | "retracted" | "scheduled" | "suspended";
+                /** @description true: only offers with a version awaiting review (the review queue); false: only offers without one. */
+                in_review?: boolean;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by first_published_at, created_at, updated_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `first_published_at` - First published at
+                 *     * `-first_published_at` - First published at (descending)
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `updated_at` - Updated at
+                 *     * `-updated_at` - Updated at (descending)
+                 */
+                ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
+                /** @description Administrators: only this provider organization's offers. */
+                organization_id?: string;
+                /** @description Administrators: only offers posted in this partner's capacity. */
+                partner_id?: string;
+                /**
+                 * @description partner_portal, employer_portal or admin_on_behalf.
+                 *
+                 *     * `partner_portal` - Partner portal
+                 *     * `employer_portal` - Employer portal
+                 *     * `admin_on_behalf` - Administrator on behalf
+                 */
+                posted_via?: "admin_on_behalf" | "employer_portal" | "partner_portal";
+                /** @description A search term. */
+                search?: string;
+                /** @description Live version is also listed for the audience's employees. */
+                show_to_employees?: boolean;
+            };
+            header: {
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedOfferList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_own_offers_create: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BusinessOfferInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["BusinessOfferInput"];
+                "multipart/form-data": components["schemas"]["BusinessOfferInput"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_own_offers_retrieve: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_own_offers_update: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BusinessOfferUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["BusinessOfferUpdate"];
+                "multipart/form-data": components["schemas"]["BusinessOfferUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_own_offers_decisions_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Live version's business audience: all_businesses or selected_organizations.
+                 *
+                 *     * `all_businesses` - All businesses
+                 *     * `selected_organizations` - Selected organizations
+                 */
+                audience_type?: "all_businesses" | "selected_organizations";
+                /**
+                 * @description enabled, paused or retired.
+                 *
+                 *     * `enabled` - Enabled
+                 *     * `paused` - Paused
+                 *     * `retired` - Retired
+                 */
+                availability?: "enabled" | "paused" | "retired";
+                /** @description Only offers whose live version is in this category. */
+                category_id?: string;
+                /**
+                 * @description The display_status badge, evaluated now.
+                 *
+                 *     * `draft` - draft
+                 *     * `in_review` - in_review
+                 *     * `changes_requested` - changes_requested
+                 *     * `rejected` - rejected
+                 *     * `retracted` - retracted
+                 *     * `scheduled` - scheduled
+                 *     * `active` - active
+                 *     * `expired` - expired
+                 *     * `paused` - paused
+                 *     * `suspended` - suspended
+                 *     * `retired` - retired
+                 */
+                display_status?: "active" | "changes_requested" | "draft" | "expired" | "in_review" | "paused" | "rejected" | "retired" | "retracted" | "scheduled" | "suspended";
+                /** @description true: only offers with a version awaiting review (the review queue); false: only offers without one. */
+                in_review?: boolean;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by first_published_at, created_at, updated_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `first_published_at` - First published at
+                 *     * `-first_published_at` - First published at (descending)
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `updated_at` - Updated at
+                 *     * `-updated_at` - Updated at (descending)
+                 */
+                ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
+                /** @description Administrators: only this provider organization's offers. */
+                organization_id?: string;
+                /** @description Administrators: only offers posted in this partner's capacity. */
+                partner_id?: string;
+                /**
+                 * @description partner_portal, employer_portal or admin_on_behalf.
+                 *
+                 *     * `partner_portal` - Partner portal
+                 *     * `employer_portal` - Employer portal
+                 *     * `admin_on_behalf` - Administrator on behalf
+                 */
+                posted_via?: "admin_on_behalf" | "employer_portal" | "partner_portal";
+                /** @description A search term. */
+                search?: string;
+                /** @description Live version is also listed for the audience's employees. */
+                show_to_employees?: boolean;
+            };
+            header: {
+                "X-Organization-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedOfferDecisionList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_own_offers_pause_create: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_own_offers_resume_create: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_own_offers_retire_create: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_own_offers_retract_create: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_own_offers_submit_create: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_own_offers_unpublish_create: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_own_offers_versions_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Live version's business audience: all_businesses or selected_organizations.
+                 *
+                 *     * `all_businesses` - All businesses
+                 *     * `selected_organizations` - Selected organizations
+                 */
+                audience_type?: "all_businesses" | "selected_organizations";
+                /**
+                 * @description enabled, paused or retired.
+                 *
+                 *     * `enabled` - Enabled
+                 *     * `paused` - Paused
+                 *     * `retired` - Retired
+                 */
+                availability?: "enabled" | "paused" | "retired";
+                /** @description Only offers whose live version is in this category. */
+                category_id?: string;
+                /**
+                 * @description The display_status badge, evaluated now.
+                 *
+                 *     * `draft` - draft
+                 *     * `in_review` - in_review
+                 *     * `changes_requested` - changes_requested
+                 *     * `rejected` - rejected
+                 *     * `retracted` - retracted
+                 *     * `scheduled` - scheduled
+                 *     * `active` - active
+                 *     * `expired` - expired
+                 *     * `paused` - paused
+                 *     * `suspended` - suspended
+                 *     * `retired` - retired
+                 */
+                display_status?: "active" | "changes_requested" | "draft" | "expired" | "in_review" | "paused" | "rejected" | "retired" | "retracted" | "scheduled" | "suspended";
+                /** @description true: only offers with a version awaiting review (the review queue); false: only offers without one. */
+                in_review?: boolean;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by first_published_at, created_at, updated_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `first_published_at` - First published at
+                 *     * `-first_published_at` - First published at (descending)
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `updated_at` - Updated at
+                 *     * `-updated_at` - Updated at (descending)
+                 */
+                ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
+                /** @description Administrators: only this provider organization's offers. */
+                organization_id?: string;
+                /** @description Administrators: only offers posted in this partner's capacity. */
+                partner_id?: string;
+                /**
+                 * @description partner_portal, employer_portal or admin_on_behalf.
+                 *
+                 *     * `partner_portal` - Partner portal
+                 *     * `employer_portal` - Employer portal
+                 *     * `admin_on_behalf` - Administrator on behalf
+                 */
+                posted_via?: "admin_on_behalf" | "employer_portal" | "partner_portal";
+                /** @description A search term. */
+                search?: string;
+                /** @description Live version is also listed for the audience's employees. */
+                show_to_employees?: boolean;
+            };
+            header: {
+                "X-Organization-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedOfferVersionList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_received_enquiries_list: {
+        parameters: {
+            query?: {
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description One offer. */
+                offer_id?: string;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by created_at, closed_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `closed_at` - Closed at
+                 *     * `-closed_at` - Closed at (descending)
+                 */
+                ordering?: ("-closed_at" | "-created_at" | "closed_at" | "created_at")[];
+                /** @description Received and administrator lists: one enquiring organization. */
+                organization_id?: string;
+                /** @description Sent and administrator lists: one provider organization. */
+                provider_organization_id?: string;
+                /** @description A search term. */
+                search?: string;
+                /**
+                 * @description open or closed.
+                 *
+                 *     * `open` - Open
+                 *     * `closed` - Closed by the provider
+                 */
+                status?: "closed" | "open";
+            };
+            header: {
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBusinessEnquiryList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the organization is neither a verified partner nor an employer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_received_enquiries_retrieve: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path: {
+                enquiry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessEnquiry"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the organization is neither a verified partner nor an employer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Enquiry not found, or not your organization's (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_business_received_enquiries_close_create: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Organization-ID": string;
+            };
+            path: {
+                enquiry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CloseEnquiryInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["CloseEnquiryInput"];
+                "multipart/form-data": components["schemas"]["CloseEnquiryInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessEnquiry"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the organization is neither a verified partner nor an employer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Enquiry not found, or not your organization's (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description OFFER_NOT_CLAIMABLE: the offer is not live or not available to your organization; OFFER_VERSION_CHANGED: another version went live since you saw it (current_version_id is included); ENQUIRY_ALREADY_OPEN: your organization already has an open enquiry about it (enquiry_id is included); ENQUIRY_CLOSED: the enquiry is already closed. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
                 };
             };
         };

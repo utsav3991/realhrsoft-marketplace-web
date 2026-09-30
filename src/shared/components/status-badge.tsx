@@ -118,6 +118,19 @@ export const STATUS_DEFINITIONS = {
       description: "New and edited offers cannot use it",
     },
   },
+  /** An organization's enquiry about a business offer: a lead the provider follows up. */
+  enquiry: {
+    open: {
+      label: "Open",
+      intent: "warning",
+      description: "The provider follows up with the contact given",
+    },
+    closed: {
+      label: "Closed",
+      intent: "neutral",
+      description: "Followed up; the organization may enquire again",
+    },
+  },
   /** A claim decision. Accepted never turns into used: the voucher or use records that. */
   claim: {
     requested: {

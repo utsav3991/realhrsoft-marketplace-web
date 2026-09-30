@@ -25,6 +25,14 @@ Range.prototype.getClientRects = emptyRects;
 Range.prototype.getBoundingClientRect = () => new DOMRect();
 document.elementFromPoint ??= () => null;
 
+// Radix measures some controls (the Switch's hidden input) with ResizeObserver, which jsdom
+// lacks. Nothing resizes without layout, so an observer that never reports is faithful.
+globalThis.ResizeObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
 afterEach(() => {
   cleanup();
 });

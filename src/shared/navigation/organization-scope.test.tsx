@@ -104,14 +104,35 @@ describe("portals", () => {
     expect(getPortal("partner").canAccess(outsider)).toBe(false);
     expect(accessiblePortals(outsider).map((p) => p.id)).toEqual(["marketplace"]);
     const partner = actor([membership(ACME, "Acme", true)]);
-    expect(accessiblePortals(partner).map((p) => p.id)).toEqual(["partner", "marketplace"]);
+    expect(accessiblePortals(partner).map((p) => p.id)).toEqual([
+      "partner",
+      "business",
+      "marketplace",
+    ]);
     // An organization with no capacity yet can register itself as a partner.
     const applicant = actor([{ organizationId: ACME, name: "Acme", employer: false, partner: false }]);
     expect(accessiblePortals(applicant).map((p) => p.id)).toEqual(["partner", "marketplace"]);
     // Employer-only members can still open it, but it is not offered to them.
     const employer = actor([membership(GLOBEX, "Globex", false)]);
     expect(getPortal("partner").canAccess(employer)).toBe(true);
-    expect(accessiblePortals(employer).map((p) => p.id)).toEqual(["employer", "marketplace"]);
+    expect(accessiblePortals(employer).map((p) => p.id)).toEqual([
+      "employer",
+      "business",
+      "marketplace",
+    ]);
+  });
+
+  it("opens the Business portal for partners and employers, selecting either", () => {
+    const applicant = actor([{ organizationId: ACME, name: "Acme", employer: false, partner: false }]);
+    expect(getPortal("business").canAccess(applicant)).toBe(false);
+    renderWith(
+      actor([
+        { organizationId: ACME, name: "Acme", employer: false, partner: false },
+        membership(GLOBEX, "Globex", false),
+      ]),
+      <RequireOrganization capacity="business">Portal</RequireOrganization>,
+    );
+    expect(getActiveOrganizationId()).toBe(GLOBEX);
   });
 
   it("lets any membership be selected in the Partner portal", () => {

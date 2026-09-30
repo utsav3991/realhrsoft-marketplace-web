@@ -12,6 +12,8 @@ const TARGET_ROUTES: ReadonlyMap<string, (id: string) => string> = new Map([
   ["partner_claim", (id: string) => `/partner/claims/${id}`],
   ["partner_redemption", (id: string) => `/partner/redemptions/${id}`],
   ["employer_benefit", (id: string) => `/employer/benefits/${id}`],
+  ["received_enquiry", (id: string) => `/business/leads/${id}`],
+  ["sent_enquiry", (id: string) => `/business/enquiries/${id}`],
   ["admin_claim", (id: string) => `/admin/claims/${id}`],
   ["admin_redemption", (id: string) => `/admin/redemptions/${id}`],
 ]);

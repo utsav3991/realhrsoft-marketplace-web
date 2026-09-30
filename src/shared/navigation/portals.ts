@@ -5,6 +5,8 @@ import {
   Building2,
   Gift,
   Handshake,
+  Inbox,
+  Send,
   KeyRound,
   LayoutDashboard,
   LayoutTemplate,
@@ -30,6 +32,8 @@ import type { OrganizationFilter } from "./organization-scope";
 import {
   AnalyticsAdminPermission,
   BenefitAdminPermission,
+  BusinessAdminPermission,
+  BusinessOfferPermission,
   ClaimAdminPermission,
   EmployerAnalyticsPermission,
   EmployerBenefitPermission,
@@ -51,7 +55,7 @@ import {
   type PermissionCode,
 } from "@/shared/authorization";
 
-export type PortalId = "marketplace" | "partner" | "employer" | "admin";
+export type PortalId = "marketplace" | "partner" | "employer" | "business" | "admin";
 
 export interface NavItem {
   href: string;
@@ -85,6 +89,10 @@ export interface Portal {
 
 const hasCapacity = (actor: CurrentActor, capacity: Capacity) =>
   actor.memberships.some((membership) => membership[capacity]);
+
+/** Businesses post and browse business (B2B) offers: a partner or an employer organization. */
+const isBusiness = (actor: CurrentActor) =>
+  actor.memberships.some((membership) => membership.partner || membership.employer);
 
 /** Every portal, in landing-preference order: specialised workspaces before the marketplace. */
 export const PORTALS: readonly Portal[] = [
@@ -171,6 +179,18 @@ export const PORTALS: readonly Portal[] = [
             label: "Claims",
             icon: Ticket,
             anyOf: [ClaimAdminPermission.CLAIM_VIEW],
+          },
+          {
+            href: "/admin/business-offers",
+            label: "Business offers",
+            icon: BriefcaseBusiness,
+            anyOf: [OfferAdminPermission.OFFER_VIEW],
+          },
+          {
+            href: "/admin/business-enquiries",
+            label: "Business enquiries",
+            icon: Inbox,
+            anyOf: [BusinessAdminPermission.ENQUIRY_VIEW],
           },
         ],
       },
@@ -367,6 +387,59 @@ export const PORTALS: readonly Portal[] = [
             label: "Reports",
             icon: ChartColumn,
             anyOf: [EmployerAnalyticsPermission.BENEFIT_REPORT_VIEW],
+            inOrganization: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "business",
+    label: "Business Portal",
+    icon: BriefcaseBusiness,
+    basePath: "/business",
+    // Business (B2B) offers between organizations. The API accepts only a verified partner or
+    // an employer; a pending partner registration opens the portal and the API explains.
+    canAccess: isBusiness,
+    capacity: "business",
+    navigation: [
+      {
+        items: [{ href: "/business", label: "Overview", icon: LayoutDashboard }],
+      },
+      {
+        label: "Selling",
+        items: [
+          {
+            href: "/business/offers",
+            label: "Business offers",
+            icon: Tag,
+            anyOf: [BusinessOfferPermission.OFFER_VIEW],
+            inOrganization: true,
+          },
+          {
+            href: "/business/leads",
+            label: "Leads",
+            icon: Inbox,
+            anyOf: [BusinessOfferPermission.RECEIVED_ENQUIRY_VIEW],
+            inOrganization: true,
+          },
+        ],
+      },
+      {
+        label: "Buying",
+        items: [
+          {
+            href: "/business/catalogue",
+            label: "Browse offers",
+            icon: Store,
+            anyOf: [BusinessOfferPermission.CATALOGUE_VIEW],
+            inOrganization: true,
+          },
+          {
+            href: "/business/enquiries",
+            label: "Sent enquiries",
+            icon: Send,
+            anyOf: [BusinessOfferPermission.SENT_ENQUIRY_VIEW],
             inOrganization: true,
           },
         ],

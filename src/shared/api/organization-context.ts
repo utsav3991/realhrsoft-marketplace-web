@@ -43,14 +43,19 @@ export function subscribeActiveOrganization(listener: Listener): () => void {
 }
 
 /**
- * Paths whose handlers act inside the selected organization, plus /auth/me (which reports the
- * grants held there). Partner self-service registration is organization-scoped too: an
+ * Paths whose handlers act inside the selected organization (the Employer, Partner and Business
+ * portals), plus /auth/me (which reports the grants held there). Partner self-service registration is organization-scoped too: an
  * organization registers itself (POST /partner/me). Administration is never
  * organization-scoped: sending the header there would only make the backend demand a
  * membership it does not need.
  */
 export function isOrganizationScoped(path: string): boolean {
-  return path === "/auth/me" || path.startsWith("/employer/") || path.startsWith("/partner/");
+  return (
+    path === "/auth/me" ||
+    path.startsWith("/employer/") ||
+    path.startsWith("/partner/") ||
+    path.startsWith("/business/")
+  );
 }
 
 // Organizations the API refused for this actor (member without any grant there). They are not
