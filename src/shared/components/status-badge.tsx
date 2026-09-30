@@ -207,6 +207,95 @@ export const STATUS_DEFINITIONS = {
     },
     retired: { label: "Retired", intent: "outline", description: "Final; no longer offered" },
   },
+  /**
+   * Advertisement workspace badge (display_status), the first that applies: owner and
+   * administrator controls, then the campaign, then the review state. Approved means an
+   * approved revision exists; schedule and eligibility still decide serving.
+   */
+  advertisement: {
+    draft: { label: "Draft", intent: "neutral", description: "Not submitted for review" },
+    in_review: {
+      label: "In review",
+      intent: "warning",
+      description: "Awaiting Aayulogic review",
+    },
+    changes_requested: {
+      label: "Changes requested",
+      intent: "warning",
+      description: "Returned to the owner; edit and resubmit",
+    },
+    rejected: {
+      label: "Rejected",
+      intent: "danger",
+      description: "Not accepted; edit to start a new draft",
+    },
+    approved: {
+      label: "Approved",
+      intent: "success",
+      description: "An approved revision may serve while its campaign runs",
+    },
+    campaign_inactive: {
+      label: "Campaign inactive",
+      intent: "neutral",
+      description: "Its campaign is paused or archived",
+    },
+    paused: { label: "Paused", intent: "warning", description: "Hidden by its owner" },
+    suspended: {
+      label: "Suspended",
+      intent: "danger",
+      description: "Hidden by Aayulogic",
+    },
+    archived: { label: "Archived", intent: "outline", description: "Final; never served again" },
+  },
+  /** One revision of an advertisement's content. Only a draft is edited; the rest are frozen. */
+  adRevision: {
+    draft: { label: "Draft", intent: "neutral", description: "Editable" },
+    in_review: { label: "In review", intent: "warning", description: "Frozen for review" },
+    changes_requested: {
+      label: "Changes requested",
+      intent: "warning",
+      description: "Frozen; edit to start a new draft",
+    },
+    rejected: { label: "Rejected", intent: "danger", description: "Frozen; not approved" },
+    retracted: { label: "Retracted", intent: "neutral", description: "Taken out of review" },
+    approved: { label: "Approved", intent: "success", description: "Reviewed content" },
+  },
+  adDecision: {
+    approved: { label: "Approved", intent: "success", description: "Revision approved" },
+    changes_requested: {
+      label: "Changes requested",
+      intent: "warning",
+      description: "Returned to the owner",
+    },
+    rejected: { label: "Rejected", intent: "danger", description: "Revision rejected" },
+    suspended: { label: "Suspended", intent: "danger", description: "Hidden by Aayulogic" },
+    reinstated: { label: "Reinstated", intent: "success", description: "Suspension lifted" },
+  },
+  /** Owner control of a campaign; it never changes the review state of its advertisements. */
+  campaign: {
+    active: { label: "Active", intent: "success", description: "Its advertisements may serve" },
+    paused: {
+      label: "Paused",
+      intent: "warning",
+      description: "Every advertisement in it is hidden",
+    },
+    archived: { label: "Archived", intent: "outline", description: "Final; hidden for good" },
+  },
+  placementSlot: {
+    active: { label: "Active", intent: "success", description: "Revisions can target it" },
+    inactive: {
+      label: "Inactive",
+      intent: "neutral",
+      description: "New or resubmitted revisions cannot target it",
+    },
+  },
+  /** An advertising grant, derived from its window and revocation. */
+  advertisingGrant: {
+    active: { label: "Active", intent: "success", description: "The organization may advertise" },
+    scheduled: { label: "Scheduled", intent: "info", description: "Starts later" },
+    expired: { label: "Expired", intent: "outline", description: "Its window ended" },
+    revoked: { label: "Revoked", intent: "danger", description: "Withdrawn by Aayulogic" },
+  },
   /** Interim employee eligibility: current until an administrator ends it. */
   employment: {
     current: {

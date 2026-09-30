@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { type DataTableColumns } from "@/design-system/components/data-table";
@@ -53,6 +54,7 @@ import {
   useCanInOrganization,
   type OrganizationPermissionCode,
 } from "@/shared/authorization";
+import { ConfirmDialog } from "@/shared/components/confirm-dialog";
 import { QueryDataTable, type RowOf } from "@/shared/components/query-data-table";
 import { SearchField } from "@/shared/components/search-field";
 import { StatusBadge } from "@/shared/components/status-badge";

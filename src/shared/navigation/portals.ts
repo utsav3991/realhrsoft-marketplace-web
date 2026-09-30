@@ -7,15 +7,19 @@ import {
   Handshake,
   KeyRound,
   LayoutDashboard,
+  LayoutTemplate,
+  Megaphone,
   OctagonPause,
   ReceiptText,
   ScanLine,
   ShieldCheck,
+  Stamp,
   Store,
   Tag,
   Tags,
   Ticket,
   TicketCheck,
+  Target,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -32,11 +36,13 @@ import {
   EmploymentAdminPermission,
   GLOBAL_PERMISSIONS,
   IdentityPermission,
+  MarketingAdminPermission,
   OfferAdminPermission,
   OrganizationAdminPermission,
   PartnerAdminPermission,
   PartnerAnalyticsPermission,
   PartnerClaimPermission,
+  PartnerMarketingPermission,
   PartnerOfferPermission,
   PartnerPermission,
   PartnerRedemptionPermission,
@@ -57,6 +63,12 @@ export interface NavItem {
   inOrganization?: boolean;
 }
 
+/** A sidebar section. Unlabelled groups sit under the brand with no heading. */
+export interface NavGroup {
+  label?: string;
+  items: readonly NavItem[];
+}
+
 export interface Portal {
   id: PortalId;
   label: string;
@@ -68,7 +80,7 @@ export interface Portal {
   listed?: (actor: CurrentActor) => boolean;
   /** Organizations the portal acts for; its pages are scoped to one organization. */
   capacity?: OrganizationFilter;
-  navigation: readonly NavItem[];
+  navigation: readonly NavGroup[];
 }
 
 const hasCapacity = (actor: CurrentActor, capacity: Capacity) =>
@@ -84,90 +96,146 @@ export const PORTALS: readonly Portal[] = [
     // Global grants only: an organization grant never opens the console (ADR-014).
     canAccess: (actor) => canAny(actor, GLOBAL_PERMISSIONS),
     navigation: [
-      { href: "/admin", label: "Overview", icon: LayoutDashboard },
       {
-        href: "/admin/users",
-        label: "Users",
-        icon: Users,
-        anyOf: [IdentityPermission.USER_VIEW],
+        items: [{ href: "/admin", label: "Overview", icon: LayoutDashboard }],
       },
       {
-        href: "/admin/roles",
-        label: "Roles",
-        icon: ShieldCheck,
-        anyOf: [IdentityPermission.ROLE_VIEW],
+        label: "Access",
+        items: [
+          {
+            href: "/admin/users",
+            label: "Users",
+            icon: Users,
+            anyOf: [IdentityPermission.USER_VIEW],
+          },
+          {
+            href: "/admin/roles",
+            label: "Roles",
+            icon: ShieldCheck,
+            anyOf: [IdentityPermission.ROLE_VIEW],
+          },
+          {
+            href: "/admin/permissions",
+            label: "Permissions",
+            icon: KeyRound,
+            anyOf: [IdentityPermission.PERMISSION_VIEW],
+          },
+        ],
       },
       {
-        href: "/admin/permissions",
-        label: "Permissions",
-        icon: KeyRound,
-        anyOf: [IdentityPermission.PERMISSION_VIEW],
-      },
-      {
-        href: "/admin/organizations",
         label: "Organizations",
-        icon: Building2,
-        anyOf: [OrganizationAdminPermission.ORGANIZATION_VIEW],
+        items: [
+          {
+            href: "/admin/organizations",
+            label: "Organizations",
+            icon: Building2,
+            anyOf: [OrganizationAdminPermission.ORGANIZATION_VIEW],
+          },
+          {
+            href: "/admin/partners",
+            label: "Partners",
+            icon: Handshake,
+            anyOf: [PartnerAdminPermission.PARTNER_VIEW],
+          },
+          {
+            href: "/admin/employments",
+            label: "Employments",
+            icon: BriefcaseBusiness,
+            anyOf: [EmploymentAdminPermission.EMPLOYMENT_VIEW],
+          },
+          {
+            href: "/admin/company-benefits",
+            label: "Company benefits",
+            icon: Gift,
+            anyOf: [BenefitAdminPermission.BENEFIT_VIEW],
+          },
+        ],
       },
       {
-        href: "/admin/partners",
-        label: "Partners",
-        icon: Handshake,
-        anyOf: [PartnerAdminPermission.PARTNER_VIEW],
-      },
-      {
-        href: "/admin/offers",
         label: "Offers",
-        icon: Tag,
-        anyOf: [OfferAdminPermission.OFFER_VIEW],
+        items: [
+          {
+            href: "/admin/offers",
+            label: "Offers",
+            icon: Tag,
+            anyOf: [OfferAdminPermission.OFFER_VIEW],
+          },
+          {
+            href: "/admin/offer-categories",
+            label: "Offer categories",
+            icon: Tags,
+            anyOf: [OfferAdminPermission.CATEGORY_VIEW],
+          },
+          {
+            href: "/admin/claims",
+            label: "Claims",
+            icon: Ticket,
+            anyOf: [ClaimAdminPermission.CLAIM_VIEW],
+          },
+        ],
       },
       {
-        href: "/admin/offer-categories",
-        label: "Offer categories",
-        icon: Tags,
-        anyOf: [OfferAdminPermission.CATEGORY_VIEW],
+        label: "Redemptions",
+        items: [
+          {
+            href: "/admin/vouchers",
+            label: "Vouchers",
+            icon: TicketCheck,
+            anyOf: [RedemptionAdminPermission.VOUCHER_VIEW],
+          },
+          {
+            href: "/admin/redemptions",
+            label: "Receipts",
+            icon: ReceiptText,
+            anyOf: [RedemptionAdminPermission.REDEMPTION_VIEW],
+          },
+          {
+            href: "/admin/redemption-blocks",
+            label: "Redemption blocks",
+            icon: OctagonPause,
+            anyOf: [RedemptionAdminPermission.BLOCK_VIEW],
+          },
+        ],
       },
       {
-        href: "/admin/claims",
-        label: "Claims",
-        icon: Ticket,
-        anyOf: [ClaimAdminPermission.CLAIM_VIEW],
+        label: "Advertising",
+        items: [
+          {
+            href: "/admin/advertisements",
+            label: "Advertisements",
+            icon: Megaphone,
+            anyOf: [MarketingAdminPermission.AD_VIEW],
+          },
+          {
+            href: "/admin/campaigns",
+            label: "Campaigns",
+            icon: Target,
+            anyOf: [MarketingAdminPermission.CAMPAIGN_VIEW],
+          },
+          {
+            href: "/admin/placement-slots",
+            label: "Placement slots",
+            icon: LayoutTemplate,
+            anyOf: [MarketingAdminPermission.SLOT_VIEW],
+          },
+          {
+            href: "/admin/advertising-grants",
+            label: "Advertising grants",
+            icon: Stamp,
+            anyOf: [MarketingAdminPermission.GRANT_VIEW],
+          },
+        ],
       },
       {
-        href: "/admin/vouchers",
-        label: "Vouchers",
-        icon: TicketCheck,
-        anyOf: [RedemptionAdminPermission.VOUCHER_VIEW],
-      },
-      {
-        href: "/admin/redemptions",
-        label: "Receipts",
-        icon: ReceiptText,
-        anyOf: [RedemptionAdminPermission.REDEMPTION_VIEW],
-      },
-      {
-        href: "/admin/redemption-blocks",
-        label: "Redemption blocks",
-        icon: OctagonPause,
-        anyOf: [RedemptionAdminPermission.BLOCK_VIEW],
-      },
-      {
-        href: "/admin/company-benefits",
-        label: "Company benefits",
-        icon: Gift,
-        anyOf: [BenefitAdminPermission.BENEFIT_VIEW],
-      },
-      {
-        href: "/admin/employments",
-        label: "Employments",
-        icon: BriefcaseBusiness,
-        anyOf: [EmploymentAdminPermission.EMPLOYMENT_VIEW],
-      },
-      {
-        href: "/admin/reports",
-        label: "Reports",
-        icon: ChartColumn,
-        anyOf: [AnalyticsAdminPermission.OFFER_REPORT_VIEW],
+        label: "Insights",
+        items: [
+          {
+            href: "/admin/reports",
+            label: "Reports",
+            icon: ChartColumn,
+            anyOf: [AnalyticsAdminPermission.OFFER_REPORT_VIEW],
+          },
+        ],
       },
     ],
   },
@@ -183,52 +251,90 @@ export const PORTALS: readonly Portal[] = [
     listed: (actor) => actor.memberships.some((m) => m.partner || !m.employer),
     capacity: "any",
     navigation: [
-      { href: "/partner", label: "Dashboard", icon: LayoutDashboard },
       {
-        href: "/partner/profile",
-        label: "Business profile",
-        icon: BadgeCheck,
-        anyOf: [PartnerPermission.PROFILE_VIEW],
-        inOrganization: true,
-      },
-      {
-        href: "/partner/offers",
-        label: "Offers",
-        icon: Tag,
-        anyOf: [PartnerOfferPermission.OFFER_VIEW],
-        inOrganization: true,
-      },
-      {
-        href: "/partner/claims",
-        label: "Claims",
-        icon: Ticket,
-        // Deciding needs the queue, so viewing opens the page.
-        anyOf: [PartnerClaimPermission.CLAIM_VIEW],
-        inOrganization: true,
-      },
-      {
-        href: "/partner/redeem",
-        label: "Redeem",
-        icon: ScanLine,
-        anyOf: [
-          PartnerRedemptionPermission.VOUCHER_VALIDATE,
-          PartnerRedemptionPermission.VOUCHER_CONFIRM,
+        items: [
+          { href: "/partner", label: "Dashboard", icon: LayoutDashboard },
+          {
+            href: "/partner/profile",
+            label: "Business profile",
+            icon: BadgeCheck,
+            anyOf: [PartnerPermission.PROFILE_VIEW],
+            inOrganization: true,
+          },
         ],
-        inOrganization: true,
       },
       {
-        href: "/partner/redemptions",
-        label: "Receipts",
-        icon: ReceiptText,
-        anyOf: [PartnerRedemptionPermission.REDEMPTION_VIEW],
-        inOrganization: true,
+        label: "Offers",
+        items: [
+          {
+            href: "/partner/offers",
+            label: "Offers",
+            icon: Tag,
+            anyOf: [PartnerOfferPermission.OFFER_VIEW],
+            inOrganization: true,
+          },
+          {
+            href: "/partner/claims",
+            label: "Claims",
+            icon: Ticket,
+            // Deciding needs the queue, so viewing opens the page.
+            anyOf: [PartnerClaimPermission.CLAIM_VIEW],
+            inOrganization: true,
+          },
+        ],
       },
       {
-        href: "/partner/analytics",
-        label: "Analytics",
-        icon: ChartColumn,
-        anyOf: [PartnerAnalyticsPermission.OFFER_REPORT_VIEW],
-        inOrganization: true,
+        label: "Redemptions",
+        items: [
+          {
+            href: "/partner/redeem",
+            label: "Redeem",
+            icon: ScanLine,
+            anyOf: [
+              PartnerRedemptionPermission.VOUCHER_VALIDATE,
+              PartnerRedemptionPermission.VOUCHER_CONFIRM,
+            ],
+            inOrganization: true,
+          },
+          {
+            href: "/partner/redemptions",
+            label: "Receipts",
+            icon: ReceiptText,
+            anyOf: [PartnerRedemptionPermission.REDEMPTION_VIEW],
+            inOrganization: true,
+          },
+        ],
+      },
+      {
+        label: "Advertising",
+        items: [
+          {
+            href: "/partner/campaigns",
+            label: "Campaigns",
+            icon: Target,
+            anyOf: [PartnerMarketingPermission.CAMPAIGN_VIEW],
+            inOrganization: true,
+          },
+          {
+            href: "/partner/advertisements",
+            label: "Advertisements",
+            icon: Megaphone,
+            anyOf: [PartnerMarketingPermission.AD_VIEW],
+            inOrganization: true,
+          },
+        ],
+      },
+      {
+        label: "Insights",
+        items: [
+          {
+            href: "/partner/analytics",
+            label: "Analytics",
+            icon: ChartColumn,
+            anyOf: [PartnerAnalyticsPermission.OFFER_REPORT_VIEW],
+            inOrganization: true,
+          },
+        ],
       },
     ],
   },
@@ -242,18 +348,28 @@ export const PORTALS: readonly Portal[] = [
     capacity: "employer",
     navigation: [
       {
-        href: "/employer/benefits",
-        label: "Company benefits",
-        icon: Gift,
-        anyOf: [EmployerBenefitPermission.BENEFIT_VIEW],
-        inOrganization: true,
+        label: "Benefits",
+        items: [
+          {
+            href: "/employer/benefits",
+            label: "Company benefits",
+            icon: Gift,
+            anyOf: [EmployerBenefitPermission.BENEFIT_VIEW],
+            inOrganization: true,
+          },
+        ],
       },
       {
-        href: "/employer/reports",
-        label: "Reports",
-        icon: ChartColumn,
-        anyOf: [EmployerAnalyticsPermission.BENEFIT_REPORT_VIEW],
-        inOrganization: true,
+        label: "Insights",
+        items: [
+          {
+            href: "/employer/reports",
+            label: "Reports",
+            icon: ChartColumn,
+            anyOf: [EmployerAnalyticsPermission.BENEFIT_REPORT_VIEW],
+            inOrganization: true,
+          },
+        ],
       },
     ],
   },
@@ -266,11 +382,20 @@ export const PORTALS: readonly Portal[] = [
     // employment) is not a permission code; the API decides it and answers 403 otherwise.
     canAccess: () => true,
     navigation: [
-      { href: "/marketplace", label: "Discover", icon: Store },
-      { href: "/marketplace/claims", label: "My offers", icon: Ticket },
-      { href: "/marketplace/vouchers", label: "My vouchers", icon: TicketCheck },
-      // Separate from offers (EMP-02): the employer's own benefits, not partner offers.
-      { href: "/marketplace/company-benefits", label: "Company benefits", icon: Gift },
+      {
+        items: [
+          { href: "/marketplace", label: "Discover", icon: Store },
+          // Separate from offers (EMP-02): the employer's own benefits, not partner offers.
+          { href: "/marketplace/company-benefits", label: "Company benefits", icon: Gift },
+        ],
+      },
+      {
+        label: "My wallet",
+        items: [
+          { href: "/marketplace/claims", label: "My offers", icon: Ticket },
+          { href: "/marketplace/vouchers", label: "My vouchers", icon: TicketCheck },
+        ],
+      },
     ],
   },
 ];

@@ -432,6 +432,7 @@ function AssistedEdit({ offer, onDone }: { offer: Offer; onDone: () => void }) {
             intents={intents}
             organizationPicker={(props) => <OrganizationPicker {...props} />}
             reasonHint="Optional note, recorded in the audit log."
+            promoCodeLocked={Boolean(offer.first_published_at)}
             onCancel={onDone}
             onSubmit={async (values, intent) => {
               await update.mutateAsync({

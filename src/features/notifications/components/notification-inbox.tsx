@@ -28,6 +28,7 @@ import {
 } from "../api/queries";
 import { notificationHref } from "../targets";
 
+import { EmailPreference } from "./email-preference";
 import {
   CATEGORY_LABEL,
   CategoryBadge,
@@ -120,6 +121,7 @@ export function NotificationInbox() {
 
   return (
     <div className="space-y-4">
+      <EmailPreference />
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by read state">
           {READ_FILTERS.map((option) => (

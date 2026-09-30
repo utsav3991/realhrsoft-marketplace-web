@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, X } from "lucide-react";
+import { Loader2, RefreshCw, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useForm, type UseFormReturn } from "react-hook-form";
 
@@ -35,6 +35,7 @@ import { applyApiFieldErrors } from "@/shared/forms/api-field-errors";
 import {
   ACCEPTANCE_LABEL,
   APPROVAL_TTL_HOURS,
+  generatePromoCode,
   AUDIENCE_LABEL,
   INSTRUCTION_METHODS,
   METHOD_FIELDS,
@@ -75,6 +76,11 @@ interface OfferFormProps {
     onAdd: (organization: AudienceOrganization) => void;
   }) => ReactNode;
   reasonHint: string;
+  /**
+   * The offer has been published: employees may hold its promo code, so it can no longer be
+   * edited or regenerated.
+   */
+  promoCodeLocked?: boolean;
   /** Resolves on success or throws an ApiError, shown in the form. */
   onSubmit: (values: OfferValues, intent: OfferIntent) => Promise<unknown>;
   onCancel?: () => void;
@@ -93,13 +99,22 @@ export function OfferForm({
   intents,
   organizationPicker,
   reasonHint,
+  promoCodeLocked = false,
   onSubmit,
   onCancel,
   children,
 }: OfferFormProps) {
   const [failure, setFailure] = useState<string | null>(null);
   const [pendingIntent, setPendingIntent] = useState<OfferIntent | null>(null);
-  const form = useForm<OfferValues>({ resolver: zodResolver(offerSchema), defaultValues });
+  // A new offer, or one switching to the promo code method, starts with a generated code.
+  const [initialValues] = useState(() => ({
+    ...defaultValues,
+    promoCode: defaultValues.promoCode || generatePromoCode(),
+  }));
+  const form = useForm<OfferValues>({
+    resolver: zodResolver(offerSchema),
+    defaultValues: initialValues,
+  });
   const { isSubmitting } = form.formState;
   const method = form.watch("presentationMethod");
   const acceptanceMode = form.watch("acceptanceMode");
@@ -319,11 +334,36 @@ export function OfferForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Promo code</FormLabel>
-                  <FormControl>
-                    <Input className="font-mono" autoComplete="off" spellCheck={false} {...field} />
-                  </FormControl>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input
+                        className="font-mono uppercase"
+                        autoComplete="off"
+                        spellCheck={false}
+                        readOnly={promoCodeLocked}
+                        {...field}
+                        onChange={(event) => field.onChange(event.target.value.toUpperCase())}
+                      />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={promoCodeLocked || isSubmitting}
+                      onClick={() =>
+                        form.setValue("promoCode", generatePromoCode(), {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        })
+                      }
+                    >
+                      <RefreshCw aria-hidden />
+                      Regenerate
+                    </Button>
+                  </div>
                   <FormDescription>
-                    Shared code your cashier applies; 3-64 letters, digits, hyphens or underscores.
+                    {promoCodeLocked
+                      ? "Shared code your cashier applies. It is fixed once the offer has been published."
+                      : "Shared code your cashier applies; 3-64 upper case letters, digits, hyphens or underscores."}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

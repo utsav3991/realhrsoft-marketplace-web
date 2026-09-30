@@ -55,7 +55,32 @@ export const ACCEPTANCE_LABEL: Record<AcceptanceMode, string> = {
 
 export const APPROVAL_TTL_HOURS = { min: 1, max: 720, default: 72 } as const;
 
-const PROMO_CODE = /^[A-Za-z0-9_-]{3,64}$/;
+const PROMO_CODE = /^[A-Z0-9_-]{3,64}$/;
+/** Generated codes skip look-alikes (0/O, 1/I/L) so cashiers can read them back. */
+const PROMO_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+/** Generated codes are opaque `XXXX-XXXX`; discount and validity live on the offer, not the code. */
+const PROMO_CODE_GROUPS = 2;
+const PROMO_CODE_GROUP_LENGTH = 4;
+/** Bytes at or above this are rejected so every alphabet character is equally likely. */
+const PROMO_CODE_BYTE_LIMIT = 256 - (256 % PROMO_CODE_ALPHABET.length);
+
+function randomPromoCodeChars(count: number): string {
+  let chars = "";
+  while (chars.length < count) {
+    for (const byte of crypto.getRandomValues(new Uint8Array(count))) {
+      if (byte < PROMO_CODE_BYTE_LIMIT && chars.length < count)
+        chars += PROMO_CODE_ALPHABET[byte % PROMO_CODE_ALPHABET.length];
+    }
+  }
+  return chars;
+}
+
+/** A random opaque promo code such as `K7MP-4X9Q`. */
+export function generatePromoCode(): string {
+  return Array.from({ length: PROMO_CODE_GROUPS }, () =>
+    randomPromoCodeChars(PROMO_CODE_GROUP_LENGTH),
+  ).join("-");
+}
 const HTTPS_URL = /^https:\/\/[^\s/$.?#][^\s]*$/;
 
 /** Offer audiences a partner offer may use. Own Employees is a Company Benefit, not an offer. */
@@ -104,7 +129,7 @@ export const offerSchema = z
     switch (values.presentationMethod) {
       case "promo_code":
         if (!PROMO_CODE.test(values.promoCode))
-          issue("promoCode", "Use 3-64 letters, digits, hyphens or underscores");
+          issue("promoCode", "Use 3-64 upper case letters, digits, hyphens or underscores");
         break;
       case "booking_link":
         if (!HTTPS_URL.test(values.redemptionUrl))

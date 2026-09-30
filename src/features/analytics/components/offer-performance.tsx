@@ -418,9 +418,8 @@ export function AdsNotAvailable() {
       </CardHeader>
       <CardContent>
         <p className="text-muted-foreground text-sm">
-          Not available yet. Advertising is not part of the marketplace yet, so there are no ad
-          impressions or clicks to report. They will appear here separately from offers, never added
-          to offer numbers.
+          Ad impressions and clicks are reported on each advertisement&apos;s page (Delivery),
+          separately from offers. They are never added to offer numbers.
         </p>
       </CardContent>
     </Card>

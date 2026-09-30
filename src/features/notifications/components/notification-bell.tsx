@@ -3,7 +3,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Bell, CheckCheck } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/design-system/primitives/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/design-system/primitives/popover";
@@ -11,6 +13,7 @@ import { errorMessage } from "@/shared/api";
 
 import { useMarkAllNotificationsRead, useMarkNotificationRead } from "../api/mutations";
 import {
+  latestNotificationsQuery,
   notificationKeys,
   useLatestNotifications,
   useUnreadCount,
@@ -21,6 +24,9 @@ import { notificationHref } from "../targets";
 import { markedToast, NotificationText, NotificationTime } from "./notification-parts";
 
 const badgeText = (count: number) => (count > 99 ? "99+" : String(count));
+
+/** At most this many pop-ups per arrival; the bell and inbox hold the rest. */
+const MAX_POPUPS = 3;
 
 function LatestItem({ notification, onOpen }: { notification: Notification; onOpen: () => void }) {
   const markRead = useMarkNotificationRead();
@@ -71,19 +77,40 @@ export function NotificationBell({ inboxHref }: { inboxHref: string }) {
   const count = useUnreadCount();
   const latest = useLatestNotifications({ enabled: open });
   const markAll = useMarkAllNotificationsRead();
+  const router = useRouter();
   const unread = count.data?.unread ?? 0;
   const items = latest.data?.results ?? [];
 
   // A changed count means items arrived or were read elsewhere (another tab): lists refetch
-  // the next time they are shown instead of polling themselves.
+  // the next time they are shown instead of polling themselves. A rise pops up the newest
+  // unread items, as many as arrived; nothing pops up for what was already unread on load.
   const seen = useRef<number | null>(null);
+  const popped = useRef(new Set<string>());
   useEffect(() => {
     if (count.data === undefined) return;
-    if (seen.current !== null && seen.current !== count.data.unread) {
-      void queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
-    }
+    const previous = seen.current;
     seen.current = count.data.unread;
-  }, [count.data, queryClient]);
+    if (previous === null || previous === count.data.unread) return;
+    void queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
+    const arrived = count.data.unread - previous;
+    if (arrived <= 0) return;
+    void queryClient
+      .fetchQuery(latestNotificationsQuery)
+      .then((page) => {
+        const fresh = page.results
+          .filter((item) => item.read_at === null && !popped.current.has(item.id))
+          .slice(0, Math.min(arrived, MAX_POPUPS));
+        for (const item of fresh) {
+          popped.current.add(item.id);
+          const href = notificationHref(item);
+          toast(item.title, {
+            description: item.body,
+            action: href ? { label: "Open", onClick: () => router.push(href) } : undefined,
+          });
+        }
+      })
+      .catch(() => undefined); // the badge already shows the count; a pop-up is a bonus
+  }, [count.data, queryClient, router]);
 
   const label = unread > 0 ? `Notifications, ${unread} unread` : "Notifications";
 

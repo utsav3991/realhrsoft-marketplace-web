@@ -37,3 +37,24 @@ export function useMarkAllNotificationsRead() {
     onSettled: refresh,
   });
 }
+
+/** Turn notification emails on or off; turning them on retires old unsubscribe links. */
+export function useSetEmailNotifications() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (emailEnabled: boolean) =>
+      unwrap(
+        api.PATCH("/me/notification-preferences", { body: { email_enabled: emailEnabled } }),
+      ),
+    onSuccess: (preferences) =>
+      queryClient.setQueryData(notificationKeys.preferences(), preferences),
+  });
+}
+
+/** Confirm an email's unsubscribe link; needs no sign-in. */
+export function useUnsubscribe() {
+  return useMutation({
+    mutationFn: (token: string) =>
+      unwrap(api.POST("/notifications/unsubscribe", { body: { token } })),
+  });
+}

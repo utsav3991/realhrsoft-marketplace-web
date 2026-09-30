@@ -191,7 +191,7 @@ afterEach(() => {
 
 describe("Employee catalogue", () => {
   it("explains eligibility instead of a missing permission on 403", async () => {
-    fetchMock.mockResolvedValue(problem(403, "FORBIDDEN"));
+    fetchMock.mockImplementation(async () => problem(403, "FORBIDDEN"));
     renderAs(actor({ actorType: "marketplace_staff" }), <Catalogue />);
     expect(await screen.findByText("Offers are for employees")).toBeVisible();
   });

@@ -245,6 +245,518 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/marketing/advertisements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all advertisements
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.view. Every partner's advertisements with their current and working revisions. Filter by display_status, availability, campaign_id, in_review, suspended and (administrators) partner_id; search matches the name. The review queue is in_review=true, ordered by submitted_at. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         */
+        get: operations["v1_admin_marketing_advertisements_list"];
+        put?: never;
+        /**
+         * Create an advertisement on behalf of a partner
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.manage. Creates the advertisement in any non-archived campaign with draft revision 1 (posted_via=admin_on_behalf); intent=submit also sends it for review. The asset and offer must belong to the campaign's owner. Marketing is separate from Offers: an advertisement is never claimed or redeemed and never counts as a claim or redemption. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). Revisions: content (creative, destination, slots) is edited only in a draft. Submitting freezes it with a content digest; frozen content never changes, and editing a declined or live revision starts a new draft. The approved current_revision keeps serving while its replacement is edited or reviewed (Q21, 2026-09-29); approving the replacement swaps it in atomically. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction. Serving (next increment) needs every gate at once: verified partner, an active advertising grant, an approved current revision, the advertisement active and not suspended, its campaign active and inside its schedule, active targeted slots and a destination visible to the viewer. Approval never bypasses the other gates.
+         */
+        post: operations["v1_admin_marketing_advertisements_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/advertisements/{ad_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read an advertisement
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.view. Read version and the working revision's id before any write or review decision.
+         */
+        get: operations["v1_admin_marketing_advertisements_retrieve"];
+        /**
+         * Edit an advertisement on behalf of its partner
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.manage. Replaces the name and working content (PUT): edits the draft, or starts a new draft from a declined or live revision. Editing while a revision is in review returns 409 (retract first). An unchanged save changes nothing. Never lifts a pause or suspension. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). Revisions: content (creative, destination, slots) is edited only in a draft. Submitting freezes it with a content digest; frozen content never changes, and editing a declined or live revision starts a new draft. The approved current_revision keeps serving while its replacement is edited or reviewed (Q21, 2026-09-29); approving the replacement swaps it in atomically. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        put: operations["v1_admin_marketing_advertisements_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/advertisements/{ad_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve the revision under review
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.review. in_review -> approved: it becomes current_revision at once, replacing any previous approved revision, and the working revision is cleared. The content is revalidated (422 if a slot was deactivated or the destination or asset no longer qualifies); the partner must still be verified. Does not lift a pause or suspension. reason is optional. Send the working revision_id you reviewed and the advertisement version. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_admin_marketing_advertisements_approve_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/advertisements/{ad_id}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List an advertisement's review and moderation decisions
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.view. Newest first. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_admin_marketing_advertisements_decisions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/advertisements/{ad_id}/reinstate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reinstate a suspended advertisement
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.suspend. Lifts the suspension with a required reason; availability and review state are unchanged. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_admin_marketing_advertisements_reinstate_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/advertisements/{ad_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reject the revision under review
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.review. in_review -> rejected with a required reason shown to the partner. The current revision, if any, keeps serving. Send the working revision_id you reviewed and the advertisement version. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_admin_marketing_advertisements_reject_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/advertisements/{ad_id}/request-changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request changes to the revision under review
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.review. in_review -> changes_requested with a required reason; the partner's next save starts a new draft. The current revision, if any, keeps serving. Send the working revision_id you reviewed and the advertisement version. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_admin_marketing_advertisements_request_changes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/advertisements/{ad_id}/retract": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retract a revision on behalf of its partner
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.manage. Withdraws the revision awaiting review (in_review -> retracted). It stays frozen as history; the next save starts a new draft. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_admin_marketing_advertisements_retract_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/advertisements/{ad_id}/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List an advertisement's revisions
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.view. Newest first. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_admin_marketing_advertisements_revisions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/advertisements/{ad_id}/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read an advertisement's delivery report
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.view. Delivery counts from daily rollups (Q20, 2026-09-30): served is recorded when the server returns the advertisement, rendered by the client's on-screen beacon, clicks when followed; each counts once per advertisement, slot, viewer and local day. Only aggregates are returned, never viewers. Rollups refresh about every 5 minutes; raw events are kept 90 days, rollups indefinitely. Conversions are not available (null). Query date_from/date_to (YYYY-MM-DD, local days, inclusive) default to the last 30 days; the range may span at most 366 days and date_to must not precede date_from (422).
+         */
+        get: operations["v1_admin_marketing_advertisements_stats_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/advertisements/{ad_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit an advertisement on behalf of its partner
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.manage. Sends the working draft for Aayulogic review (draft -> in_review), freezing it. The organization needs an active advertising grant (409 ADVERTISING_NOT_ELIGIBLE otherwise), and the content is revalidated against the current slots, destination and assets (422 if it no longer fits). Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_admin_marketing_advertisements_submit_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/advertisements/{ad_id}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suspend an advertisement
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.suspend. Hides the advertisement regardless of every owner control until reinstated; records a suspended decision with the required reason, which the partner sees. Archived advertisements cannot be suspended. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_admin_marketing_advertisements_suspend_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/advertising-grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List advertising grants
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.grant.view. Interim commercial gate (Q12, 2026-09-29): an organization needs an active grant to submit advertisements for review, and serving will require one. A grant records the administrator's basis (paid, complimentary or waived) and a reference; it is not proof of payment and never approves or activates an advertisement. Grants are never edited or deleted; revoke and grant anew. Filter by active and (administrators) organization_id. Newest valid_from first unless ordering is given. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_admin_marketing_advertising_grants_list"];
+        put?: never;
+        /**
+         * Grant an organization advertising
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.grant.manage. valid_until, when given, must be after valid_from and in the future. Overlapping grants are allowed; any active one makes the organization eligible. Interim commercial gate (Q12, 2026-09-29): an organization needs an active grant to submit advertisements for review, and serving will require one. A grant records the administrator's basis (paid, complimentary or waived) and a reference; it is not proof of payment and never approves or activates an advertisement. Grants are never edited or deleted; revoke and grant anew. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_admin_marketing_advertising_grants_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/advertising-grants/{grant_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read an advertising grant
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.grant.view.
+         */
+        get: operations["v1_admin_marketing_advertising_grants_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/advertising-grants/{grant_id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revoke an advertising grant
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.grant.manage. Ends the grant now with a required reason; an already revoked grant returns 409. Advertisements already in review stay there; submissions and serving need another active grant. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_admin_marketing_advertising_grants_revoke_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all campaigns
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.campaign.view. Every partner's campaigns with their flights. Filter by status, objective and (administrators) partner_id; search matches the name. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         */
+        get: operations["v1_admin_marketing_campaigns_list"];
+        put?: never;
+        /**
+         * Create a campaign on behalf of a partner
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.campaign.manage. Creates an active campaign owned by the named partner's organization (posted_via=admin_on_behalf). The owner must be a verified partner to create, edit, upload or submit (409 otherwise). Campaigns contain advertisements. Flights are schedule windows per channel (Q25 proposal): a channel without flights runs across the campaign window, a channel with flights only inside one of them. An ended window hides the campaign's advertisements; it never archives them. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_admin_marketing_campaigns_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/campaigns/{campaign_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a campaign
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.campaign.view. Read version before any write.
+         */
+        get: operations["v1_admin_marketing_campaigns_retrieve"];
+        /**
+         * Edit a campaign on behalf of its partner
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.campaign.manage. Replaces the name, objective, description, window and flights (PUT; omitted optional fields and flights are reset). Never changes the status. An archived campaign cannot be edited. An unchanged body returns the campaign without a new version. Campaigns contain advertisements. Flights are schedule windows per channel (Q25 proposal): a channel without flights runs across the campaign window, a channel with flights only inside one of them. An ended window hides the campaign's advertisements; it never archives them. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        put: operations["v1_admin_marketing_campaigns_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/creative-assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List creative assets
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.view. Every organization's uploads; partner_id narrows to one partner's. Search matches the original file name. Newest first. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_admin_marketing_creative_assets_list"];
+        put?: never;
+        /**
+         * Upload a creative asset on behalf of a partner
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.manage. Send multipart/form-data with file and partner_id. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). Stored privately (Q22): never reachable through the public media location, readable only by the owner's members with marketing.own_ad.view and administrators with marketing.ad.view. The type is detected from the content, not the file name. Use the returned id as creative.asset_id. Assets are immutable.
+         */
+        post: operations["v1_admin_marketing_creative_assets_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/creative-assets/{asset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a creative asset's details
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.view.
+         */
+        get: operations["v1_admin_marketing_creative_assets_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/creative-assets/{asset_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download a creative asset for review
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.view. Streams the stored image inline with its detected content type, Cache-Control: no-store and nosniff.
+         */
+        get: operations["v1_admin_marketing_creative_assets_content_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/placement-slots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List placement slots
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.slot.view. The whole catalogue, inactive slots included. Filter by is_active and surface; search matches the name. Ordered by surface then key unless ordering is given. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_admin_marketing_placement_slots_list"];
+        put?: never;
+        /**
+         * Create a placement slot
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.slot.manage. Adds an active slot; a taken key returns 409. Slots are data: a new placement is a row. key is what the frontend requests and never changes. Image creatives must match the slot's aspect ratio (within 2%) and be at least width x height pixels; max_ads caps how many render at once and rotation picks among the eligible (random). Deactivated slots cannot be targeted by new or resubmitted revisions. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_admin_marketing_placement_slots_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/placement-slots/{slot_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a placement slot
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.slot.view.
+         */
+        get: operations["v1_admin_marketing_placement_slots_retrieve"];
+        /**
+         * Edit a placement slot
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.slot.manage. Replaces the definition (PUT; omitted optional fields are reset). key must equal the current key (422 otherwise). Approved revisions keep the content they were reviewed with. An unchanged body returns the slot without a new version. Slots are data: a new placement is a row. key is what the frontend requests and never changes. Image creatives must match the slot's aspect ratio (within 2%) and be at least width x height pixels; max_ads caps how many render at once and rotation picks among the eligible (random). Deactivated slots cannot be targeted by new or resubmitted revisions. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        put: operations["v1_admin_marketing_placement_slots_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/placement-slots/{slot_id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Deactivate a placement slot
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.slot.manage. Requires a reason. New or resubmitted revisions can no longer target the slot, and approving a revision that targets it returns 422. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_admin_marketing_placement_slots_deactivate_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/marketing/placement-slots/{slot_id}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reactivate a placement slot
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.slot.manage. Requires a reason. Makes the slot available to revisions again. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_admin_marketing_placement_slots_reactivate_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/offer-categories": {
         parameters: {
             query?: never;
@@ -1595,6 +2107,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/marketplace/advertisements/{ad_id}/click": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Follow a served advertisement
+         * @description Authenticate with the Bearer access token of any signed-in account: employees, employers, partners and marketplace staff all see advertisements. No permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Call when the viewer activates the advertisement, then navigate to the returned link. Rechecks every serving gate for you now: An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee with a current employment whose catalogue has the offer). Advertisements are never claimed or redeemed. The link is built from the reviewed destination, never from client input. Counts a click. Counted at most once per advertisement, slot, viewer and local day (Asia/Kathmandu), so retries are safe. 404 when the advertisement is no longer available to you (show a notice instead of navigating). 409 AD_CREATIVE_CHANGED when a newer revision of the advertisement was approved since the placement returned revision: reload the placement rather than showing or following the newer creative.
+         */
+        post: operations["v1_marketplace_advertisements_click_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/advertisements/{ad_id}/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download a served advertisement's image
+         * @description Authenticate with the Bearer access token of any signed-in account: employees, employers, partners and marketplace staff all see advertisements. No permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Streams the approved image of an image_banner advertisement inline (nosniff, no-store). Fetch it with the bearer token (e.g. as a blob). An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee with a current employment whose catalogue has the offer). Advertisements are never claimed or redeemed. 404 when the advertisement is not available to you in the slot now or has no image. 409 AD_CREATIVE_CHANGED when a newer revision of the advertisement was approved since the placement returned revision: reload the placement rather than showing or following the newer creative. Does not count an event. An image is immutable for a revision, so clients may cache it by revision.
+         */
+        get: operations["v1_marketplace_advertisements_image_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/advertisements/{ad_id}/page": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a served advertisement's own page
+         * @description Authenticate with the Bearer access token of any signed-in account: employees, employers, partners and marketplace staff all see advertisements. No permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. For an advertisement whose destination is ad_page: the click endpoint returns /marketplace/ads/{ad_id}?slot=&revision=, and that page loads its content here with the same slot and revision. Rechecks every serving gate for you now, as a click does: An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee with a current employment whose catalogue has the offer). Advertisements are never claimed or redeemed. The onward action is resolved for you and is null when the page has none or its offer is not available to you. Render title and body as plain text. The creative's image, when has_image is true, comes from the image endpoint with the same slot and revision. Does not count an event. 404 when the advertisement is not available to you in the slot now or has no page. 409 AD_CREATIVE_CHANGED when a newer revision of the advertisement was approved since the placement returned revision: reload the placement rather than showing or following the newer creative.
+         */
+        get: operations["v1_marketplace_advertisements_page_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/advertisements/{ad_id}/rendered": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Report a served advertisement as rendered
+         * @description Authenticate with the Bearer access token of any signed-in account: employees, employers, partners and marketplace staff all see advertisements. No permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Send once the advertisement's creative is visible on screen. Counts a rendered impression only for an advertisement served to you in this slot today or yesterday, and only for the revision served or its current approved revision; otherwise 404. Counted at most once per advertisement, slot, viewer and local day (Asia/Kathmandu), so retries are safe. Responds 204 with no body.
+         */
+        post: operations["v1_marketplace_advertisements_rendered_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/marketplace/benefit-claims": {
         parameters: {
             query?: never;
@@ -1803,6 +2395,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/marketplace/placements/{slot_key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the advertisements to show in a placement slot
+         * @description Authenticate with the Bearer access token of any signed-in account: employees, employers, partners and marketplace staff all see advertisements. No permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Call when rendering a surface, once per slot on the page (e.g. app.home.top on every portal home, marketplace.home.top). Returns up to the slot's max_ads advertisements picked at random among those eligible for you (Q26); the list is empty when none is. An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee with a current employment whose catalogue has the offer). Advertisements are never claimed or redeemed. Each returned advertisement counts one served impression. Counted at most once per advertisement, slot, viewer and local day (Asia/Kathmandu), so retries are safe. Render it with a Sponsored label, fetch the image when has_image is true, report rendered once it is on screen and call click when it is followed. 404 when the slot key is unknown or deactivated.
+         */
+        get: operations["v1_marketplace_placements_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/marketplace/vouchers": {
         parameters: {
             query?: never;
@@ -1861,6 +2473,30 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/me/notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read my notification preferences
+         * @description Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Whether notification emails reach your account email. Email is on until you turn it off here or through an email's unsubscribe link. In-app notifications are always on. Only some notifications are also emailed (currently: a new Company Benefit from your employer).
+         */
+        get: operations["v1_me_notification_preferences_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Turn my notification emails on or off
+         * @description Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Idempotent. Turning email off stops every notification email not yet sent, and they stay unsent even if you turn email back on. Turning it on applies to new notifications only and invalidates the unsubscribe links in emails you already received. Your inbox is never changed. Audited.
+         */
+        patch: operations["v1_me_notification_preferences_partial_update"];
         trace?: never;
     };
     "/me/notifications": {
@@ -1963,6 +2599,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/notifications/unsubscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check an unsubscribe link
+         * @description No authentication: the token from a notification email's unsubscribe link is the only credential, and it can do nothing but turn that account's notification emails off. It stops working when the owner turns email back on. Rate-limited per client. Responses use Cache-Control: no-store. Call when the unsubscribe page opens, to show a confirm button or an invalid-link message. Changes nothing and reveals no account details.
+         */
+        get: operations["v1_notifications_unsubscribe_retrieve"];
+        put?: never;
+        /**
+         * Unsubscribe from notification emails
+         * @description No authentication: the token from a notification email's unsubscribe link is the only credential, and it can do nothing but turn that account's notification emails off. It stops working when the owner turns email back on. Rate-limited per client. Responses use Cache-Control: no-store. Call when the person confirms. Turns notification emails off for the link's account; emails not yet sent are not sent. Idempotent. In-app notifications and sign-in or password emails are unaffected. Audited.
+         */
+        post: operations["v1_notifications_unsubscribe_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/partner/analytics/offers": {
         parameters: {
             query?: never;
@@ -1995,6 +2655,426 @@ export interface paths {
          * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires analytics.partner_offer_report.view in the selected organization. Only this partner's offers, as totals: no employee identity and no employer breakdown. Offer metrics only, never combined with ads or benefit usage: views are unique offer detail opens per employee per local day; claims count at claimed_at; redemptions count when a partner member or administrator confirmed them, so a claim and its redemption can fall in different periods. Counts are live and include offers that were since withdrawn, suspended or expired. Dates are local to time_zone (Asia/Kathmandu); start..end is inclusive, defaults to the last 30 days and spans at most 366 days. Totals plus a series with one bucket per day, week or month, including empty buckets as zero. Pass offer_id for a single offer.
          */
         get: operations["v1_partner_analytics_offers_summary_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/advertisements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my organization's advertisements
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.view in the selected organization. Filter by display_status, availability, campaign_id, in_review, suspended and (administrators) partner_id; search matches the name. The review queue is in_review=true, ordered by submitted_at. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         */
+        get: operations["v1_partner_marketing_advertisements_list"];
+        put?: never;
+        /**
+         * Create an advertisement for my organization
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.manage in the selected organization, plus marketing.own_ad.submit for intent=submit. Creates the advertisement in one of the organization's non-archived campaigns with draft revision 1; intent=submit also sends it for review. Use your own uploaded assets and marketplace offers. Marketing is separate from Offers: an advertisement is never claimed or redeemed and never counts as a claim or redemption. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). Revisions: content (creative, destination, slots) is edited only in a draft. Submitting freezes it with a content digest; frozen content never changes, and editing a declined or live revision starts a new draft. The approved current_revision keeps serving while its replacement is edited or reviewed (Q21, 2026-09-29); approving the replacement swaps it in atomically. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction. Serving (next increment) needs every gate at once: verified partner, an active advertising grant, an approved current revision, the advertisement active and not suspended, its campaign active and inside its schedule, active targeted slots and a destination visible to the viewer. Approval never bypasses the other gates.
+         */
+        post: operations["v1_partner_marketing_advertisements_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/advertisements/{ad_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read one of my organization's advertisements
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.view in the selected organization. Includes review feedback through decisions and any suspension reason. Another organization's advertisement returns 404.
+         */
+        get: operations["v1_partner_marketing_advertisements_retrieve"];
+        /**
+         * Edit one of my organization's advertisements
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.manage in the selected organization, plus marketing.own_ad.submit for intent=submit. Replaces the name and working content (PUT): edits the draft, or starts a new draft from a declined or live revision. Editing while a revision is in review returns 409 (retract first). An unchanged save changes nothing; intent=submit with nothing to submit returns 409. Never lifts a pause or suspension. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). Revisions: content (creative, destination, slots) is edited only in a draft. Submitting freezes it with a content digest; frozen content never changes, and editing a declined or live revision starts a new draft. The approved current_revision keeps serving while its replacement is edited or reviewed (Q21, 2026-09-29); approving the replacement swaps it in atomically. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        put: operations["v1_partner_marketing_advertisements_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/advertisements/{ad_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Archive an advertisement
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.manage in the selected organization. active or paused -> archived (final); a revision awaiting review is retracted first. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_partner_marketing_advertisements_archive_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/advertisements/{ad_id}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List one of my advertisement's review decisions
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.view in the selected organization. Review feedback and suspensions, with reasons. Newest first. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_partner_marketing_advertisements_decisions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/advertisements/{ad_id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pause an advertisement
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.manage in the selected organization. active -> paused. Stops serving without touching its review state. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_partner_marketing_advertisements_pause_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/advertisements/{ad_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resume an advertisement
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.manage in the selected organization. paused -> active. Never lifts an administrator suspension or a campaign pause. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_partner_marketing_advertisements_resume_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/advertisements/{ad_id}/retract": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retract a revision from review
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.submit in the selected organization. Withdraws the revision awaiting review (in_review -> retracted). It stays frozen as history; the next save starts a new draft. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_partner_marketing_advertisements_retract_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/advertisements/{ad_id}/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List one of my advertisement's revisions
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.view in the selected organization. Newest first. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_partner_marketing_advertisements_revisions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/advertisements/{ad_id}/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read one of my advertisement's delivery report
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.view in the selected organization. Another organization's advertisement returns 404. Delivery counts from daily rollups (Q20, 2026-09-30): served is recorded when the server returns the advertisement, rendered by the client's on-screen beacon, clicks when followed; each counts once per advertisement, slot, viewer and local day. Only aggregates are returned, never viewers. Rollups refresh about every 5 minutes; raw events are kept 90 days, rollups indefinitely. Conversions are not available (null). Query date_from/date_to (YYYY-MM-DD, local days, inclusive) default to the last 30 days; the range may span at most 366 days and date_to must not precede date_from (422).
+         */
+        get: operations["v1_partner_marketing_advertisements_stats_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/advertisements/{ad_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit an advertisement for review
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.submit in the selected organization. Sends the working draft for Aayulogic review (draft -> in_review), freezing it. The organization needs an active advertising grant (409 ADVERTISING_NOT_ELIGIBLE otherwise), and the content is revalidated against the current slots, destination and assets (422 if it no longer fits). Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_partner_marketing_advertisements_submit_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/advertising-grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my organization's advertising grants
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_campaign.view in the selected organization. Shows whether the organization may submit advertisements, without administrator identities or notes. Interim commercial gate (Q12, 2026-09-29): an organization needs an active grant to submit advertisements for review, and serving will require one. A grant records the administrator's basis (paid, complimentary or waived) and a reference; it is not proof of payment and never approves or activates an advertisement. Grants are never edited or deleted; revoke and grant anew. Filter by active and (administrators) organization_id. Newest valid_from first unless ordering is given. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_partner_marketing_advertising_grants_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my organization's campaigns
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_campaign.view in the selected organization. Filter by status, objective and (administrators) partner_id; search matches the name. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         */
+        get: operations["v1_partner_marketing_campaigns_list"];
+        put?: never;
+        /**
+         * Create a campaign for my organization
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_campaign.manage in the selected organization. The organization must be a partner (404 otherwise). Creates an active campaign. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). Campaigns contain advertisements. Flights are schedule windows per channel (Q25 proposal): a channel without flights runs across the campaign window, a channel with flights only inside one of them. An ended window hides the campaign's advertisements; it never archives them. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_partner_marketing_campaigns_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/campaigns/{campaign_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read one of my organization's campaigns
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_campaign.view in the selected organization. Another organization's campaign returns 404.
+         */
+        get: operations["v1_partner_marketing_campaigns_retrieve"];
+        /**
+         * Edit one of my organization's campaigns
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_campaign.manage in the selected organization. Replaces the name, objective, description, window and flights (PUT; omitted optional fields and flights are reset). Never changes the status; an archived campaign cannot be edited. An unchanged body returns the campaign without a new version. Campaigns contain advertisements. Flights are schedule windows per channel (Q25 proposal): a channel without flights runs across the campaign window, a channel with flights only inside one of them. An ended window hides the campaign's advertisements; it never archives them. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        put: operations["v1_partner_marketing_campaigns_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/campaigns/{campaign_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Archive a campaign
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_campaign.manage in the selected organization. active or paused -> archived (final). Archives every advertisement of the campaign too, retracting any revision awaiting review. No new advertisements can be added. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_partner_marketing_campaigns_archive_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/campaigns/{campaign_id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pause a campaign
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_campaign.manage in the selected organization. active -> paused. Hides every advertisement of the campaign; their own availability, suspension and review states are unchanged. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_partner_marketing_campaigns_pause_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/campaigns/{campaign_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resume a campaign
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_campaign.manage in the selected organization. paused -> active. Resuming never revives an advertisement that is paused, suspended or not approved. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         */
+        post: operations["v1_partner_marketing_campaigns_resume_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/creative-assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my organization's creative assets
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.view in the selected organization. Search matches the original file name. Newest first. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_partner_marketing_creative_assets_list"];
+        put?: never;
+        /**
+         * Upload a creative asset
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.manage in the selected organization. Send multipart/form-data with file. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). Stored privately (Q22): never reachable through the public media location, readable only by the owner's members with marketing.own_ad.view and administrators with marketing.ad.view. The type is detected from the content, not the file name. Use the returned id as creative.asset_id. Assets are immutable.
+         */
+        post: operations["v1_partner_marketing_creative_assets_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/creative-assets/{asset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read one of my creative asset's details
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.view in the selected organization. Another organization's asset returns 404.
+         */
+        get: operations["v1_partner_marketing_creative_assets_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/creative-assets/{asset_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download one of my creative assets
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.view in the selected organization. Streams the stored image inline for previews, with Cache-Control: no-store and nosniff.
+         */
+        get: operations["v1_partner_marketing_creative_assets_content_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/partner/marketing/placement-slots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List placement slots I can target
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.view in the selected organization. Active slots only, with the creative types and image sizes each accepts; use their keys as slot_keys. Filter by is_active and surface; search matches the name. Ordered by surface then key unless ordering is given. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_partner_marketing_placement_slots_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2516,6 +3596,369 @@ export interface components {
          */
         ActorTypeEnum: "marketplace_staff" | "employee";
         /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        AdCreate: {
+            /** @description Required internal label, 1-150 characters. */
+            name: string;
+            /**
+             * @description Required: image_banner, text_card.
+             *
+             *     * `image_banner` - image_banner
+             *     * `text_card` - text_card
+             */
+            creative_type: components["schemas"]["CreativeTypeEnum"];
+            /** @description Typed creative payload. image_banner: asset_id (required, one of the owner's uploaded assets), alt_text (required, 1-150), headline (optional, up to 80), cta_label (optional, up to 30); the image must match each slot's aspect ratio (within 2%) and be at least its size. text_card: headline (required, 1-80), body (optional, up to 200), cta_label (optional, up to 30). Stored with schema_version. */
+            creative: {
+                [key: string]: unknown;
+            };
+            /**
+             * @description Required: ad_page, external_url, offer.
+             *
+             *     * `ad_page` - ad_page
+             *     * `external_url` - external_url
+             *     * `offer` - offer
+             */
+            destination_type: components["schemas"]["DestinationTypeEnum"];
+            /** @description Typed destination payload. external_url: url (required https URL up to 2000 characters, no credentials). offer: offer_id (required, one of the owner's marketplace offers). ad_page: the advertisement's own page in the web app; title (required, 1-120), body (required plain text, 1-5000; line breaks are kept) and an optional onward action: url (https) or offer_id (the owner's offer), not both, with action_label (optional, up to 30). Stored with schema_version. */
+            destination: {
+                [key: string]: unknown;
+            };
+            /** @description Required 1-10 active placement slot keys the creative fits. */
+            slot_keys: string[];
+            /**
+             * @description save (default) keeps a draft; submit also sends it for review and needs the submit permission and an active advertising grant.
+             *
+             *     * `save` - Save the draft
+             *     * `submit` - Save and submit for review
+             * @default save
+             */
+            intent: components["schemas"]["AdIntentEnum"];
+            /**
+             * @description Optional audit note, up to 500 characters.
+             * @default
+             */
+            reason: string;
+            /**
+             * Format: uuid
+             * @description Required campaign of the owner; must not be archived.
+             */
+            campaign_id: string;
+        };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        AdDecision: {
+            /**
+             * Format: uuid
+             * @description Decision UUID.
+             */
+            id: string;
+            /**
+             * Format: uuid
+             * @description Revision reviewed; null for a suspension or reinstatement.
+             */
+            revision_id: string | null;
+            /** @description That revision's number. */
+            revision_number: number | null;
+            /**
+             * @description approved, changes_requested, rejected, suspended or reinstated.
+             *
+             *     * `approved` - Approved
+             *     * `changes_requested` - Changes requested
+             *     * `rejected` - Rejected
+             *     * `suspended` - Suspended by an administrator
+             *     * `reinstated` - Reinstated by an administrator
+             */
+            outcome: components["schemas"]["AdDecisionOutcomeEnum"];
+            /** @description Feedback shown to the owner; may be empty for an approval. */
+            reason: string;
+            /** @description Decider's public user UUID. */
+            decided_by: string;
+            /**
+             * Format: date-time
+             * @description Decision timestamp.
+             */
+            decided_at: string;
+        };
+        /**
+         * @description * `approved` - Approved
+         *     * `changes_requested` - Changes requested
+         *     * `rejected` - Rejected
+         *     * `suspended` - Suspended by an administrator
+         *     * `reinstated` - Reinstated by an administrator
+         * @enum {string}
+         */
+        AdDecisionOutcomeEnum: "approved" | "changes_requested" | "rejected" | "suspended" | "reinstated";
+        /** @enum {string} */
+        AdDisplayStatusEnum: "archived" | "suspended" | "paused" | "campaign_inactive" | "approved" | "in_review" | "changes_requested" | "rejected" | "draft";
+        /**
+         * @description * `save` - Save the draft
+         *     * `submit` - Save and submit for review
+         * @enum {string}
+         */
+        AdIntentEnum: "save" | "submit";
+        /**
+         * @description A Serializer that takes an additional `fields` argument that
+         *     controls which fields should be displayed.
+         */
+        AdLink: {
+            /**
+             * @description internal: navigate inside the web app; external: open the https URL (new tab, rel=noopener).
+             *
+             *     * `internal` - internal
+             *     * `external` - external
+             */
+            target: components["schemas"]["AdLinkTargetEnum"];
+            /** @description App path such as /marketplace/offers/{id} or /marketplace/ads/{id}?slot=&revision= (internal) or the reviewed https URL (external). */
+            url: string;
+        };
+        /**
+         * @description * `internal` - internal
+         *     * `external` - external
+         * @enum {string}
+         */
+        AdLinkTargetEnum: "internal" | "external";
+        /** @description An advertisement's own page, built from its approved current revision. */
+        AdPage: {
+            /**
+             * Format: uuid
+             * @description Advertisement UUID.
+             */
+            readonly id: string;
+            /**
+             * Format: uuid
+             * @description The approved revision shown.
+             */
+            readonly revision_id: string;
+            /** @description The advertiser's business name, shown with the Sponsored label. */
+            readonly sponsor: string;
+            /**
+             * @description The creative's headline; may be empty.
+             * @default
+             */
+            readonly headline: string;
+            /**
+             * @description Image description; empty for text cards.
+             * @default
+             */
+            readonly alt_text: string;
+            /** @description True when the image endpoint returns the creative's image. */
+            readonly has_image: boolean;
+            /** @description Page title. */
+            readonly title: string;
+            /** @description Plain text; render as text with line breaks kept, never as HTML. */
+            readonly body: string;
+            /** @description The onward action, or null when the page has none or its offer is not available to you. */
+            readonly action: components["schemas"]["AdPageAction"] | null;
+        };
+        /**
+         * @description A Serializer that takes an additional `fields` argument that
+         *     controls which fields should be displayed.
+         */
+        AdPageAction: {
+            /**
+             * @description internal: navigate inside the web app; external: open the https URL (new tab, rel=noopener).
+             *
+             *     * `internal` - internal
+             *     * `external` - external
+             */
+            target: components["schemas"]["AdLinkTargetEnum"];
+            /** @description App path such as /marketplace/offers/{id} or /marketplace/ads/{id}?slot=&revision= (internal) or the reviewed https URL (external). */
+            url: string;
+            /** @description Button label; may be empty (render a default such as View offer or Visit). */
+            label: string;
+        };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        AdRevision: {
+            /**
+             * Format: uuid
+             * @description Revision UUID.
+             */
+            id: string;
+            /** @description Revision number, from 1. */
+            number: number;
+            /**
+             * @description draft (editable), in_review, changes_requested, rejected, retracted or approved. Everything but a draft is frozen.
+             *
+             *     * `draft` - Draft
+             *     * `in_review` - Awaiting review
+             *     * `changes_requested` - Changes requested
+             *     * `rejected` - Rejected
+             *     * `retracted` - Retracted
+             *     * `approved` - Approved
+             */
+            state: components["schemas"]["AdRevisionStateEnum"];
+            /** @description Creative type: image_banner, text_card. */
+            creative_type: string;
+            /** @description Typed creative payload. image_banner: asset_id (required, one of the owner's uploaded assets), alt_text (required, 1-150), headline (optional, up to 80), cta_label (optional, up to 30); the image must match each slot's aspect ratio (within 2%) and be at least its size. text_card: headline (required, 1-80), body (optional, up to 200), cta_label (optional, up to 30). Stored with schema_version. */
+            creative: {
+                [key: string]: unknown;
+            };
+            /** @description Destination type: ad_page, external_url, offer. */
+            destination_type: string;
+            /** @description Typed destination payload. external_url: url (required https URL up to 2000 characters, no credentials). offer: offer_id (required, one of the owner's marketplace offers). ad_page: the advertisement's own page in the web app; title (required, 1-120), body (required plain text, 1-5000; line breaks are kept) and an optional onward action: url (https) or offer_id (the owner's offer), not both, with action_label (optional, up to 30). Stored with schema_version. */
+            destination: {
+                [key: string]: unknown;
+            };
+            /** @description Placement slots this revision targets. */
+            readonly slots: components["schemas"]["SlotRef"][];
+            /** @description SHA-256 of the frozen content; empty while a draft. */
+            content_digest: string;
+            /** @description Increments on every draft save; detects a changed draft. */
+            edit_count: number;
+            /**
+             * Format: date-time
+             * @description When the content froze; null while a draft.
+             */
+            frozen_at: string | null;
+            /**
+             * Format: date-time
+             * @description When it was sent for review; null if never.
+             */
+            submitted_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /**
+         * @description * `draft` - Draft
+         *     * `in_review` - Awaiting review
+         *     * `changes_requested` - Changes requested
+         *     * `rejected` - Rejected
+         *     * `retracted` - Retracted
+         *     * `approved` - Approved
+         * @enum {string}
+         */
+        AdRevisionStateEnum: "draft" | "in_review" | "changes_requested" | "rejected" | "retracted" | "approved";
+        /**
+         * @description A Serializer that takes an additional `fields` argument that
+         *     controls which fields should be displayed.
+         */
+        AdStats: {
+            /** Format: uuid */
+            advertisement_id: string;
+            /**
+             * Format: date
+             * @description First day covered.
+             */
+            date_from: string;
+            /**
+             * Format: date
+             * @description Last day covered, inclusive.
+             */
+            date_to: string;
+            /** @description Sums over the range. */
+            totals: components["schemas"]["DeliveryCounts"];
+            /** @description Days with any activity, oldest first; missing days are 0. */
+            daily: components["schemas"]["DailyCounts"][];
+            /** @description Sums per slot over the range. */
+            slots: components["schemas"]["SlotCounts"][];
+            /** @description Always null: conversions are not available until an attribution rule exists (Q20). */
+            readonly conversions: number | null;
+            /**
+             * Format: date-time
+             * @description When the newest included rollup was rebuilt; null when there is no activity. Rollups refresh about every 5 minutes.
+             */
+            refreshed_at: string | null;
+        };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        AdUpdate: {
+            /** @description Required internal label, 1-150 characters. */
+            name: string;
+            /**
+             * @description Required: image_banner, text_card.
+             *
+             *     * `image_banner` - image_banner
+             *     * `text_card` - text_card
+             */
+            creative_type: components["schemas"]["CreativeTypeEnum"];
+            /** @description Typed creative payload. image_banner: asset_id (required, one of the owner's uploaded assets), alt_text (required, 1-150), headline (optional, up to 80), cta_label (optional, up to 30); the image must match each slot's aspect ratio (within 2%) and be at least its size. text_card: headline (required, 1-80), body (optional, up to 200), cta_label (optional, up to 30). Stored with schema_version. */
+            creative: {
+                [key: string]: unknown;
+            };
+            /**
+             * @description Required: ad_page, external_url, offer.
+             *
+             *     * `ad_page` - ad_page
+             *     * `external_url` - external_url
+             *     * `offer` - offer
+             */
+            destination_type: components["schemas"]["DestinationTypeEnum"];
+            /** @description Typed destination payload. external_url: url (required https URL up to 2000 characters, no credentials). offer: offer_id (required, one of the owner's marketplace offers). ad_page: the advertisement's own page in the web app; title (required, 1-120), body (required plain text, 1-5000; line breaks are kept) and an optional onward action: url (https) or offer_id (the owner's offer), not both, with action_label (optional, up to 30). Stored with schema_version. */
+            destination: {
+                [key: string]: unknown;
+            };
+            /** @description Required 1-10 active placement slot keys the creative fits. */
+            slot_keys: string[];
+            /**
+             * @description save (default) keeps a draft; submit also sends it for review and needs the submit permission and an active advertising grant.
+             *
+             *     * `save` - Save the draft
+             *     * `submit` - Save and submit for review
+             * @default save
+             */
+            intent: components["schemas"]["AdIntentEnum"];
+            /**
+             * @description Optional audit note, up to 500 characters.
+             * @default
+             */
+            reason: string;
+            /** @description Required current version; stale versions return 409. */
+            expected_version: number;
+        };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        AdminAssetUpload: {
+            /**
+             * Format: uri
+             * @description Required PNG, JPEG or WebP image, at most 2 MiB and 4096 px per side; the type is detected from the content.
+             */
+            file: string;
+            /**
+             * Format: uuid
+             * @description Required verified partner the asset is uploaded for.
+             */
+            partner_id: string;
+        };
+        /** @description PUT semantics: omitted optional fields and flights are reset. */
+        AdminCampaignCreate: {
+            /** @description Required, 1-150 characters. */
+            name: string;
+            /**
+             * @description Required: awareness, traffic, engagement or conversion.
+             *
+             *     * `awareness` - Awareness
+             *     * `traffic` - Traffic
+             *     * `engagement` - Engagement
+             *     * `conversion` - Conversion
+             */
+            objective: components["schemas"]["CampaignObjectiveEnum"];
+            /**
+             * @description Optional, up to 2000 characters.
+             * @default
+             */
+            description: string;
+            /**
+             * Format: date-time
+             * @description Optional ISO 8601 start with timezone; null is unbounded.
+             */
+            starts_at?: string | null;
+            /**
+             * Format: date-time
+             * @description Optional end after starts_at; null is unbounded.
+             */
+            ends_at?: string | null;
+            /** @description Optional schedule windows, up to 50; replaces the stored list. */
+            flights?: components["schemas"]["FlightInput"][];
+            /**
+             * @description Optional audit note, up to 500 characters.
+             * @default
+             */
+            reason: string;
+            /**
+             * Format: uuid
+             * @description Required verified partner the campaign is created for.
+             */
+            partner_id: string;
+        };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
         AdminConfirmInput: {
             /** @description Required, 1-500 characters; audited. */
             reason: string;
@@ -2747,6 +4190,154 @@ export interface components {
             intent: components["schemas"]["AdminOfferIntentEnum"];
             /** @description Required current version; stale versions return 409. */
             expected_version: number;
+        };
+        /** @description Owner and administrator view of an advertisement and its revisions. */
+        Advertisement: {
+            /**
+             * Format: uuid
+             * @description Immutable advertisement UUID.
+             */
+            id: string;
+            /** @description The campaign it belongs to. */
+            campaign: components["schemas"]["CampaignRef"];
+            /** @description The owner. */
+            owner_organization: components["schemas"]["OrganizationRef"];
+            /** @description Internal label, 1-150 characters; not reviewed, never shown to viewers. */
+            name: string;
+            /** @description Workspace badge, the first that applies: archived, suspended, paused, campaign_inactive, approved, in_review, changes_requested, rejected, draft. approved means an approved revision exists; schedule, eligibility and destination checks still apply when serving. */
+            readonly display_status: components["schemas"]["AdDisplayStatusEnum"];
+            /**
+             * @description Owner control: active, paused or archived (terminal).
+             *
+             *     * `active` - Active
+             *     * `paused` - Paused
+             *     * `archived` - Archived
+             */
+            availability: components["schemas"]["MarketingOwnerStatusEnum"];
+            /** @description The approved revision that may be served; null until approved. */
+            current_revision: components["schemas"]["AdRevision"] | null;
+            /** @description The draft or review candidate; null when none. The current revision keeps serving while this one is reviewed. */
+            working_revision: components["schemas"]["AdRevision"] | null;
+            /** @description True while an administrator suspension hides it. */
+            readonly suspended: boolean;
+            /**
+             * Format: date-time
+             * @description When it was suspended; null when not suspended.
+             */
+            suspended_at: string | null;
+            /** @description Administrator's reason; empty when not suspended. */
+            suspension_reason: string;
+            /**
+             * Format: date-time
+             * @description First approval time; null if never approved.
+             */
+            first_approved_at: string | null;
+            /**
+             * @description partner_portal or admin_on_behalf.
+             *
+             *     * `partner_portal` - Partner portal
+             *     * `admin_on_behalf` - Administrator on behalf
+             */
+            posted_via: components["schemas"]["MarketingPostedViaEnum"];
+            /**
+             * Format: date-time
+             * @description When it was archived; null otherwise.
+             */
+            archived_at: string | null;
+            /** @description Current revision; send as expected_version on every write. */
+            version: number;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /** @description The partner a campaign belongs to. */
+        Advertiser: {
+            /**
+             * Format: uuid
+             * @description Partner UUID.
+             */
+            id: string;
+            /**
+             * Format: uuid
+             * @description Partner organization UUID.
+             */
+            organization_id: string;
+            /** @description Partner business name. */
+            business_name: string;
+            /**
+             * @description Verification status; only verified partners can advertise.
+             *
+             *     * `pending` - Pending
+             *     * `verified` - Verified
+             *     * `rejected` - Rejected
+             */
+            status: components["schemas"]["StatusEnum"];
+        };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        AdvertisingGrant: {
+            /**
+             * Format: uuid
+             * @description Grant UUID.
+             */
+            id: string;
+            /** @description The organization granted. */
+            organization: components["schemas"]["OrganizationRef"];
+            /**
+             * @description paid, complimentary or waived.
+             *
+             *     * `paid` - Paid
+             *     * `complimentary` - Complimentary
+             *     * `waived` - Waived
+             */
+            basis: components["schemas"]["AdvertisingGrantBasisEnum"];
+            /** @description Agreement, invoice or approval reference; may be empty. */
+            reference: string;
+            /** @description Administrator's note; may be empty. */
+            note: string;
+            /**
+             * Format: date-time
+             * @description Eligibility starts.
+             */
+            valid_from: string;
+            /**
+             * Format: date-time
+             * @description Eligibility ends; null is open-ended.
+             */
+            valid_until: string | null;
+            /** @description True when not revoked and now is inside the window. */
+            readonly active: boolean;
+            /**
+             * Format: date-time
+             * @description When it was granted.
+             */
+            granted_at: string;
+            /** @description Granting administrator's UUID. */
+            granted_by: string;
+            /**
+             * Format: date-time
+             * @description When it was revoked; null if not.
+             */
+            revoked_at: string | null;
+            /** @description Revoking administrator's UUID; null if not. */
+            revoked_by: string | null;
+            /** @description Why it was revoked; empty if not. */
+            revocation_reason: string;
+        };
+        /**
+         * @description * `paid` - Paid
+         *     * `complimentary` - Complimentary
+         *     * `waived` - Waived
+         * @enum {string}
+         */
+        AdvertisingGrantBasisEnum: "paid" | "complimentary" | "waived";
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        AssetUpload: {
+            /**
+             * Format: uri
+             * @description Required PNG, JPEG or WebP image, at most 2 MiB and 4096 px per side; the type is detected from the content.
+             */
+            file: string;
         };
         AssignRoleRequest: {
             /** Format: uuid */
@@ -3164,6 +4755,175 @@ export interface components {
             /** @description Required, 1-500 characters; audited. */
             reason: string;
         };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        Campaign: {
+            /**
+             * Format: uuid
+             * @description Immutable campaign UUID.
+             */
+            id: string;
+            /** @description The organization that owns the campaign. */
+            owner_organization: components["schemas"]["OrganizationRef"];
+            /**
+             * @description Capacity the owner advertises in: partner.
+             *
+             *     * `partner` - Partner
+             */
+            owner_capacity: components["schemas"]["OwnerCapacityEnum"];
+            /** @description The owner's Partner capacity. */
+            partner: components["schemas"]["Advertiser"] | null;
+            /** @description Campaign name, 1-150 characters. */
+            name: string;
+            /**
+             * @description awareness, traffic, engagement or conversion; descriptive only.
+             *
+             *     * `awareness` - Awareness
+             *     * `traffic` - Traffic
+             *     * `engagement` - Engagement
+             *     * `conversion` - Conversion
+             */
+            objective: components["schemas"]["CampaignObjectiveEnum"];
+            /** @description Optional notes; may be empty. */
+            description: string;
+            /**
+             * Format: date-time
+             * @description Campaign window start; null is unbounded.
+             */
+            starts_at: string | null;
+            /**
+             * Format: date-time
+             * @description Campaign window end; null is unbounded. An ended window hides the campaign's advertisements; it never archives them.
+             */
+            ends_at: string | null;
+            /**
+             * @description Owner container control: active, paused (hides every advertisement) or archived (terminal).
+             *
+             *     * `active` - Active
+             *     * `paused` - Paused
+             *     * `archived` - Archived
+             */
+            status: components["schemas"]["MarketingOwnerStatusEnum"];
+            /** @description Schedule windows per channel. A channel without flights runs across the campaign window. */
+            flights: components["schemas"]["Flight"][];
+            /**
+             * @description partner_portal or admin_on_behalf.
+             *
+             *     * `partner_portal` - Partner portal
+             *     * `admin_on_behalf` - Administrator on behalf
+             */
+            posted_via: components["schemas"]["MarketingPostedViaEnum"];
+            /**
+             * Format: date-time
+             * @description When the campaign was archived; null otherwise.
+             */
+            archived_at: string | null;
+            /** @description Current revision; send as expected_version on every write. */
+            version: number;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /** @description PUT semantics: omitted optional fields and flights are reset. */
+        CampaignInput: {
+            /** @description Required, 1-150 characters. */
+            name: string;
+            /**
+             * @description Required: awareness, traffic, engagement or conversion.
+             *
+             *     * `awareness` - Awareness
+             *     * `traffic` - Traffic
+             *     * `engagement` - Engagement
+             *     * `conversion` - Conversion
+             */
+            objective: components["schemas"]["CampaignObjectiveEnum"];
+            /**
+             * @description Optional, up to 2000 characters.
+             * @default
+             */
+            description: string;
+            /**
+             * Format: date-time
+             * @description Optional ISO 8601 start with timezone; null is unbounded.
+             */
+            starts_at?: string | null;
+            /**
+             * Format: date-time
+             * @description Optional end after starts_at; null is unbounded.
+             */
+            ends_at?: string | null;
+            /** @description Optional schedule windows, up to 50; replaces the stored list. */
+            flights?: components["schemas"]["FlightInput"][];
+            /**
+             * @description Optional audit note, up to 500 characters.
+             * @default
+             */
+            reason: string;
+        };
+        /**
+         * @description * `awareness` - Awareness
+         *     * `traffic` - Traffic
+         *     * `engagement` - Engagement
+         *     * `conversion` - Conversion
+         * @enum {string}
+         */
+        CampaignObjectiveEnum: "awareness" | "traffic" | "engagement" | "conversion";
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        CampaignRef: {
+            /**
+             * Format: uuid
+             * @description Campaign UUID.
+             */
+            id: string;
+            /** @description Campaign name. */
+            name: string;
+            /**
+             * @description active, paused or archived.
+             *
+             *     * `active` - Active
+             *     * `paused` - Paused
+             *     * `archived` - Archived
+             */
+            status: components["schemas"]["MarketingOwnerStatusEnum"];
+        };
+        /** @description PUT semantics: omitted optional fields and flights are reset. */
+        CampaignUpdate: {
+            /** @description Required, 1-150 characters. */
+            name: string;
+            /**
+             * @description Required: awareness, traffic, engagement or conversion.
+             *
+             *     * `awareness` - Awareness
+             *     * `traffic` - Traffic
+             *     * `engagement` - Engagement
+             *     * `conversion` - Conversion
+             */
+            objective: components["schemas"]["CampaignObjectiveEnum"];
+            /**
+             * @description Optional, up to 2000 characters.
+             * @default
+             */
+            description: string;
+            /**
+             * Format: date-time
+             * @description Optional ISO 8601 start with timezone; null is unbounded.
+             */
+            starts_at?: string | null;
+            /**
+             * Format: date-time
+             * @description Optional end after starts_at; null is unbounded.
+             */
+            ends_at?: string | null;
+            /** @description Optional schedule windows, up to 50; replaces the stored list. */
+            flights?: components["schemas"]["FlightInput"][];
+            /**
+             * @description Optional audit note, up to 500 characters.
+             * @default
+             */
+            reason: string;
+            /** @description Required current version; stale versions return 409. */
+            expected_version: number;
+        };
         /** @description The category on an employee catalogue card. */
         CatalogueCategory: {
             /**
@@ -3534,6 +5294,39 @@ export interface components {
             /** Format: uuid */
             id: string;
         };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        CreativeAsset: {
+            /**
+             * Format: uuid
+             * @description Asset UUID; use as creative.asset_id.
+             */
+            id: string;
+            /**
+             * Format: uuid
+             * @description Owning organization UUID.
+             */
+            owner_organization_id: string;
+            /** @description Uploaded file name. */
+            original_name: string;
+            /** @description image/png, image/jpeg or image/webp, detected from the content. */
+            content_type: string;
+            /** @description File size in bytes. */
+            size_bytes: number;
+            /** @description Image width in pixels. */
+            width: number;
+            /** @description Image height in pixels. */
+            height: number;
+            /** @description SHA-256 of the file, hex. */
+            sha256: string;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description * `image_banner` - image_banner
+         *     * `text_card` - text_card
+         * @enum {string}
+         */
+        CreativeTypeEnum: "image_banner" | "text_card";
         /** @description A freshly issued voucher QR. Returned once; never stored in plain form. */
         Credential: {
             /**
@@ -3560,6 +5353,23 @@ export interface components {
             authentication_source: string;
             memberships: components["schemas"]["Membership"][];
         };
+        /**
+         * @description A Serializer that takes an additional `fields` argument that
+         *     controls which fields should be displayed.
+         */
+        DailyCounts: {
+            /** @description Viewer-days the server returned the advertisement. */
+            served: number;
+            /** @description Viewer-days the client reported it on screen. */
+            rendered: number;
+            /** @description Viewer-days with a click. */
+            clicks: number;
+            /**
+             * Format: date
+             * @description Local day (Asia/Kathmandu).
+             */
+            day: string;
+        };
         /** @description Verify/reject and assisted resubmission: reason required. */
         DecisionInput: {
             /** @description Required current version; stale versions return 409. */
@@ -3567,6 +5377,25 @@ export interface components {
             /** @description Required, 1-500 characters. For a rejection it is the feedback the applicant sees. */
             reason: string;
         };
+        /**
+         * @description A Serializer that takes an additional `fields` argument that
+         *     controls which fields should be displayed.
+         */
+        DeliveryCounts: {
+            /** @description Viewer-days the server returned the advertisement. */
+            served: number;
+            /** @description Viewer-days the client reported it on screen. */
+            rendered: number;
+            /** @description Viewer-days with a click. */
+            clicks: number;
+        };
+        /**
+         * @description * `ad_page` - ad_page
+         *     * `external_url` - external_url
+         *     * `offer` - offer
+         * @enum {string}
+         */
+        DestinationTypeEnum: "ad_page" | "external_url" | "offer";
         /** @enum {string} */
         DisplayStatusEnum: "draft" | "in_review" | "changes_requested" | "rejected" | "retracted" | "scheduled" | "active" | "expired" | "paused" | "suspended" | "retired";
         EmployerCapacity: {
@@ -3685,6 +5514,56 @@ export interface components {
             /** @description True to feature the offer on the marketplace home. */
             is_featured: boolean;
         };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        Flight: {
+            /**
+             * Format: uuid
+             * @description Flight UUID.
+             */
+            id: string;
+            /**
+             * @description Channel the window applies to: placement.
+             *
+             *     * `placement` - Marketplace placements
+             */
+            channel: components["schemas"]["MarketingChannelEnum"];
+            /** @description Optional label; may be empty. */
+            name: string;
+            /**
+             * Format: date-time
+             * @description Window start (inclusive).
+             */
+            starts_at: string;
+            /**
+             * Format: date-time
+             * @description Window end (exclusive); null runs until the campaign ends.
+             */
+            ends_at: string | null;
+        };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        FlightInput: {
+            /**
+             * @description Required channel: placement.
+             *
+             *     * `placement` - Marketplace placements
+             */
+            channel: components["schemas"]["MarketingChannelEnum"];
+            /**
+             * @description Optional label, up to 100 characters.
+             * @default
+             */
+            name: string;
+            /**
+             * Format: date-time
+             * @description Required ISO 8601 start with timezone; not before the campaign start.
+             */
+            starts_at: string;
+            /**
+             * Format: date-time
+             * @description Optional end after starts_at, not after the campaign end; required when the campaign has an end.
+             */
+            ends_at?: string | null;
+        };
         /**
          * @description * `claim_as_use` - The claim is the use
          *     * `voucher_confirmation` - Voucher confirmed at use
@@ -3703,6 +5582,42 @@ export interface components {
             /** Format: date-time */
             granted_at: string;
             granted_by: string | null;
+        };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        GrantInput: {
+            /**
+             * Format: uuid
+             * @description Required organization to grant advertising to.
+             */
+            organization_id: string;
+            /**
+             * @description Required: paid, complimentary or waived.
+             *
+             *     * `paid` - Paid
+             *     * `complimentary` - Complimentary
+             *     * `waived` - Waived
+             */
+            basis: components["schemas"]["AdvertisingGrantBasisEnum"];
+            /**
+             * @description Optional agreement, invoice or approval reference, up to 200.
+             * @default
+             */
+            reference: string;
+            /**
+             * Format: date-time
+             * @description Required ISO 8601 start with timezone; may be in the past.
+             */
+            valid_from: string;
+            /**
+             * Format: date-time
+             * @description Optional future end after valid_from; null is open-ended.
+             */
+            valid_until?: string | null;
+            /**
+             * @description Optional note stored on the grant, up to 500 characters.
+             * @default
+             */
+            reason: string;
         };
         /**
          * @description * `self_service` - Self-service
@@ -3737,6 +5652,24 @@ export interface components {
              */
             up_to_id: string;
         };
+        /**
+         * @description * `placement` - Marketplace placements
+         * @enum {string}
+         */
+        MarketingChannelEnum: "placement";
+        /**
+         * @description * `active` - Active
+         *     * `paused` - Paused
+         *     * `archived` - Archived
+         * @enum {string}
+         */
+        MarketingOwnerStatusEnum: "active" | "paused" | "archived";
+        /**
+         * @description * `partner_portal` - Partner portal
+         *     * `admin_on_behalf` - Administrator on behalf
+         * @enum {string}
+         */
+        MarketingPostedViaEnum: "partner_portal" | "admin_on_behalf";
         /** @description Employee catalogue card. Never carries promo codes, links or instructions. */
         MarketplaceOffer: {
             /**
@@ -3917,6 +5850,18 @@ export interface components {
              */
             read_at: string | null;
         };
+        /** @description Your notification choices. In-app notifications are always on. */
+        NotificationPreference: {
+            /** @description Whether notification emails are sent to your account email. */
+            email_enabled: boolean;
+            /**
+             * Format: email
+             * @description The address notification emails go to (your account email).
+             */
+            email: string;
+            /** @description Always true: in-app notifications cannot be turned off. */
+            readonly in_app_enabled: boolean;
+        };
         /** @description Owner and administrator view of an offer and its live and working versions. */
         Offer: {
             /**
@@ -3942,7 +5887,7 @@ export interface components {
              *     * `employer_portal` - Employer portal
              *     * `admin_on_behalf` - Administrator on behalf
              */
-            posted_via: components["schemas"]["PostedViaEnum"];
+            posted_via: components["schemas"]["OfferPostedViaEnum"];
             /**
              * @description Owner control: enabled, paused or retired (final).
              *
@@ -4225,6 +6170,13 @@ export interface components {
             source: components["schemas"]["SourceEnum"];
         };
         /**
+         * @description * `partner_portal` - Partner portal
+         *     * `employer_portal` - Employer portal
+         *     * `admin_on_behalf` - Administrator on behalf
+         * @enum {string}
+         */
+        OfferPostedViaEnum: "partner_portal" | "employer_portal" | "admin_on_behalf";
+        /**
          * @description A Serializer that takes an additional `fields` argument that
          *     controls which fields should be displayed.
          */
@@ -4473,7 +6425,7 @@ export interface components {
             /** @description Page ordered by name then public UUID. */
             results: components["schemas"]["Organization"][];
         };
-        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        /** @description Shared reference to an organization inside other apps' payloads. */
         OrganizationRef: {
             /**
              * Format: uuid
@@ -4695,6 +6647,41 @@ export interface components {
              */
             revoked_at: string | null;
         };
+        /**
+         * @description * `partner` - Partner
+         * @enum {string}
+         */
+        OwnerCapacityEnum: "partner";
+        PaginatedAdDecisionList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["AdDecision"][];
+        };
+        PaginatedAdRevisionList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["AdRevision"][];
+        };
         PaginatedAdminOfferReportList: {
             /** @example 123 */
             count: number;
@@ -4709,6 +6696,36 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["AdminOfferReport"][];
+        };
+        PaginatedAdvertisementList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["Advertisement"][];
+        };
+        PaginatedAdvertisingGrantList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["AdvertisingGrant"][];
         };
         PaginatedBenefitReportRowList: {
             /** @example 123 */
@@ -4739,6 +6756,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Block"][];
+        };
+        PaginatedCampaignList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["Campaign"][];
         };
         PaginatedClaimList: {
             /** @example 123 */
@@ -4784,6 +6816,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["CompanyBenefitListItem"][];
+        };
+        PaginatedCreativeAssetList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["CreativeAsset"][];
         };
         PaginatedEmployerReportRowList: {
             /** @example 123 */
@@ -5009,6 +7056,36 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["PartnerRedemptionListItem"][];
+        };
+        PaginatedPlacementSlotList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["PlacementSlot"][];
+        };
+        PaginatedPortalAdvertisingGrantList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["PortalAdvertisingGrant"][];
         };
         PaginatedRedemptionList: {
             /** @example 123 */
@@ -5402,6 +7479,11 @@ export interface components {
             valid: boolean;
             message?: string;
         };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        PatchedNotificationPreferenceInput: {
+            /** @description false stops notification emails; true turns them back on and retires every unsubscribe link sent before. */
+            email_enabled?: boolean;
+        };
         Permission: {
             code: string;
             display_name: string;
@@ -5415,6 +7497,100 @@ export interface components {
             code: string;
             /** @default false */
             delegable: boolean;
+        };
+        /**
+         * @description A Serializer that takes an additional `fields` argument that
+         *     controls which fields should be displayed.
+         */
+        Placement: {
+            /** @description The slot being filled. */
+            slot: components["schemas"]["ServedPlacementSlot"];
+            /** @description Up to max_ads advertisements in display order; empty when none is eligible for you now. */
+            ads: components["schemas"]["ServedAd"][];
+        };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        PlacementSlot: {
+            /**
+             * Format: uuid
+             * @description Immutable slot UUID.
+             */
+            id: string;
+            /** @description Unique dotted key the frontend requests; never changes. */
+            key: string;
+            /** @description Display name, 1-100 characters. */
+            name: string;
+            /**
+             * @description app_home, marketplace_home, marketplace_category or marketplace_offer_list.
+             *
+             *     * `app_home` - Every portal's home page
+             *     * `marketplace_home` - Benefits & Marketplace home
+             *     * `marketplace_category` - Marketplace category page
+             *     * `marketplace_offer_list` - Marketplace offer list
+             */
+            surface: components["schemas"]["PlacementSurfaceEnum"];
+            /** @description Optional notes; may be empty. */
+            description: string;
+            /** @description Creative types accepted here: image_banner, text_card. */
+            allowed_creative_types: string[];
+            /** @description Image creatives need this aspect ratio and at least this width in pixels. */
+            width: number;
+            /** @description Image creatives need at least this height in pixels. */
+            height: number;
+            /** @description Most advertisements rendered at once, 1-20. */
+            max_ads: number;
+            /** @description How rendered advertisements are chosen among the eligible: random. */
+            rotation: string;
+            /** @description False once deactivated: new revisions cannot target it. */
+            is_active: boolean;
+            /** @description Current revision; send as expected_version on every write. */
+            version: number;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /**
+         * @description * `app_home` - Every portal's home page
+         *     * `marketplace_home` - Benefits & Marketplace home
+         *     * `marketplace_category` - Marketplace category page
+         *     * `marketplace_offer_list` - Marketplace offer list
+         * @enum {string}
+         */
+        PlacementSurfaceEnum: "app_home" | "marketplace_home" | "marketplace_category" | "marketplace_offer_list";
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        PortalAdvertisingGrant: {
+            /**
+             * Format: uuid
+             * @description Grant UUID.
+             */
+            id: string;
+            /**
+             * @description paid, complimentary or waived.
+             *
+             *     * `paid` - Paid
+             *     * `complimentary` - Complimentary
+             *     * `waived` - Waived
+             */
+            basis: components["schemas"]["AdvertisingGrantBasisEnum"];
+            /** @description Agreement, invoice or approval reference; may be empty. */
+            reference: string;
+            /**
+             * Format: date-time
+             * @description Eligibility starts.
+             */
+            valid_from: string;
+            /**
+             * Format: date-time
+             * @description Eligibility ends; null is open-ended.
+             */
+            valid_until: string | null;
+            /** @description True when not revoked and now is inside the window. */
+            readonly active: boolean;
+            /**
+             * Format: date-time
+             * @description When it was revoked; null if not.
+             */
+            revoked_at: string | null;
         };
         PortalMembership: {
             /**
@@ -5463,13 +7639,6 @@ export interface components {
          * @enum {string}
          */
         PortalOfferIntentEnum: "save" | "submit";
-        /**
-         * @description * `partner_portal` - Partner portal
-         *     * `employer_portal` - Employer portal
-         *     * `admin_on_behalf` - Administrator on behalf
-         * @enum {string}
-         */
-        PostedViaEnum: "partner_portal" | "employer_portal" | "admin_on_behalf";
         /**
          * @description A Serializer that takes an additional `fields` argument that
          *     controls which fields should be displayed.
@@ -5652,6 +7821,38 @@ export interface components {
              */
             reason: string;
         };
+        /** @description Body of a versioned state-change action with an optional audit note. */
+        RevisionDecision: {
+            /** @description Required current version; stale versions return 409. */
+            expected_version: number;
+            /**
+             * @description Optional audit note, up to 500 characters.
+             * @default
+             */
+            reason: string;
+            /**
+             * Format: uuid
+             * @description The revision under review you read; 409 AD_REVISION_CHANGED if another one is under review now.
+             */
+            revision_id: string;
+        };
+        /** @description Body of a versioned state-change action with an optional audit note. */
+        RevisionDecisionReason: {
+            /** @description Required current version; stale versions return 409. */
+            expected_version: number;
+            /** @description Required audited reason, 1-500 characters. */
+            reason: string;
+            /**
+             * Format: uuid
+             * @description The revision under review you read; 409 AD_REVISION_CHANGED if another one is under review now.
+             */
+            revision_id: string;
+        };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        RevokeGrant: {
+            /** @description Required audited reason, 1-500 characters. */
+            reason: string;
+        };
         Role: {
             /** Format: uuid */
             id: string;
@@ -5672,6 +7873,11 @@ export interface components {
         RoleVersionResponse: {
             version: number;
         };
+        /**
+         * @description * `random` - random
+         * @enum {string}
+         */
+        RotationEnum: "random";
         /** @description A validated scan: the benefit to apply and the proof to confirm with. */
         Scan: {
             /** @description Short-lived secret proving this scan. Send it to confirm use. Keep it in memory only; it cannot be shown again. */
@@ -5723,9 +7929,225 @@ export interface components {
              */
             period_start: string;
         };
+        /** @description One advertisement to render; built from the approved current revision. */
+        ServedAd: {
+            /**
+             * Format: uuid
+             * @description Advertisement UUID; send it to the image, rendered and click endpoints.
+             */
+            readonly id: string;
+            /**
+             * Format: uuid
+             * @description The approved revision rendered.
+             */
+            readonly revision_id: string;
+            /**
+             * @description image_banner (fetch the image) or text_card.
+             *
+             *     * `image_banner` - image_banner
+             *     * `text_card` - text_card
+             */
+            readonly creative_type: components["schemas"]["CreativeTypeEnum"];
+            /**
+             * @description Headline; may be empty for an image banner.
+             * @default
+             */
+            readonly headline: string;
+            /**
+             * @description Text card body; empty for other types.
+             * @default
+             */
+            readonly body: string;
+            /**
+             * @description Image description for assistive technology; empty for text cards.
+             * @default
+             */
+            readonly alt_text: string;
+            /**
+             * @description Call-to-action label; may be empty (render a default).
+             * @default
+             */
+            readonly cta_label: string;
+            /** @description True when the image endpoint returns this advertisement's image. */
+            readonly has_image: boolean;
+            /**
+             * @description internal: the click opens an app page; external: an https site (open in a new tab). The URL itself comes from the click endpoint.
+             *
+             *     * `internal` - internal
+             *     * `external` - external
+             */
+            readonly link_target: components["schemas"]["AdLinkTargetEnum"];
+            /**
+             * @description Where a click leads: external_url, offer, or ad_page (the advertisement's own page). Use it to pick a default call-to-action label.
+             *
+             *     * `ad_page` - ad_page
+             *     * `external_url` - external_url
+             *     * `offer` - offer
+             */
+            readonly destination_type: components["schemas"]["DestinationTypeEnum"];
+            /** @description The advertiser's business name, shown with the Sponsored label. */
+            readonly sponsor: string;
+        };
+        /** @description Which served advertisement the viewer is looking at: slot and revision. */
+        ServedAdRef: {
+            /** @description Required key of the placement slot the advertisement was served in, e.g. marketplace.home.top. */
+            slot: string;
+            /**
+             * Format: uuid
+             * @description Required revision_id of the advertisement as the placement returned it. When a newer revision was approved since, the request fails with AD_CREATIVE_CHANGED (409) instead of using the newer creative or destination; reload the placement.
+             */
+            revision: string;
+        };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        ServedPlacementSlot: {
+            /** @description Unique dotted key the frontend requests; never changes. */
+            key: string;
+            /**
+             * @description app_home, marketplace_home, marketplace_category or marketplace_offer_list.
+             *
+             *     * `app_home` - Every portal's home page
+             *     * `marketplace_home` - Benefits & Marketplace home
+             *     * `marketplace_category` - Marketplace category page
+             *     * `marketplace_offer_list` - Marketplace offer list
+             */
+            surface: components["schemas"]["PlacementSurfaceEnum"];
+            /** @description Image creatives need this aspect ratio and at least this width in pixels. */
+            width: number;
+            /** @description Image creatives need at least this height in pixels. */
+            height: number;
+            /** @description Most advertisements rendered at once, 1-20. */
+            max_ads: number;
+        };
         SetPasswordRequest: {
             password: string;
             confirm_password: string;
+        };
+        /**
+         * @description A Serializer that takes an additional `fields` argument that
+         *     controls which fields should be displayed.
+         */
+        SlotCounts: {
+            /** @description Viewer-days the server returned the advertisement. */
+            served: number;
+            /** @description Viewer-days the client reported it on screen. */
+            rendered: number;
+            /** @description Viewer-days with a click. */
+            clicks: number;
+            /** @description Placement slot key. */
+            slot_key: string;
+        };
+        /** @description PUT semantics: omitted optional fields are reset to their defaults. */
+        SlotInput: {
+            /** @description Required dotted lowercase key, e.g. marketplace.home.top; unique and unchangeable. */
+            key: string;
+            /** @description Required, 1-100 characters. */
+            name: string;
+            /**
+             * @description Required: app_home (every portal's home page), marketplace_home, marketplace_category or marketplace_offer_list.
+             *
+             *     * `app_home` - Every portal's home page
+             *     * `marketplace_home` - Benefits & Marketplace home
+             *     * `marketplace_category` - Marketplace category page
+             *     * `marketplace_offer_list` - Marketplace offer list
+             */
+            surface: components["schemas"]["PlacementSurfaceEnum"];
+            /**
+             * @description Optional, up to 500 characters.
+             * @default
+             */
+            description: string;
+            /** @description Required creative types accepted: image_banner, text_card */
+            allowed_creative_types: components["schemas"]["CreativeTypeEnum"][];
+            /** @description Required image width, 1-4096 px. */
+            width: number;
+            /** @description Required image height, 1-4096 px. */
+            height: number;
+            /**
+             * @description Optional capacity, 1-20 (default 1).
+             * @default 1
+             */
+            max_ads: number;
+            /**
+             * @description Optional rotation strategy: random (default).
+             *
+             *     * `random` - random
+             * @default random
+             */
+            rotation: components["schemas"]["RotationEnum"];
+            /**
+             * @description Optional audit note, up to 500 characters.
+             * @default
+             */
+            reason: string;
+        };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        SlotRef: {
+            /**
+             * Format: uuid
+             * @description Placement slot UUID.
+             */
+            id: string;
+            /** @description Dotted slot key, e.g. marketplace.home.top. */
+            key: string;
+            /** @description Display name. */
+            name: string;
+            /**
+             * @description Marketplace surface the slot is on.
+             *
+             *     * `app_home` - Every portal's home page
+             *     * `marketplace_home` - Benefits & Marketplace home
+             *     * `marketplace_category` - Marketplace category page
+             *     * `marketplace_offer_list` - Marketplace offer list
+             */
+            surface: components["schemas"]["PlacementSurfaceEnum"];
+            /** @description False once deactivated: new revisions cannot target it. */
+            is_active: boolean;
+        };
+        /** @description PUT semantics: omitted optional fields are reset to their defaults. */
+        SlotUpdate: {
+            /** @description Required dotted lowercase key, e.g. marketplace.home.top; unique and unchangeable. */
+            key: string;
+            /** @description Required, 1-100 characters. */
+            name: string;
+            /**
+             * @description Required: app_home (every portal's home page), marketplace_home, marketplace_category or marketplace_offer_list.
+             *
+             *     * `app_home` - Every portal's home page
+             *     * `marketplace_home` - Benefits & Marketplace home
+             *     * `marketplace_category` - Marketplace category page
+             *     * `marketplace_offer_list` - Marketplace offer list
+             */
+            surface: components["schemas"]["PlacementSurfaceEnum"];
+            /**
+             * @description Optional, up to 500 characters.
+             * @default
+             */
+            description: string;
+            /** @description Required creative types accepted: image_banner, text_card */
+            allowed_creative_types: components["schemas"]["CreativeTypeEnum"][];
+            /** @description Required image width, 1-4096 px. */
+            width: number;
+            /** @description Required image height, 1-4096 px. */
+            height: number;
+            /**
+             * @description Optional capacity, 1-20 (default 1).
+             * @default 1
+             */
+            max_ads: number;
+            /**
+             * @description Optional rotation strategy: random (default).
+             *
+             *     * `random` - random
+             * @default random
+             */
+            rotation: components["schemas"]["RotationEnum"];
+            /**
+             * @description Optional audit note, up to 500 characters.
+             * @default
+             */
+            reason: string;
+            /** @description Required current version; stale versions return 409. */
+            expected_version: number;
         };
         /**
          * @description * `partner_organization` - Partner organization
@@ -5777,6 +8199,27 @@ export interface components {
         UnreadCount: {
             /** @description Your unread inbox items. */
             unread: number;
+        };
+        /**
+         * @description A Serializer that takes an additional `fields` argument that
+         *     controls which fields should be displayed.
+         */
+        UnsubscribeStatus: {
+            /** @description Whether the link still works. It says nothing about the account. */
+            valid: boolean;
+        };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        UnsubscribeToken: {
+            /** @description The token from the email's unsubscribe link. */
+            token: string;
+        };
+        /**
+         * @description A Serializer that takes an additional `fields` argument that
+         *     controls which fields should be displayed.
+         */
+        Unsubscribed: {
+            /** @description Always true on 200: notification emails are off for the account. */
+            unsubscribed: boolean;
         };
         UpdateOrganization: {
             /** @description Required nonblank display name; surrounding whitespace is trimmed. */
@@ -6980,6 +9423,2286 @@ export interface operations {
                 };
             };
             /** @description Invalid, missing or unknown fields; the user is not an employee account (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertisements_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description active, paused or archived.
+                 *
+                 *     * `active` - Active
+                 *     * `paused` - Paused
+                 *     * `archived` - Archived
+                 */
+                availability?: "active" | "archived" | "paused";
+                /** @description Only this campaign's advertisements. */
+                campaign_id?: string;
+                /**
+                 * @description The display_status badge.
+                 *
+                 *     * `archived` - archived
+                 *     * `suspended` - suspended
+                 *     * `paused` - paused
+                 *     * `campaign_inactive` - campaign_inactive
+                 *     * `approved` - approved
+                 *     * `in_review` - in_review
+                 *     * `changes_requested` - changes_requested
+                 *     * `rejected` - rejected
+                 *     * `draft` - draft
+                 */
+                display_status?: "approved" | "archived" | "campaign_inactive" | "changes_requested" | "draft" | "in_review" | "paused" | "rejected" | "suspended";
+                /** @description true: only advertisements with a revision awaiting review (the review queue); false: only those without one. */
+                in_review?: boolean;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by name, submitted_at, first_approved_at, created_at, updated_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `name` - Name
+                 *     * `-name` - Name (descending)
+                 *     * `submitted_at` - Submitted at
+                 *     * `-submitted_at` - Submitted at (descending)
+                 *     * `first_approved_at` - First approved at
+                 *     * `-first_approved_at` - First approved at (descending)
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `updated_at` - Updated at
+                 *     * `-updated_at` - Updated at (descending)
+                 */
+                ordering?: ("-created_at" | "-first_approved_at" | "-name" | "-submitted_at" | "-updated_at" | "created_at" | "first_approved_at" | "name" | "submitted_at" | "updated_at")[];
+                /** @description Administrators: only this partner's advertisements. */
+                partner_id?: string;
+                /** @description Case-insensitive substring of the name. */
+                search?: string;
+                /** @description true: only suspended advertisements; false: only unsuspended. */
+                suspended?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAdvertisementList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertisements_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["AdCreate"];
+                "multipart/form-data": components["schemas"]["AdCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertisements_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertisements_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["AdUpdate"];
+                "multipart/form-data": components["schemas"]["AdUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertisements_approve_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevisionDecision"];
+                "application/x-www-form-urlencoded": components["schemas"]["RevisionDecision"];
+                "multipart/form-data": components["schemas"]["RevisionDecision"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertisements_decisions_list: {
+        parameters: {
+            query?: {
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAdDecisionList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertisements_reinstate_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersionReason"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersionReason"];
+                "multipart/form-data": components["schemas"]["ExpectedVersionReason"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertisements_reject_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevisionDecisionReason"];
+                "application/x-www-form-urlencoded": components["schemas"]["RevisionDecisionReason"];
+                "multipart/form-data": components["schemas"]["RevisionDecisionReason"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertisements_request_changes_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevisionDecisionReason"];
+                "application/x-www-form-urlencoded": components["schemas"]["RevisionDecisionReason"];
+                "multipart/form-data": components["schemas"]["RevisionDecisionReason"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertisements_retract_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertisements_revisions_list: {
+        parameters: {
+            query?: {
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAdRevisionList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertisements_stats_retrieve: {
+        parameters: {
+            query?: {
+                /** @description First local day. */
+                date_from?: string;
+                /** @description Last local day. */
+                date_to?: string;
+            };
+            header?: never;
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdStats"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertisements_submit_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertisements_suspend_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersionReason"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersionReason"];
+                "multipart/form-data": components["schemas"]["ExpectedVersionReason"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertising_grants_list: {
+        parameters: {
+            query?: {
+                /** @description true: only grants in force now; false: only revoked, expired or future grants. */
+                active?: boolean;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by valid_from, valid_until; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `valid_from` - Valid from
+                 *     * `-valid_from` - Valid from (descending)
+                 *     * `valid_until` - Valid until
+                 *     * `-valid_until` - Valid until (descending)
+                 */
+                ordering?: ("-valid_from" | "-valid_until" | "valid_from" | "valid_until")[];
+                /** @description Administrators: only this organization's grants. */
+                organization_id?: string;
+                /** @description A search term. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAdvertisingGrantList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertising_grants_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GrantInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["GrantInput"];
+                "multipart/form-data": components["schemas"]["GrantInput"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdvertisingGrant"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertising_grants_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                grant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdvertisingGrant"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_advertising_grants_revoke_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                grant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevokeGrant"];
+                "application/x-www-form-urlencoded": components["schemas"]["RevokeGrant"];
+                "multipart/form-data": components["schemas"]["RevokeGrant"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdvertisingGrant"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_campaigns_list: {
+        parameters: {
+            query?: {
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /**
+                 * @description awareness, traffic, engagement or conversion.
+                 *
+                 *     * `awareness` - Awareness
+                 *     * `traffic` - Traffic
+                 *     * `engagement` - Engagement
+                 *     * `conversion` - Conversion
+                 */
+                objective?: "awareness" | "conversion" | "engagement" | "traffic";
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by name, starts_at, created_at, updated_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `name` - Name
+                 *     * `-name` - Name (descending)
+                 *     * `starts_at` - Starts at
+                 *     * `-starts_at` - Starts at (descending)
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `updated_at` - Updated at
+                 *     * `-updated_at` - Updated at (descending)
+                 */
+                ordering?: ("-created_at" | "-name" | "-starts_at" | "-updated_at" | "created_at" | "name" | "starts_at" | "updated_at")[];
+                /** @description Administrators: only this partner's campaigns. */
+                partner_id?: string;
+                /** @description Case-insensitive substring of the name. */
+                search?: string;
+                /**
+                 * @description active, paused or archived.
+                 *
+                 *     * `active` - Active
+                 *     * `paused` - Paused
+                 *     * `archived` - Archived
+                 */
+                status?: "active" | "archived" | "paused";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedCampaignList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_campaigns_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminCampaignCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["AdminCampaignCreate"];
+                "multipart/form-data": components["schemas"]["AdminCampaignCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campaign"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_campaigns_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campaign"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_campaigns_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["CampaignUpdate"];
+                "multipart/form-data": components["schemas"]["CampaignUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campaign"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_creative_assets_list: {
+        parameters: {
+            query?: {
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /** @description Administrators: only this partner's uploads. */
+                partner_id?: string;
+                /** @description A search term. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedCreativeAssetList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_creative_assets_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["AdminAssetUpload"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreativeAsset"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_creative_assets_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreativeAsset"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_creative_assets_content_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
+                    "image/jpeg": string;
+                    "image/webp": string;
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_placement_slots_list: {
+        parameters: {
+            query?: {
+                is_active?: boolean;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by key, name; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `key` - Key
+                 *     * `-key` - Key (descending)
+                 *     * `name` - Name
+                 *     * `-name` - Name (descending)
+                 */
+                ordering?: ("-key" | "-name" | "key" | "name")[];
+                /** @description Case-insensitive substring of the name. */
+                search?: string;
+                /**
+                 * @description Only slots on this surface.
+                 *
+                 *     * `app_home` - Every portal's home page
+                 *     * `marketplace_home` - Benefits & Marketplace home
+                 *     * `marketplace_category` - Marketplace category page
+                 *     * `marketplace_offer_list` - Marketplace offer list
+                 */
+                surface?: "app_home" | "marketplace_category" | "marketplace_home" | "marketplace_offer_list";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPlacementSlotList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_placement_slots_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SlotInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["SlotInput"];
+                "multipart/form-data": components["schemas"]["SlotInput"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlacementSlot"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_placement_slots_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlacementSlot"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_placement_slots_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SlotUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["SlotUpdate"];
+                "multipart/form-data": components["schemas"]["SlotUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlacementSlot"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_placement_slots_deactivate_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersionReason"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersionReason"];
+                "multipart/form-data": components["schemas"]["ExpectedVersionReason"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlacementSlot"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_marketing_placement_slots_reactivate_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersionReason"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersionReason"];
+                "multipart/form-data": components["schemas"]["ExpectedVersionReason"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlacementSlot"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -12445,6 +17168,266 @@ export interface operations {
             };
         };
     };
+    v1_marketplace_advertisements_click_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServedAdRef"];
+                "application/x-www-form-urlencoded": components["schemas"]["ServedAdRef"];
+                "multipart/form-data": components["schemas"]["ServedAdRef"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdLink"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_marketplace_advertisements_image_retrieve: {
+        parameters: {
+            query: {
+                /** @description revision_id of the advertisement as the placement returned it. */
+                revision: string;
+                /** @description Key of the slot the advertisement was served in. */
+                slot: string;
+            };
+            header?: never;
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
+                    "image/jpeg": string;
+                    "image/webp": string;
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_marketplace_advertisements_page_retrieve: {
+        parameters: {
+            query: {
+                /** @description revision_id of the advertisement as the placement returned it. */
+                revision: string;
+                /** @description Key of the slot the advertisement was served in. */
+                slot: string;
+            };
+            header?: never;
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdPage"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_marketplace_advertisements_rendered_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServedAdRef"];
+                "application/x-www-form-urlencoded": components["schemas"]["ServedAdRef"];
+                "multipart/form-data": components["schemas"]["ServedAdRef"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     v1_marketplace_benefit_claims_list: {
         parameters: {
             query?: {
@@ -13169,6 +18152,45 @@ export interface operations {
             };
         };
     };
+    v1_marketplace_placements_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slot_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Placement"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     v1_marketplace_vouchers_list: {
         parameters: {
             query?: {
@@ -13338,6 +18360,77 @@ export interface operations {
             };
             /** @description Too many requests; retry after Retry-After seconds (RATE_LIMITED). */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_me_notification_preferences_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPreference"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_me_notification_preferences_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedNotificationPreferenceInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedNotificationPreferenceInput"];
+                "multipart/form-data": components["schemas"]["PatchedNotificationPreferenceInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPreference"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters (VALIDATION_ERROR). */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -13559,6 +18652,80 @@ export interface operations {
             };
         };
     };
+    v1_notifications_unsubscribe_retrieve: {
+        parameters: {
+            query: {
+                /** @description The token from the email's unsubscribe link. */
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnsubscribeStatus"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_notifications_unsubscribe_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnsubscribeToken"];
+                "application/x-www-form-urlencoded": components["schemas"]["UnsubscribeToken"];
+                "multipart/form-data": components["schemas"]["UnsubscribeToken"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Unsubscribed"];
+                };
+            };
+            /** @description The link is invalid, or no longer works because email was turned back on (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields or query parameters (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     v1_partner_analytics_offers_list: {
         parameters: {
             query?: {
@@ -13691,6 +18858,1916 @@ export interface operations {
                 };
             };
             /** @description Invalid query parameter: a malformed date or UUID, an unknown interval or ordering, start after end, a period over 366 days, or a missing or non-UUID X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_advertisements_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description active, paused or archived.
+                 *
+                 *     * `active` - Active
+                 *     * `paused` - Paused
+                 *     * `archived` - Archived
+                 */
+                availability?: "active" | "archived" | "paused";
+                /** @description Only this campaign's advertisements. */
+                campaign_id?: string;
+                /**
+                 * @description The display_status badge.
+                 *
+                 *     * `archived` - archived
+                 *     * `suspended` - suspended
+                 *     * `paused` - paused
+                 *     * `campaign_inactive` - campaign_inactive
+                 *     * `approved` - approved
+                 *     * `in_review` - in_review
+                 *     * `changes_requested` - changes_requested
+                 *     * `rejected` - rejected
+                 *     * `draft` - draft
+                 */
+                display_status?: "approved" | "archived" | "campaign_inactive" | "changes_requested" | "draft" | "in_review" | "paused" | "rejected" | "suspended";
+                /** @description true: only advertisements with a revision awaiting review (the review queue); false: only those without one. */
+                in_review?: boolean;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by name, submitted_at, first_approved_at, created_at, updated_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `name` - Name
+                 *     * `-name` - Name (descending)
+                 *     * `submitted_at` - Submitted at
+                 *     * `-submitted_at` - Submitted at (descending)
+                 *     * `first_approved_at` - First approved at
+                 *     * `-first_approved_at` - First approved at (descending)
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `updated_at` - Updated at
+                 *     * `-updated_at` - Updated at (descending)
+                 */
+                ordering?: ("-created_at" | "-first_approved_at" | "-name" | "-submitted_at" | "-updated_at" | "created_at" | "first_approved_at" | "name" | "submitted_at" | "updated_at")[];
+                /** @description Administrators: only this partner's advertisements. */
+                partner_id?: string;
+                /** @description Case-insensitive substring of the name. */
+                search?: string;
+                /** @description true: only suspended advertisements; false: only unsuspended. */
+                suspended?: boolean;
+            };
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAdvertisementList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_advertisements_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["AdCreate"];
+                "multipart/form-data": components["schemas"]["AdCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_advertisements_retrieve: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_advertisements_update: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["AdUpdate"];
+                "multipart/form-data": components["schemas"]["AdUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_advertisements_archive_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_advertisements_decisions_list: {
+        parameters: {
+            query?: {
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+            };
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAdDecisionList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_advertisements_pause_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_advertisements_resume_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_advertisements_retract_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_advertisements_revisions_list: {
+        parameters: {
+            query?: {
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+            };
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAdRevisionList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_advertisements_stats_retrieve: {
+        parameters: {
+            query?: {
+                /** @description First local day. */
+                date_from?: string;
+                /** @description Last local day. */
+                date_to?: string;
+            };
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdStats"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_advertisements_submit_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path: {
+                ad_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advertisement"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_advertising_grants_list: {
+        parameters: {
+            query?: {
+                /** @description true: only grants in force now; false: only revoked, expired or future grants. */
+                active?: boolean;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by valid_from, valid_until; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `valid_from` - Valid from
+                 *     * `-valid_from` - Valid from (descending)
+                 *     * `valid_until` - Valid until
+                 *     * `-valid_until` - Valid until (descending)
+                 */
+                ordering?: ("-valid_from" | "-valid_until" | "valid_from" | "valid_until")[];
+                /** @description Administrators: only this organization's grants. */
+                organization_id?: string;
+                /** @description A search term. */
+                search?: string;
+            };
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPortalAdvertisingGrantList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_campaigns_list: {
+        parameters: {
+            query?: {
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /**
+                 * @description awareness, traffic, engagement or conversion.
+                 *
+                 *     * `awareness` - Awareness
+                 *     * `traffic` - Traffic
+                 *     * `engagement` - Engagement
+                 *     * `conversion` - Conversion
+                 */
+                objective?: "awareness" | "conversion" | "engagement" | "traffic";
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by name, starts_at, created_at, updated_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `name` - Name
+                 *     * `-name` - Name (descending)
+                 *     * `starts_at` - Starts at
+                 *     * `-starts_at` - Starts at (descending)
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `updated_at` - Updated at
+                 *     * `-updated_at` - Updated at (descending)
+                 */
+                ordering?: ("-created_at" | "-name" | "-starts_at" | "-updated_at" | "created_at" | "name" | "starts_at" | "updated_at")[];
+                /** @description Administrators: only this partner's campaigns. */
+                partner_id?: string;
+                /** @description Case-insensitive substring of the name. */
+                search?: string;
+                /**
+                 * @description active, paused or archived.
+                 *
+                 *     * `active` - Active
+                 *     * `paused` - Paused
+                 *     * `archived` - Archived
+                 */
+                status?: "active" | "archived" | "paused";
+            };
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedCampaignList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_campaigns_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["CampaignInput"];
+                "multipart/form-data": components["schemas"]["CampaignInput"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campaign"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_campaigns_retrieve: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campaign"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_campaigns_update: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["CampaignUpdate"];
+                "multipart/form-data": components["schemas"]["CampaignUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campaign"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_campaigns_archive_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campaign"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_campaigns_pause_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campaign"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_campaigns_resume_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campaign"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_creative_assets_list: {
+        parameters: {
+            query?: {
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /** @description A search term. */
+                search?: string;
+            };
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedCreativeAssetList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_creative_assets_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["AssetUpload"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreativeAsset"];
+                };
+            };
+            /** @description Malformed JSON or multipart body (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_creative_assets_retrieve: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreativeAsset"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_creative_assets_content_retrieve: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
+                    "image/jpeg": string;
+                    "image/webp": string;
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_partner_marketing_placement_slots_list: {
+        parameters: {
+            query?: {
+                is_active?: boolean;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by key, name; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `key` - Key
+                 *     * `-key` - Key (descending)
+                 *     * `name` - Name
+                 *     * `-name` - Name (descending)
+                 */
+                ordering?: ("-key" | "-name" | "key" | "name")[];
+                /** @description Case-insensitive substring of the name. */
+                search?: string;
+                /**
+                 * @description Only slots on this surface.
+                 *
+                 *     * `app_home` - Every portal's home page
+                 *     * `marketplace_home` - Benefits & Marketplace home
+                 *     * `marketplace_category` - Marketplace category page
+                 *     * `marketplace_offer_list` - Marketplace offer list
+                 */
+                surface?: "app_home" | "marketplace_category" | "marketplace_home" | "marketplace_offer_list";
+            };
+            header: {
+                /** @description The partner organization you act for (its UUID). */
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPlacementSlotList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or content that breaks a rule: unknown creative/destination fields, an asset or offer that is not the owner's, a non-https URL, an unknown or inactive slot, an image that does not fit a slot, windows out of order or flights outside the campaign (VALIDATION_ERROR). */
             422: {
                 headers: {
                     [name: string]: unknown;

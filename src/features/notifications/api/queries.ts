@@ -31,6 +31,7 @@ export const notificationKeys = {
   list: (filters: NotificationFilters, page: Page) =>
     [...notificationKeys.lists(), filters, page] as const,
   latest: () => [...notificationKeys.lists(), "latest"] as const,
+  preferences: () => [...notificationKeys.all, "preferences"] as const,
 };
 
 /** How often the badge refreshes while the tab is visible (the API suggests about 30 s). */
@@ -53,17 +54,39 @@ export function useUnreadCount() {
 
 /** The newest items, unfiltered, for the bell panel. */
 export function useLatestNotifications({ enabled = true } = {}) {
+  return useQuery({ ...latestNotificationsQuery, enabled });
+}
+
+/** The newest items, fetched on demand (e.g. to pop up what just arrived). */
+export const latestNotificationsQuery = {
+  queryKey: notificationKeys.latest(),
+  queryFn: ({ signal }: { signal: AbortSignal }) =>
+    unwrap(
+      api.GET("/me/notifications", {
+        params: { query: { offset: 0, limit: LATEST_LIMIT } },
+        signal,
+      }),
+    ),
+  staleTime: 0,
+};
+
+export type NotificationPreferences = Schemas["NotificationPreference"];
+
+/** Whether notification emails reach the account email. In-app is always on. */
+export function useNotificationPreferences() {
   return useQuery({
-    queryKey: notificationKeys.latest(),
+    queryKey: notificationKeys.preferences(),
+    queryFn: ({ signal }) => unwrap(api.GET("/me/notification-preferences", { signal })),
+  });
+}
+
+/** Whether an email's unsubscribe link still works. Read-only: opening it changes nothing. */
+export function useUnsubscribeLink(token: string) {
+  return useQuery({
+    queryKey: [...notificationKeys.all, "unsubscribe-link", token] as const,
     queryFn: ({ signal }) =>
-      unwrap(
-        api.GET("/me/notifications", {
-          params: { query: { offset: 0, limit: LATEST_LIMIT } },
-          signal,
-        }),
-      ),
-    enabled,
-    staleTime: 0,
+      unwrap(api.GET("/notifications/unsubscribe", { params: { query: { token } }, signal })),
+    retry: false,
   });
 }
 

@@ -35,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/design-system/primitives/select";
+import { Input } from "@/design-system/primitives/input";
 import { Skeleton } from "@/design-system/primitives/skeleton";
 import { Textarea } from "@/design-system/primitives/textarea";
 import { errorMessage } from "@/shared/api";

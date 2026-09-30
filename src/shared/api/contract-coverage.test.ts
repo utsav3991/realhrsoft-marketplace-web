@@ -11,6 +11,10 @@ import { describe, expect, it } from "vitest";
 const NOT_CALLED: Readonly<Record<string, string>> = {
   "GET /marketplace/benefit-claims/{claim_id}":
     "Benefit uses have no detail view: history rows already carry every field of the use.",
+  "GET /admin/marketing/placement-slots/{slot_id}":
+    "The slot catalogue is small and its rows carry every field; edits start from the row.",
+  "GET /admin/marketing/advertising-grants/{grant_id}":
+    "Grant rows carry every field, including the revocation; there is no grant detail view.",
   "GET /me/notifications/{notification_id}":
     "Inbox rows already carry every field of an item, and opening one goes to its target.",
 };

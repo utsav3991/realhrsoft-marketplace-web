@@ -184,6 +184,42 @@ export const PartnerRedemptionPermission = {
   REDEMPTION_VIEW: "redemptions.partner_redemption.view",
 } as const;
 
+/**
+ * Global: Aayulogic administration of advertising (the Marketing module): campaigns and
+ * advertisements on a partner's behalf, the review queue, suspension, the placement slot
+ * catalogue and the advertising grants that make an organization eligible to advertise.
+ */
+export const MarketingAdminPermission = {
+  CAMPAIGN_VIEW: "marketing.campaign.view",
+  CAMPAIGN_MANAGE: "marketing.campaign.manage",
+  /** Advertisements, their revisions, decisions and creative assets (incl. the queue). */
+  AD_VIEW: "marketing.ad.view",
+  /** Creates, edits, submits and retracts on behalf, and uploads assets for a partner. */
+  AD_MANAGE: "marketing.ad.manage",
+  AD_REVIEW: "marketing.ad.review",
+  AD_SUSPEND: "marketing.ad.suspend",
+  SLOT_VIEW: "marketing.slot.view",
+  SLOT_MANAGE: "marketing.slot.manage",
+  GRANT_VIEW: "marketing.grant.view",
+  GRANT_MANAGE: "marketing.grant.manage",
+} as const;
+
+/**
+ * Organization: the selected partner's own campaigns (/partner/campaigns) and advertisements
+ * (/partner/advertisements). Viewing campaigns also shows the organization's advertising
+ * grants; viewing advertisements also lists creative assets and targetable slots.
+ */
+export const PartnerMarketingPermission = {
+  CAMPAIGN_VIEW: "marketing.own_campaign.view",
+  /** Creates, edits, pauses, resumes and archives campaigns. */
+  CAMPAIGN_MANAGE: "marketing.own_campaign.manage",
+  AD_VIEW: "marketing.own_ad.view",
+  /** Creates, edits, pauses, resumes and archives advertisements and uploads assets. */
+  AD_MANAGE: "marketing.own_ad.manage",
+  /** Sends revisions for review and retracts them. */
+  AD_SUBMIT: "marketing.own_ad.submit",
+} as const;
+
 type ValueOf<T> = T[keyof T];
 
 export type IdentityPermissionCode = ValueOf<typeof IdentityPermission>;
@@ -196,7 +232,8 @@ export type GlobalPermissionCode =
   | ValueOf<typeof ClaimAdminPermission>
   | ValueOf<typeof AnalyticsAdminPermission>
   | ValueOf<typeof BenefitAdminPermission>
-  | ValueOf<typeof RedemptionAdminPermission>;
+  | ValueOf<typeof RedemptionAdminPermission>
+  | ValueOf<typeof MarketingAdminPermission>;
 export type OrganizationPermissionCode =
   | ValueOf<typeof PartnerPermission>
   | ValueOf<typeof PartnerOfferPermission>
@@ -204,7 +241,8 @@ export type OrganizationPermissionCode =
   | ValueOf<typeof PartnerAnalyticsPermission>
   | ValueOf<typeof EmployerBenefitPermission>
   | ValueOf<typeof EmployerAnalyticsPermission>
-  | ValueOf<typeof PartnerRedemptionPermission>;
+  | ValueOf<typeof PartnerRedemptionPermission>
+  | ValueOf<typeof PartnerMarketingPermission>;
 export type PermissionCode = GlobalPermissionCode | OrganizationPermissionCode;
 
 /** Every administrative global code: holding any of them opens the admin console. */
@@ -218,4 +256,5 @@ export const GLOBAL_PERMISSIONS: readonly GlobalPermissionCode[] = [
   ...Object.values(AnalyticsAdminPermission),
   ...Object.values(BenefitAdminPermission),
   ...Object.values(RedemptionAdminPermission),
+  ...Object.values(MarketingAdminPermission),
 ];

@@ -3,12 +3,16 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { toast } from "sonner";
+
 import { makeQueryClient, type Schemas } from "@/shared/api";
 
 import { notificationHref } from "../targets";
 
 import { NotificationBell } from "./notification-bell";
 import { NotificationInbox } from "./notification-inbox";
+
+vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { success: vi.fn() }) }));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
@@ -56,6 +60,9 @@ function serve({ unread = 1 } = {}) {
   fetchMock.mockImplementation(async (request) => {
     const url = new URL(request.url);
     if (url.pathname.endsWith("/unread-count")) return json({ unread });
+    if (url.pathname.endsWith("/notification-preferences")) {
+      return json({ email_enabled: true, email: "ram@acme.example", in_app_enabled: true });
+    }
     if (url.pathname.endsWith("/read-all")) return json({ marked: 1 });
     if (url.pathname.endsWith("/read")) return json({ ...issued, read_at: "2026-10-02T12:05:00Z" });
     return json(page([issued, older]));
@@ -71,12 +78,19 @@ const posts = () => fetchMock.mock.calls.map(([r]) => r).filter((r) => r.method 
 beforeEach(() => vi.stubGlobal("fetch", fetchMock));
 afterEach(() => {
   fetchMock.mockReset();
+  vi.mocked(toast).mockClear();
   vi.unstubAllGlobals();
 });
 
 describe("notification targets", () => {
   it("links only allowlisted types with a valid UUID to an internal route", () => {
     expect(notificationHref(issued)).toBe(`/marketplace/vouchers/${VOUCHER_ID}`);
+    expect(notificationHref({ target_type: "partner_claim", target_id: VOUCHER_ID })).toBe(
+      `/partner/claims/${VOUCHER_ID}`,
+    );
+    expect(notificationHref({ target_type: "admin_redemption", target_id: VOUCHER_ID })).toBe(
+      `/admin/redemptions/${VOUCHER_ID}`,
+    );
     expect(notificationHref({ target_type: "unknown_kind", target_id: VOUCHER_ID })).toBeNull();
     expect(notificationHref({ target_type: "constructor", target_id: VOUCHER_ID })).toBeNull();
     expect(notificationHref({ target_type: "voucher", target_id: null })).toBeNull();
@@ -116,6 +130,29 @@ describe("Notification bell", () => {
     const request = posts()[0]!;
     expect(new URL(request.url).pathname).toBe("/api/v1/me/notifications/read-all");
     expect(await request.json()).toEqual({ up_to_id: NEWEST_ID });
+  });
+
+  it("pops up items that arrive while the app is open, not ones already unread", async () => {
+    serve({ unread: 1 });
+    const client = makeQueryClient();
+    render(
+      <QueryClientProvider client={client}>
+        <NotificationBell inboxHref="/marketplace/notifications" />
+      </QueryClientProvider>,
+    );
+    await screen.findByRole("button", { name: "Notifications, 1 unread" });
+    expect(toast).not.toHaveBeenCalled();
+
+    serve({ unread: 2 });
+    await client.invalidateQueries({ queryKey: ["notifications", "unread-count"] });
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        issued.title,
+        expect.objectContaining({ description: issued.body }),
+      ),
+    );
+    // One arrived, so one pop-up, even though the latest page holds more.
+    expect(toast).toHaveBeenCalledTimes(1);
   });
 
   it("opening a linked item marks it read", async () => {

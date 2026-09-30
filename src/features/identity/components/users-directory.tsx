@@ -72,10 +72,6 @@ export function UsersDirectory() {
     set(changes);
   }
 
-  function updateUrl(changes: Record<string, string | undefined>) {
-    set(changes);
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">

@@ -13,7 +13,13 @@ import {
 
 import { offerKeys } from "../api/queries";
 import { EMPTY_BENEFIT_VALUE } from "../schemas/benefit-value";
-import { EMPTY_OFFER, offerBody, offerSchema, type OfferValues } from "../schemas/offer";
+import {
+  EMPTY_OFFER,
+  generatePromoCode,
+  offerBody,
+  offerSchema,
+  type OfferValues,
+} from "../schemas/offer";
 import { OfferRecord } from "./offer-record";
 import { OwnOffer } from "./own-offers";
 
@@ -245,6 +251,7 @@ describe("offer schema", () => {
   it("requires the fields the presentation method uses", () => {
     expect(messages(valid)).toEqual([]);
     expect(messages({ ...valid, promoCode: "no spaces" })).toEqual(["promoCode"]);
+    expect(messages({ ...valid, promoCode: "hrsoft20" })).toEqual(["promoCode"]);
     expect(messages({ ...valid, presentationMethod: "booking_link" })).toEqual(["redemptionUrl"]);
     expect(
       messages({ ...valid, presentationMethod: "booking_link", redemptionUrl: "http://x.test" }),
@@ -257,6 +264,14 @@ describe("offer schema", () => {
       "redemptionInstructions",
     ]);
     expect(messages({ ...valid, presentationMethod: "show_employee_id" })).toEqual([]);
+  });
+
+  it("generates valid XXXX-XXXX promo codes without look-alike characters", () => {
+    for (let i = 0; i < 50; i++) {
+      const code = generatePromoCode();
+      expect(code).toMatch(/^[A-HJKMNP-Z2-9]{4}-[A-HJKMNP-Z2-9]{4}$/);
+      expect(messages({ ...valid, promoCode: code })).toEqual([]);
+    }
   });
 
   it("validates the benefit value by its type", () => {
@@ -387,6 +402,32 @@ describe("<OfferRecord>", () => {
     expect(body.title).toBe(draft.working_version!.title);
     expect(body.expected_version).toBe(draft.version);
     expect(body.intent).toBe("save");
+  });
+
+  it("regenerates the promo code only before the offer is first published", async () => {
+    const permissions = [
+      OfferAdminPermission.OFFER_VIEW,
+      OfferAdminPermission.OFFER_UPDATE,
+      OfferAdminPermission.CATEGORY_VIEW,
+    ];
+    const user = userEvent.setup();
+    serve(draft);
+    const { unmount } = renderAs(admin(permissions), <OfferRecord offerId={OFFER_ID} />);
+    await user.click(await screen.findByRole("button", { name: "Edit" }));
+    const code = await screen.findByLabelText<HTMLInputElement>("Promo code");
+    expect(code).toHaveValue("HRSOFT20");
+    await user.click(screen.getByRole("button", { name: "Regenerate" }));
+    expect(code.value).toMatch(/^[A-HJKMNP-Z2-9]{4}-[A-HJKMNP-Z2-9]{4}$/);
+    await user.clear(code);
+    await user.type(code, "java-20");
+    expect(code).toHaveValue("JAVA-20");
+    unmount();
+
+    serve({ ...draft, first_published_at: "2026-10-01T00:00:00Z" });
+    renderAs(admin(permissions), <OfferRecord offerId={OFFER_ID} />);
+    await user.click(await screen.findByRole("button", { name: "Edit" }));
+    expect(await screen.findByLabelText("Promo code")).toHaveAttribute("readonly");
+    expect(screen.getByRole("button", { name: "Regenerate" })).toBeDisabled();
   });
 });
 

@@ -34,6 +34,11 @@ import {
   useCatalogueOffer,
   type MarketplaceOffer,
 } from "@/features/offers/api/queries";
+import {
+  SLOTS,
+  SponsoredBanner,
+  useSponsoredCards,
+} from "@/features/marketing/components/sponsored-placement";
 import { benefitSummary } from "@/features/offers/schemas/benefit-value";
 import { presentationLabel } from "@/features/offers/schemas/offer";
 import { ApiError, isUuid } from "@/shared/api";
@@ -58,6 +63,8 @@ export function Catalogue() {
   const featured = searchParams.get("featured") === "true" ? true : null;
   const offers = useCatalogue({ search, categoryId, featured });
   const categories = useCatalogueCategories();
+  // Sponsored placements are advertisements, never offers: they are labelled and counted apart.
+  const sponsored = useSponsoredCards(SLOTS.offersInline);
 
   function setParam(name: string, value: string | null) {
     const params = new URLSearchParams(searchParams);
@@ -120,6 +127,8 @@ export function Catalogue() {
         ))}
       </div>
 
+      <SponsoredBanner slotKey={categoryId ? SLOTS.categoryTop : SLOTS.homeTop} />
+
       {offers.isPending ? (
         <ListSkeleton />
       ) : offers.isError ? (
@@ -136,9 +145,10 @@ export function Catalogue() {
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {rows.map((offer) => (
-            <OfferCard key={offer.id} offer={offer} />
-          ))}
+          {withSponsored(
+            rows.map((offer) => <OfferCard key={offer.id} offer={offer} />),
+            sponsored,
+          )}
         </div>
       )}
 
@@ -155,6 +165,14 @@ export function Catalogue() {
       ) : null}
     </div>
   );
+}
+
+/** Offer cards seen before the first sponsored card (one row on wide screens). */
+const SPONSORED_AFTER = 3;
+
+function withSponsored(cards: React.ReactNode[], sponsored: React.ReactNode[]) {
+  const at = Math.min(SPONSORED_AFTER, cards.length);
+  return [...cards.slice(0, at), ...sponsored, ...cards.slice(at)];
 }
 
 function OfferCard({ offer }: { offer: MarketplaceOffer }) {

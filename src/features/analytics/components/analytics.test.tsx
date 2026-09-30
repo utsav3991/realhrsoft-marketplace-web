@@ -133,7 +133,7 @@ describe("Partner analytics", () => {
     expect(await screen.findByText("128", { selector: "p" })).toBeVisible();
     expect(await screen.findByRole("cell", { name: row.title })).toBeVisible();
     expect(screen.queryByText(row.partner_name)).toBeNull();
-    expect(screen.getByText(/Not available yet/)).toBeVisible();
+    expect(screen.getByText(/reported on each advertisement/)).toBeVisible();
 
     const [summaryRequest] = requests("/partner/analytics/offers/summary");
     expect(summaryRequest?.headers.get("X-Organization-ID")).toBe(ORG);

@@ -123,32 +123,39 @@ function PortalNavigation({ portal }: { portal: Portal }) {
   const { actor } = useSession();
   const { isMobile, setOpenMobile } = useSidebar();
   const pathname = usePathname();
-  const items = portal.navigation.filter((item) => showsNavItem(actor, item));
+  // Groups the actor can see nothing in are dropped, heading and all.
+  const groups = portal.navigation
+    .map((group) => ({ ...group, items: group.items.filter((item) => showsNavItem(actor, item)) }))
+    .filter((group) => group.items.length > 0);
 
   return (
-    <nav aria-label={`${portal.label} navigation`}>
-      <SidebarGroupLabel>{portal.label}</SidebarGroupLabel>
-      <SidebarMenu>
-        {items.map((item) => {
-          const active = isActive(pathname, item, portal);
-          return (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
-                <Link
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  onClick={() => {
-                    if (isMobile) setOpenMobile(false);
-                  }}
-                >
-                  <item.icon aria-hidden />
-                  <span>{item.label}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          );
-        })}
-      </SidebarMenu>
+    <nav aria-label={`${portal.label} navigation`} className="flex flex-col gap-2">
+      {groups.map((group, index) => (
+        <div key={group.label ?? index} role="group" aria-label={group.label}>
+          {group.label ? <SidebarGroupLabel>{group.label}</SidebarGroupLabel> : null}
+          <SidebarMenu>
+            {group.items.map((item) => {
+              const active = isActive(pathname, item, portal);
+              return (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
+                    <Link
+                      href={item.href}
+                      aria-current={active ? "page" : undefined}
+                      onClick={() => {
+                        if (isMobile) setOpenMobile(false);
+                      }}
+                    >
+                      <item.icon aria-hidden />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
+          </SidebarMenu>
+        </div>
+      ))}
     </nav>
   );
 }

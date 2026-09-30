@@ -323,6 +323,7 @@ function PortalOfferForm({
       categories={categories.options}
       intents={intents}
       reasonHint="Optional note, recorded in the audit log."
+      promoCodeLocked={Boolean(offer?.first_published_at)}
       onSubmit={onSubmit}
       onCancel={onCancel}
     />

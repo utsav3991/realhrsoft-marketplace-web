@@ -8,6 +8,12 @@ import type { Notification } from "./api/queries";
 // retargets an authenticated call. Add a route when the backend starts sending a new type.
 const TARGET_ROUTES: ReadonlyMap<string, (id: string) => string> = new Map([
   ["voucher", (id: string) => `/marketplace/vouchers/${id}`],
+  ["company_benefit", (id: string) => `/marketplace/company-benefits/${id}`],
+  ["partner_claim", (id: string) => `/partner/claims/${id}`],
+  ["partner_redemption", (id: string) => `/partner/redemptions/${id}`],
+  ["employer_benefit", (id: string) => `/employer/benefits/${id}`],
+  ["admin_claim", (id: string) => `/admin/claims/${id}`],
+  ["admin_redemption", (id: string) => `/admin/redemptions/${id}`],
 ]);
 
 /** The page that shows the item's subject in its current state, or null when it has none. */
