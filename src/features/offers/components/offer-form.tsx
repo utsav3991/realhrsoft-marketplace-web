@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, RefreshCw, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { useForm, useFormContext } from "react-hook-form";
+import { useForm, useFormContext, useWatch } from "react-hook-form";
 
 import { DateTimePicker } from "@/design-system/components/date-picker";
 import { RichTextEditor } from "@/design-system/components/rich-text-editor";
@@ -132,7 +132,7 @@ export function OfferForm({
     defaultValues: initialValues,
   });
   const { isSubmitting } = form.formState;
-  const audienceType = form.watch("audienceType");
+  const audienceType = useWatch({ control: form.control, name: "audienceType" });
   const canSelectOrganizations =
     Boolean(organizationPicker) || defaultValues.audienceOrganizations.length > 0;
 

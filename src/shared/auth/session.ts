@@ -140,8 +140,10 @@ export function listenForLogoutElsewhere(
     // Accept the old string format while other tabs may still run the previous bundle.
     const type = typeof message === "string" ? message : message?.type;
     const destination = message?.destination;
-    const safeDestination = destination === "/partner" || destination === "/admin/users" || destination === "/login"
-      ? destination : undefined;
+    const safeDestination =
+      destination === "/partner" || destination === "/admin/users" || destination === "/login"
+        ? destination
+        : undefined;
     if (type === "session-changed") {
       setAccessToken(null);
       clearOrganizationScope();

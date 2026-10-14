@@ -24,9 +24,12 @@ export function Providers({ nonce, children }: { nonce?: string; children: React
         {/* "user": people who ask for reduced motion get fades without movement. */}
         <MotionConfig reducedMotion="user">
           <SessionProvider>
+            {/* The banner owns its row; portal chrome uses the remaining viewport. */}
             <div className="grid h-dvh grid-rows-[auto_minmax(0,1fr)]">
-              <div><ImpersonationBanner /></div>
-              <div className="overflow-auto [container-type:size]" data-slot="application-content">
+              <div>
+                <ImpersonationBanner />
+              </div>
+              <div className="[container-type:size] overflow-auto" data-slot="application-content">
                 {children}
               </div>
             </div>

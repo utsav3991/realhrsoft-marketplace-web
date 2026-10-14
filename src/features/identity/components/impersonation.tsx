@@ -19,7 +19,9 @@ export function ImpersonateAction({ user }: { user: Schemas["UserDetail"] }) {
   }
   return (
     <>
-      <Button variant="outline" onClick={() => setOpen(true)}>Sign in as partner</Button>
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        Sign in as partner
+      </Button>
       <ReasonDialog
         open={open}
         onOpenChange={setOpen}
@@ -37,7 +39,10 @@ export function ImpersonationBanner() {
   const end = useEndImpersonation();
   if (!actor?.impersonator) return null;
   return (
-    <aside aria-label="Impersonation session" className="bg-warning text-warning-foreground relative z-20 flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 text-sm">
+    <aside
+      aria-label="Impersonation session"
+      className="bg-warning text-warning-foreground relative z-20 flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 text-sm"
+    >
       <div>
         <p>Signed in as a partner. Actions are recorded as {actor.impersonator.email}.</p>
         {end.isError ? <p role="alert">{errorMessage(end.error)}</p> : null}

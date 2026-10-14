@@ -11,6 +11,8 @@ export function useImpersonate() {
     mutationFn: async (body: Schemas["ImpersonateRequest"]) => {
       await impersonate(body);
       cache.clear();
+      // Account switching must discard mounted state and the Next.js router cache.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Intentional full document navigation across account boundaries.
       window.location.assign("/partner");
     },
   });

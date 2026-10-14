@@ -32,7 +32,7 @@ import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib/cn";
 
 /*
- * shadcn's sidebar, as the SHMS frontend uses it: a fixed rail on desktop that collapses to
+ * shadcn's sidebar, as the SHMS frontend uses it: a sticky rail on desktop that collapses to
  * icons (Ctrl/Cmd+B or the header trigger), and a sheet on phones. Only UI state lives here.
  */
 
@@ -170,6 +170,8 @@ export function Sidebar({
     );
   }
 
+  // The application-content size container excludes global banners. Its height
+  // keeps the entire rail visible without guessing a banner height or obscuring its header.
   return (
     <div
       className="group peer text-sidebar-foreground sticky top-0 hidden h-[100cqh] shrink-0 self-start md:block"

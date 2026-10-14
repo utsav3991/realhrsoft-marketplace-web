@@ -12,7 +12,13 @@ import { getActiveOrganizationId, isOrganizationScoped } from "./organization-co
 export type Schemas = components["schemas"];
 
 // Cookie-authenticated session calls: they must never trigger a refresh-and-retry.
-const SESSION_PATHS = new Set(["/auth/login", "/auth/refresh", "/auth/logout", "/auth/impersonation", "/auth/impersonation/end"]);
+const SESSION_PATHS = new Set([
+  "/auth/login",
+  "/auth/refresh",
+  "/auth/logout",
+  "/auth/impersonation",
+  "/auth/impersonation/end",
+]);
 
 type AccessTokenRenewer = () => Promise<boolean>;
 let renewAccessToken: AccessTokenRenewer = async () => false;

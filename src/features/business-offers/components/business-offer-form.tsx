@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 
 import { DateTimePicker } from "@/design-system/components/date-picker";
 import { RichTextEditor } from "@/design-system/components/rich-text-editor";
@@ -108,8 +108,8 @@ export function BusinessOfferForm({
     defaultValues: initialValues,
   });
   const { isSubmitting } = form.formState;
-  const audienceType = form.watch("audienceType");
-  const showToEmployees = form.watch("showToEmployees");
+  const audienceType = useWatch({ control: form.control, name: "audienceType" });
+  const showToEmployees = useWatch({ control: form.control, name: "showToEmployees" });
   const controlled = (field: Parameters<typeof controlledProps>[0]) =>
     controlledProps(field, isSubmitting);
 

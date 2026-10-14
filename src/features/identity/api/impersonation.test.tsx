@@ -8,7 +8,8 @@ import { useEndImpersonation, useImpersonate } from "./impersonation";
 
 const session = vi.hoisted(() => ({ start: vi.fn(), end: vi.fn() }));
 vi.mock("@/shared/auth/session", () => ({
-  impersonate: session.start, endImpersonation: session.end,
+  impersonate: session.start,
+  endImpersonation: session.end,
 }));
 const assign = vi.fn();
 beforeEach(() => {
@@ -22,8 +23,9 @@ afterEach(() => vi.unstubAllGlobals());
 function setup() {
   const cache = makeQueryClient();
   cache.setQueryData(["sensitive-admin-data"], { secret: "old account" });
-  const wrapper = ({ children }: { children: ReactNode }) =>
-    <QueryClientProvider client={cache}>{children}</QueryClientProvider>;
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={cache}>{children}</QueryClientProvider>
+  );
   return { cache, wrapper };
 }
 
@@ -49,7 +51,9 @@ it("preserves the current account and page when starting fails", async () => {
   const { cache, wrapper } = setup();
   const hook = renderHook(useImpersonate, { wrapper });
   await act(async () => {
-    await expect(hook.result.current.mutateAsync({ user_id: "partner", reason: "Support" })).rejects.toThrow("Denied");
+    await expect(
+      hook.result.current.mutateAsync({ user_id: "partner", reason: "Support" }),
+    ).rejects.toThrow("Denied");
   });
   expect(cache.getQueryData(["sensitive-admin-data"])).toBeDefined();
   expect(assign).not.toHaveBeenCalled();

@@ -14,27 +14,52 @@ vi.mock("../api/impersonation", () => ({
   useEndImpersonation: () => ({ mutate: end, isPending: false, isError: false }),
 }));
 const actor: CurrentActor = {
-  id: "admin", actorType: "staff", authenticationSource: "local", roles: [],
-  globalPermissions: new Set(), organization: null, memberships: [], client: null, clients: [],
-  superuser: true, impersonator: null,
+  id: "admin",
+  actorType: "staff",
+  authenticationSource: "local",
+  roles: [],
+  globalPermissions: new Set(),
+  organization: null,
+  memberships: [],
+  client: null,
+  clients: [],
+  superuser: true,
+  impersonator: null,
 };
 const user: Schemas["UserDetail"] = {
-  id: "partner", email: "partner@example.com", username: "partner", first_name: null,
-  last_name: null, contact: null, actor_type: "staff", status: "active",
-  password_setup_pending: false, grants: [], impersonable: true,
+  id: "partner",
+  email: "partner@example.com",
+  username: "partner",
+  first_name: null,
+  last_name: null,
+  contact: null,
+  actor_type: "staff",
+  status: "active",
+  password_setup_pending: false,
+  grants: [],
+  impersonable: true,
 };
 function show(current = actor, target = user) {
   const session: SessionValue = {
-    status: "authenticated", actor: current, error: null,
-    login: async () => undefined, logout: async () => undefined,
+    status: "authenticated",
+    actor: current,
+    error: null,
+    login: async () => undefined,
+    logout: async () => undefined,
   };
-  return render(<QueryClientProvider client={makeQueryClient()}>
-    <SessionContext.Provider value={session}>
-      <ImpersonateAction user={target} /><ImpersonationBanner />
-    </SessionContext.Provider>
-  </QueryClientProvider>);
+  return render(
+    <QueryClientProvider client={makeQueryClient()}>
+      <SessionContext.Provider value={session}>
+        <ImpersonateAction user={target} />
+        <ImpersonationBanner />
+      </SessionContext.Provider>
+    </QueryClientProvider>,
+  );
 }
-beforeEach(() => { start.mockReset(); end.mockReset(); });
+beforeEach(() => {
+  start.mockReset();
+  end.mockReset();
+});
 
 it.each([
   [{ ...actor, superuser: false }, user],
@@ -50,12 +75,16 @@ it("requires an audited reason and identifies the target", async () => {
   const ui = userEvent.setup();
   show();
   await ui.click(screen.getByRole("button", { name: "Sign in as partner" }));
-  expect(screen.getByRole("heading", { name: "Sign in as partner@example.com?" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("heading", { name: "Sign in as partner@example.com?" }),
+  ).toBeInTheDocument();
   await ui.click(screen.getAllByRole("button", { name: "Sign in as partner" }).at(-1)!);
   expect(start).not.toHaveBeenCalled();
   await ui.type(screen.getByRole("textbox", { name: /Reason/ }), "Investigate missing offer");
   await ui.click(screen.getAllByRole("button", { name: "Sign in as partner" }).at(-1)!);
-  await waitFor(() => expect(start).toHaveBeenCalledWith({ user_id: "partner", reason: "Investigate missing offer" }));
+  await waitFor(() =>
+    expect(start).toHaveBeenCalledWith({ user_id: "partner", reason: "Investigate missing offer" }),
+  );
 });
 
 it("keeps a failed start in the dialog", async () => {
