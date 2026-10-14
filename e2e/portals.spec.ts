@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { NO_CLIENT, answerAmbient } from "./fakes";
+
 /**
  * A verified member of an organization with no capacity yet may register it as a partner, so
  * the Partner portal is their landing page. The Employer portal stays closed until Django
@@ -19,6 +21,7 @@ async function fakeBackend(page: Page, organizationPermissions: string[]): Promi
   await page.route("**/api/v1/**", async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname.replace(/^\/api\/v1/, "");
+    if (await answerAmbient(route, path)) return;
     calls.push(`${request.method()} ${path}`);
     if (path === "/auth/refresh") {
       await route.fulfill({
@@ -37,7 +40,16 @@ async function fakeBackend(page: Page, organizationPermissions: string[]): Promi
           permissions: [],
           organization_permissions: organizationId ? organizationPermissions : [],
           authentication_source: "local",
-          memberships: [{ organization_id: ACME, name: "Acme", employer: false, partner: false }],
+          ...NO_CLIENT,
+          memberships: [
+            {
+              organization_id: ACME,
+              name: "Acme",
+              employer: false,
+              partner: false,
+              via_client_id: null,
+            },
+          ],
         }),
       });
     } else {
@@ -86,6 +98,7 @@ test("a partner registers, sees rejection feedback, edits and resubmits", async 
   await page.route("**/api/v1/**", async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname.replace(/^\/api\/v1/, "");
+    if (await answerAmbient(route, path)) return;
     const organization = (await request.headerValue("x-organization-id")) ?? null;
     const operation = `${request.method()} ${path}`;
     const body = request.postData() ? request.postDataJSON() : null;
@@ -112,8 +125,15 @@ test("a partner registers, sees rejection feedback, edits and resubmits", async 
               ]
             : [],
           authentication_source: "local",
+          ...NO_CLIENT,
           memberships: [
-            { organization_id: ACME, name: "Acme", employer: false, partner: partner !== null },
+            {
+              organization_id: ACME,
+              name: "Acme",
+              employer: false,
+              partner: partner !== null,
+              via_client_id: null,
+            },
           ],
         });
       case "POST /partner/me":

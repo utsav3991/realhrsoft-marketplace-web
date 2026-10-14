@@ -1,5 +1,7 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 
+import { NO_CLIENT, answerAmbient } from "./fakes";
+
 /**
  * Drives every administration screen against a stateful fake of the /api/v1 contract and
  * checks that each operation in openapi/v1.json is called, with the headers and bodies the
@@ -152,10 +154,11 @@ async function fakeBackend(page: Page, { signedIn = false } = {}): Promise<Call[
         permissions: PERMISSIONS,
         organization_permissions: [],
         authentication_source: "local",
+        ...NO_CLIENT,
         memberships: [],
       }),
     ],
-    ["GET /admin/users", /^\/admin\/users$/, () => ({ items: [user()], next_cursor: null })],
+    ["GET /admin/users", /^\/admin\/users$/, () => ({ count: 1, results: [user()] })],
     ["POST /admin/users", /^\/admin\/users$/, () => [201, { id: NEW_USER_ID }]],
     ["GET /admin/users/{user_id}", /^\/admin\/users\/[^/]+$/, () => user()],
     [
@@ -394,6 +397,7 @@ async function fakeBackend(page: Page, { signedIn = false } = {}): Promise<Call[
   await page.route("**/api/v1/**", async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname.replace(/^\/api\/v1/, "");
+    if (await answerAmbient(route, path)) return;
     for (const [operation, pattern, handle] of routes) {
       const match = path.match(pattern);
       if (!match || !operation.startsWith(`${request.method()} `)) continue;
@@ -592,7 +596,7 @@ test("every API operation is reachable from the admin UI", async ({ page }) => {
   await page.getByRole("button", { name: "End", exact: true }).click();
   await page.getByRole("dialog").getByLabel("Reason").fill("Left the team");
   await page.getByRole("dialog").getByRole("button", { name: "End membership" }).click();
-  await expect(page.getByText("Ended", { exact: true })).toBeVisible();
+  await expect(page.getByRole("main").getByText("Ended", { exact: true })).toBeVisible();
   expect(
     lastCall(calls, "POST /admin/organizations/{organization_id}/memberships/{membership_id}/end")
       .body,
@@ -619,6 +623,7 @@ test("every API operation is reachable from the admin UI", async ({ page }) => {
     website: "",
     reason: "Onboarding desk",
     organization_id: ORGANIZATION_ID,
+    source: "partner_organization",
   });
 
   await page.getByRole("button", { name: "Edit" }).click();

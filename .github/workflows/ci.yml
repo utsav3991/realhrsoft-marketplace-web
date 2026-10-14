@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "24"
+  NEXT_TELEMETRY_DISABLED: "1"
+  # Build-time public configuration (README → API routing and cookies).
+  NEXT_PUBLIC_API_BASE_PATH: /api/v1
+  NEXT_PUBLIC_APP_ENV: test
+
+jobs:
+  check:
+    name: Lint, types, format, tests, API types, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      # The repository pins Yarn 4 (.yarn/releases, yarnPath); the runner's yarn defers to it.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - run: make install-ci
+      - run: make lint
+      - run: make type-check
+      - run: make format-check
+      - run: make test
+      - run: make api-check
+      - run: make build
+
+  e2e:
+    name: Playwright (fake API)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - run: make install-ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+
+      - run: make e2e-install ARGS=--with-deps
+
+      # Every spec fakes /api/v1 with page.route, so no backend runs here.
+      - run: make e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

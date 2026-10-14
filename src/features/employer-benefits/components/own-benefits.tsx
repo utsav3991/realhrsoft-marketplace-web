@@ -11,7 +11,6 @@ import {
   Pencil,
   Play,
   Plus,
-  Search,
   Upload,
   type LucideIcon,
 } from "lucide-react";

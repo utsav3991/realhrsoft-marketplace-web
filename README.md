@@ -63,3 +63,9 @@ yarn check                  # lint + type-check + format:check + test
 yarn api:generate           # regenerate src/generated/api from openapi/v1.json
 yarn api:generate --pull    # fetch Django's /api/schema/?format=json first (OPENAPI_URL to override)
 ```
+
+The Makefile wraps the same commands (`make help` lists them). `make check` runs what CI
+runs except Playwright: lint, type-check, format check, tests, `make api-check` (generated
+types match `openapi/v1.json`) and the production build. `make e2e` runs Playwright
+(`make e2e-install` once first). CI (`.github/workflows/ci.yml`) runs `make check` and,
+in a separate job, `make e2e`; every e2e spec fakes the API, so no backend is needed.

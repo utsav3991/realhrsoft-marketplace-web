@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Plus, Search } from "lucide-react";
+import { Building2, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { type DataTableColumns } from "@/design-system/components/data-table";
 import { EmptyState } from "@/design-system/components/empty-state";
 import { Button } from "@/design-system/primitives/button";
-import { Input } from "@/design-system/primitives/input";
 import { OrganizationAdminPermission, useCan } from "@/shared/authorization";
 import { FieldsDialog } from "@/shared/components/fields-dialog";
 import { QueryDataTable, type RowOf } from "@/shared/components/query-data-table";

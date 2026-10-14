@@ -34,3 +34,6 @@ next-env.d.ts
 .DS_Store
 Thumbs.db
 *.pem
+
+# make api-check scratch copy
+.api-check.ts
