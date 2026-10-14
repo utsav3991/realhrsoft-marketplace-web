@@ -85,22 +85,22 @@ project's APIs (`Badge intent`, `Button ink`, `FormSection`, …) and restyle th
 Always use the semantic Tailwind token. Never a hex value, a Tailwind palette color
 (`green-600`), or an inline style.
 
-| Token (Tailwind)                         | Light                 | Dark                  | Use                                                       |
-| ---------------------------------------- | --------------------- | --------------------- | --------------------------------------------------------- |
-| `background` / `foreground`              | `#f6f7f1` / `#0e0f0c` | `#0e0f0c` / `#f3f6eb` | Page canvas and primary text                              |
-| `card`, `popover`                        | `#ffffff`             | `#161813`             | Cards, tables, controls, menus, dialogs                   |
-| `primary` / `primary-foreground`         | `#9fe870` / `#163300` | same                  | Committing action, checked controls, focus ring           |
-| `primary-deep`                           | `#054d28`             | `#cdffad`             | Links and lime-family text on light surfaces              |
-| `ink` / `ink-foreground`                 | `#0e0f0c` / `#fff`    | inverted              | Black promotional CTA (marketplace only)                  |
-| `secondary`, `muted`                     | lime 8% / `#e8ebe6`   | lime 12% / `#1d211a`  | Secondary buttons, tab track, soft fills                  |
-| `accent` / `accent-foreground`           | `#e2f6d5` / `#163300` | `#22301a` / `#e2f6d5` | Mint: hover on outline/ghost buttons, menu focus, today   |
-| `surface-soft`                           | `#eef3e7`             | `#171a14`             | Hover on list results and filter triggers                 |
-| `destructive`                            | `#d03238`             | `#ff6a70`             | Errors, destructive actions                               |
-| `success`, `warning`                     | `#054d28`, `#ffd11a`  | `#b8f28f`, `#ffd11a`  | Solid status marks (ink text on `warning`)                |
-| `*-soft` / `*-soft-foreground`           | tinted pairs          | tinted pairs          | Badges and alerts: `neutral`, `info`, `success`, `warning`, `danger` |
-| `border` / `input`                       | ink 12% / 14%         | light 12% / 14%       | Outlines, dividers, control borders                       |
-| `sidebar`, `sidebar-accent`, `sidebar-border` | `#fbfcf7`, ink 6%, ink 8% | `#12140f`, light 8%, light 8% | Sidebar surface, active and hover item, edge |
-| `chart-1` … `chart-5`                    | lime, forest, yellow, sky, peach | lighter forest | Data series                                  |
+| Token (Tailwind)                              | Light                            | Dark                          | Use                                                                  |
+| --------------------------------------------- | -------------------------------- | ----------------------------- | -------------------------------------------------------------------- |
+| `background` / `foreground`                   | `#f6f7f1` / `#0e0f0c`            | `#0e0f0c` / `#f3f6eb`         | Page canvas and primary text                                         |
+| `card`, `popover`                             | `#ffffff`                        | `#161813`                     | Cards, tables, controls, menus, dialogs                              |
+| `primary` / `primary-foreground`              | `#9fe870` / `#163300`            | same                          | Committing action, checked controls, focus ring                      |
+| `primary-deep`                                | `#054d28`                        | `#cdffad`                     | Links and lime-family text on light surfaces                         |
+| `ink` / `ink-foreground`                      | `#0e0f0c` / `#fff`               | inverted                      | Black promotional CTA (marketplace only)                             |
+| `secondary`, `muted`                          | lime 8% / `#e8ebe6`              | lime 12% / `#1d211a`          | Secondary buttons, tab track, soft fills                             |
+| `accent` / `accent-foreground`                | `#e2f6d5` / `#163300`            | `#22301a` / `#e2f6d5`         | Mint: hover on outline/ghost buttons, menu focus, today              |
+| `surface-soft`                                | `#eef3e7`                        | `#171a14`                     | Hover on list results and filter triggers                            |
+| `destructive`                                 | `#d03238`                        | `#ff6a70`                     | Errors, destructive actions                                          |
+| `success`, `warning`                          | `#054d28`, `#ffd11a`             | `#b8f28f`, `#ffd11a`          | Solid status marks (ink text on `warning`)                           |
+| `*-soft` / `*-soft-foreground`                | tinted pairs                     | tinted pairs                  | Badges and alerts: `neutral`, `info`, `success`, `warning`, `danger` |
+| `border` / `input`                            | ink 12% / 14%                    | light 12% / 14%               | Outlines, dividers, control borders                                  |
+| `sidebar`, `sidebar-accent`, `sidebar-border` | `#fbfcf7`, ink 6%, ink 8%        | `#12140f`, light 8%, light 8% | Sidebar surface, active and hover item, edge                         |
+| `chart-1` … `chart-5`                         | lime, forest, yellow, sky, peach | lighter forest                | Data series                                                          |
 
 Rules:
 
@@ -116,15 +116,15 @@ Rules:
 Inter via `next/font/google` (`--font-body`, self-hosted at build time, so `font-src 'self'`
 holds); JetBrains Mono for `font-mono`.
 
-| Role          | Tailwind                                                                  | Use                                       |
-| ------------- | ------------------------------------------------------------------------- | ----------------------------------------- |
-| page-title    | `text-[clamp(1.5rem,2.5vw,2rem)] leading-[1.1] font-semibold tracking-[-0.03em]` | `PageHeader`, one per page       |
-| dialog-title  | `text-[1.625rem] leading-[1.05] font-semibold tracking-[-0.03em]`         | `CardTitle`, `DialogTitle`, `SheetTitle`  |
-| section-title | `text-lg font-semibold tracking-[-0.02em]`                                | `FormSection` legends, empty-state titles |
-| kicker        | `kicker text-muted-foreground` (utility in `globals.css`)                 | Eyebrow above a title, detail labels      |
-| body          | `text-sm` (body weight 600)                                               | Default UI text, table cells              |
-| supporting    | `text-sm font-medium text-muted-foreground`                               | Descriptions, hints, form descriptions    |
-| badge         | `text-[11px] font-semibold tracking-[0.14em] uppercase`                   | Badges                                    |
+| Role          | Tailwind                                                                         | Use                                       |
+| ------------- | -------------------------------------------------------------------------------- | ----------------------------------------- |
+| page-title    | `text-[clamp(1.5rem,2.5vw,2rem)] leading-[1.1] font-semibold tracking-[-0.03em]` | `PageHeader`, one per page                |
+| dialog-title  | `text-[1.625rem] leading-[1.05] font-semibold tracking-[-0.03em]`                | `CardTitle`, `DialogTitle`, `SheetTitle`  |
+| section-title | `text-lg font-semibold tracking-[-0.02em]`                                       | `FormSection` legends, empty-state titles |
+| kicker        | `kicker text-muted-foreground` (utility in `globals.css`)                        | Eyebrow above a title, detail labels      |
+| body          | `text-sm` (body weight 600)                                                      | Default UI text, table cells              |
+| supporting    | `text-sm font-medium text-muted-foreground`                                      | Descriptions, hints, form descriptions    |
+| badge         | `text-[11px] font-semibold tracking-[0.14em] uppercase`                          | Badges                                    |
 
 - `h1`–`h6` default to weight 900 with −0.02em tracking; components set their own weight.
 - Show identifiers (codes, request ids) in `font-mono text-xs`.
@@ -134,7 +134,7 @@ holds); JetBrains Mono for `font-mono`.
 - **Portal chrome** (`shared/navigation/portal-shell.tsx`): `SidebarProvider` → `Sidebar`
   (17rem, collapses to a 4.5rem icon rail) + `SidebarInset` (sticky 56px top bar, then `main`).
 - **Page container:** `main` wraps every page in `mx-auto max-w-[1600px] px-4 py-8 sm:px-6
-  lg:px-10`. List and detail pages share that width so moving between them does not shift.
+lg:px-10`. List and detail pages share that width so moving between them does not shift.
 - The base unit is 4px. Stack page sections with `space-y-6`/`gap-6`, cards in grids with
   `gap-6`, form fields 20px apart.
 - **Auth pages** (`app/(auth)/layout.tsx`): split screen, the form on the left, a lime brand
@@ -142,21 +142,21 @@ holds); JetBrains Mono for `font-mono`.
 
 ## Shapes
 
-| Radius         | Value | Use                                                                   |
-| -------------- | ----- | --------------------------------------------------------------------- |
-| `rounded-sm`   | 4px   | Checkbox                                                              |
-| `rounded-md`   | 6px   | Inputs, selects, sidebar items, tab triggers, tooltips, skeletons     |
-| `rounded-lg`   | 8px   | Buttons, textareas, menu and select items, close buttons              |
-| `rounded-xl`   | 12px  | Menus, select and popover panels, alerts                              |
-| `rounded-2xl`  | 16px  | Cards, table cards, dialogs, empty states                             |
-| `rounded-full` | pill  | Badges, switches, avatars                                             |
+| Radius         | Value | Use                                                               |
+| -------------- | ----- | ----------------------------------------------------------------- |
+| `rounded-sm`   | 4px   | Checkbox                                                          |
+| `rounded-md`   | 6px   | Inputs, selects, sidebar items, tab triggers, tooltips, skeletons |
+| `rounded-lg`   | 8px   | Buttons, textareas, menu and select items, close buttons          |
+| `rounded-xl`   | 12px  | Menus, select and popover panels, alerts                          |
+| `rounded-2xl`  | 16px  | Cards, table cards, dialogs, empty states                         |
+| `rounded-full` | pill  | Badges, switches, avatars                                         |
 
 ## Elevation
 
-| Level | Tailwind       | Use                                                                    |
-| ----- | -------------- | ---------------------------------------------------------------------- |
-| ring  | `shadow-ring`  | Cards, table cards, buttons, inputs, selects, dialogs, sheets, alerts  |
-| panel | `shadow-panel` | Menus, select and popover panels (ring plus a soft drop)               |
+| Level | Tailwind       | Use                                                                   |
+| ----- | -------------- | --------------------------------------------------------------------- |
+| ring  | `shadow-ring`  | Cards, table cards, buttons, inputs, selects, dialogs, sheets, alerts |
+| panel | `shadow-panel` | Menus, select and popover panels (ring plus a soft drop)              |
 
 Dialog and sheet overlays dim the page (`bg-foreground/60`) and blur it (`backdrop-blur-sm`).
 
@@ -170,15 +170,15 @@ variants instead of `className` overrides that repaint it.
 `rounded-lg text-sm font-semibold`, a 1px `shadow-ring`, and a small scale on hover (1.05) and
 press (0.95). Focus shows a 3px lime halo.
 
-| Variant       | Look                                        | When                                          |
-| ------------- | ------------------------------------------- | --------------------------------------------- |
-| `default`     | Lime fill, dark-green text                  | The one committing action                     |
-| `ink`         | Black fill                                  | Promotional CTA on marketplace browsing pages |
-| `outline`     | White card fill, input border, mint hover   | Secondary action, partner of a primary        |
-| `secondary`   | Muted fill, mint hover                      | Tertiary or toolbar action                    |
-| `ghost`       | No chrome until mint hover                  | Row actions, icon buttons                     |
-| `destructive` | Red fill                                    | Irreversible or governance-negative action    |
-| `link`        | `primary-deep` text, no scale               | Inline navigation                             |
+| Variant       | Look                                      | When                                          |
+| ------------- | ----------------------------------------- | --------------------------------------------- |
+| `default`     | Lime fill, dark-green text                | The one committing action                     |
+| `ink`         | Black fill                                | Promotional CTA on marketplace browsing pages |
+| `outline`     | White card fill, input border, mint hover | Secondary action, partner of a primary        |
+| `secondary`   | Muted fill, mint hover                    | Tertiary or toolbar action                    |
+| `ghost`       | No chrome until mint hover                | Row actions, icon buttons                     |
+| `destructive` | Red fill                                  | Irreversible or governance-negative action    |
+| `link`        | `primary-deep` text, no scale             | Inline navigation                             |
 
 Sizes: `default` 44px, `sm` 36px, `xs` 28px, `lg` 48px, `icon` 36px, `icon-sm` 32px, `icon-lg`
 40px. Icon-only buttons always carry an `aria-label` or `sr-only` text.
@@ -301,11 +301,11 @@ shadow), `switch`, `separator`, `scroll-area`, `avatar`, `collapsible`, `skeleto
 
 ## Responsive behavior
 
-| Breakpoint     | Width      | Changes                                                                                     |
-| -------------- | ---------- | ------------------------------------------------------------------------------------------- |
+| Breakpoint     | Width      | Changes                                                                                                          |
+| -------------- | ---------- | ---------------------------------------------------------------------------------------------------------------- |
 | Mobile         | < 768px    | One column. The sidebar is a sheet opened from the top bar. Dialog footers stack. Auth pages show the form only. |
-| Tablet (`md`)  | 768–1023px | The sidebar returns, expanded or as an icon rail. Card grids go to 2-up.                    |
-| Desktop (`lg`) | ≥ 1024px   | 3-up and 4-up card grids; page gutters grow to 40px.                                        |
+| Tablet (`md`)  | 768–1023px | The sidebar returns, expanded or as an icon rail. Card grids go to 2-up.                                         |
+| Desktop (`lg`) | ≥ 1024px   | 3-up and 4-up card grids; page gutters grow to 40px.                                                             |
 
 - **Touch targets:** default buttons and inputs are 44px. Don't ship an interactive target
   under 32px.
@@ -322,7 +322,7 @@ shadow), `switch`, `separator`, `scroll-area`, `avatar`, `collapsible`, `skeleto
 - **Overlays** (dialog, sheet, menu, select, popover, tooltip) fade and zoom in from 95% with
   `tw-animate-css` `data-[state]` classes.
 - **Reduced motion:** entry animations don't run (`useEntryInitial`), `MotionConfig
-  reducedMotion="user"` removes transforms elsewhere, and `globals.css` cuts CSS animations and
+reducedMotion="user"` removes transforms elsewhere, and `globals.css` cuts CSS animations and
   transitions to a frame.
 
 ## Accessibility

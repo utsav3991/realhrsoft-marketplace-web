@@ -39,7 +39,10 @@ export function useEndClientMember(clientId: string) {
 
 export function useGrantClientRole(clientId: string) {
   return useMutation({
-    mutationFn: ({ membershipId, ...body }: Schemas["ClientRoleGrant"] & { membershipId: string }) =>
+    mutationFn: ({
+      membershipId,
+      ...body
+    }: Schemas["ClientRoleGrant"] & { membershipId: string }) =>
       unwrap(
         api.POST("/client/members/{membership_id}/roles", {
           params: {
@@ -77,5 +80,64 @@ export function useRevokeClientRole(clientId: string) {
         }),
       ),
     onSettled: useInvalidateMembers(clientId),
+  });
+}
+
+// --- Company users ------------------------------------------------------------------------
+
+function useInvalidateCompanyUsers(clientId: string, companyId: string) {
+  const queryClient = useQueryClient();
+  return () =>
+    queryClient.invalidateQueries({ queryKey: clientKeys.companyUsers(clientId, companyId) });
+}
+
+/**
+ * Adds (or links) a user to one company with the company_user role. A new account is emailed
+ * a set-password link; 409 COMPANY_USER_LIMIT when the company is full.
+ */
+export function useAddCompanyUser(clientId: string, companyId: string) {
+  return useMutation({
+    mutationFn: (body: Schemas["CompanyUserCreate"]) =>
+      unwrap(
+        api.POST("/client/companies/{company_id}/users", {
+          params: { header: clientHeader(clientId), path: { company_id: pathId(companyId) } },
+          body,
+        }),
+      ),
+    onSettled: useInvalidateCompanyUsers(clientId, companyId),
+  });
+}
+
+/** Ends a company user's membership, which frees a slot. */
+export function useEndCompanyUser(clientId: string, companyId: string) {
+  return useMutation({
+    mutationFn: ({ membershipId, reason }: { membershipId: string; reason: string }) =>
+      unwrap(
+        api.POST("/client/companies/{company_id}/users/{membership_id}/end", {
+          params: {
+            header: clientHeader(clientId),
+            path: { company_id: pathId(companyId), membership_id: pathId(membershipId) },
+          },
+          body: { reason },
+        }),
+      ),
+    onSettled: useInvalidateCompanyUsers(clientId, companyId),
+  });
+}
+
+/** Emails a pending company user a new set-password link; earlier links stop working. */
+export function useResendCompanyUserSetup(clientId: string, companyId: string) {
+  return useMutation({
+    mutationFn: ({ membershipId, reason }: { membershipId: string; reason: string }) =>
+      unwrap(
+        api.POST("/client/companies/{company_id}/users/{membership_id}/resend-setup", {
+          params: {
+            header: clientHeader(clientId),
+            path: { company_id: pathId(companyId), membership_id: pathId(membershipId) },
+          },
+          body: { reason },
+        }),
+      ),
+    onSettled: useInvalidateCompanyUsers(clientId, companyId),
   });
 }

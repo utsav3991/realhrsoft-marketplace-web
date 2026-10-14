@@ -105,7 +105,12 @@ function json(body: unknown, status = 200) {
   });
 }
 
-const page = (results: unknown[]) => ({ count: results.length, next: null, previous: null, results });
+const page = (results: unknown[]) => ({
+  count: results.length,
+  next: null,
+  previous: null,
+  results,
+});
 
 function serve(ad: Schemas["Advertisement"]) {
   fetchMock.mockImplementation(async (request) => {
@@ -265,7 +270,10 @@ describe("grant state", () => {
 describe("<AdminAd>", () => {
   it("offers review decisions only with the review permission", async () => {
     serve(inReview);
-    renderAs(admin([MarketingAdminPermission.AD_VIEW, MarketingAdminPermission.AD_SUSPEND]), <AdminAd adId={AD_ID} />);
+    renderAs(
+      admin([MarketingAdminPermission.AD_VIEW, MarketingAdminPermission.AD_SUSPEND]),
+      <AdminAd adId={AD_ID} />,
+    );
     expect(await screen.findByRole("heading", { name: "Home banner" })).toBeVisible();
     expect(screen.queryByRole("button", { name: "Approve" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Suspend" })).toBeVisible();
@@ -285,7 +293,9 @@ describe("<AdminAd>", () => {
     await user.click(within(dialog).getByRole("button", { name: "Approve revision" }));
     await waitFor(() => expect(fetchMock.mock.calls.some(([r]) => r.method === "POST")).toBe(true));
     const request = posted();
-    expect(new URL(request.url).pathname).toBe(`/api/v1/admin/marketing/advertisements/${AD_ID}/approve`);
+    expect(new URL(request.url).pathname).toBe(
+      `/api/v1/admin/marketing/advertisements/${AD_ID}/approve`,
+    );
     expect(await request.json()).toEqual({
       expected_version: 3,
       reason: "",

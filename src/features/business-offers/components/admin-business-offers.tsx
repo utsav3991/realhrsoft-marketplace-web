@@ -53,13 +53,11 @@ import {
   SelectValue,
 } from "@/design-system/primitives/select";
 import { Skeleton } from "@/design-system/primitives/skeleton";
-import { useOrganization } from "@/features/organizations/api/queries";
-import { OrganizationFilter } from "@/features/organizations/components/organization-filter";
 import { usePartner } from "@/features/partners/api/queries";
 import { PartnerFilter } from "@/features/partners/components/partner-filter";
 import type { Offer } from "@/features/offers/api/queries";
 import { benefitSummary } from "@/features/offers/schemas/benefit-value";
-import { editableVersion } from "@/features/offers/schemas/offer";
+import { BUSINESS_KIND_LABEL, editableVersion } from "@/features/offers/schemas/offer";
 import { useAdminCategoryOptions } from "@/features/offers/components/category-options";
 import { useAdminIntents } from "@/features/offers/components/new-offer";
 import {
@@ -78,7 +76,7 @@ import {
   validity,
   VisibilityBadge,
 } from "@/features/offers/components/offer-details";
-import { OrganizationPicker, PartnerPicker } from "@/features/offers/components/pickers";
+import { PartnerPicker } from "@/features/offers/components/pickers";
 import { OFFER_STATUSES } from "@/features/offers/components/offers-directory";
 import { RedemptionControl } from "@/features/redemptions/components/redemption-blocks";
 import { ApiError, isUuid } from "@/shared/api";
@@ -86,7 +84,6 @@ import {
   BusinessAdminPermission,
   ClaimAdminPermission,
   OfferAdminPermission,
-  OrganizationAdminPermission,
   PartnerAdminPermission,
   useCan,
   type GlobalPermissionCode,
@@ -119,38 +116,44 @@ import {
   businessOfferValues,
   EMPTY_BUSINESS_OFFER,
 } from "../schemas/business-offer";
+import { AdminBusinessPicker } from "./admin-business-picker";
 import { BusinessOfferForm } from "./business-offer-form";
 
 const ALL = "all";
 const uuidParam = (value: string | null) => (value && isUuid(value) ? value : null);
 
-const EMPLOYER_ONLY =
-  "Posted as an employer: only an offer posted as a verified partner can be shown to employees, because the partner confirms their vouchers.";
+const CLIENT_ONLY =
+  "A client group's offer is enquiry-only: only a merchant's offer can be shown to employees, because the merchant confirms their vouchers.";
 
-/** "Fitness Hub · Partner", or the organization's name and "Employer". */
+const PROVIDER_KINDS = Object.keys(BUSINESS_KIND_LABEL) as (keyof typeof BUSINESS_KIND_LABEL)[];
+
+/** "Fitness Hub · Merchant", or "Acme Group · Client group". */
 function ProviderCell({ offer }: { offer: Offer }) {
+  const provider = offer.business_provider;
+  if (!provider) return <span className="text-muted-foreground">—</span>;
   return (
     <>
-      <p>{offer.partner?.business_name ?? offer.provider_organization?.name}</p>
-      <p className="text-muted-foreground text-xs">{offer.partner ? "Partner" : "Employer"}</p>
+      <p>{provider.name}</p>
+      <p className="text-muted-foreground text-xs">{BUSINESS_KIND_LABEL[provider.kind]}</p>
     </>
   );
 }
 
-/** Every organization's business offers; the review queue is ?in_review=true. */
+/** Every business's business offers; the review queue is ?in_review=true. */
 export function AdminBusinessOffers() {
   const { searchParams, set } = useUrlParams();
   const statusParam = searchParams.get("status");
   const status = OFFER_STATUSES.find((s) => s.value === statusParam)?.value ?? null;
   const inReview = searchParams.get("in_review") === "true" ? true : null;
   const showToEmployees = searchParams.get("show_to_employees") === "true" ? true : null;
-  const partnerId = uuidParam(searchParams.get("partner_id"));
-  const organizationId = uuidParam(searchParams.get("organization_id"));
+  const providerKind =
+    PROVIDER_KINDS.find((kind) => kind === searchParams.get("provider_kind")) ?? null;
+  const providerId = uuidParam(searchParams.get("provider_id"));
   const search = searchParams.get("search") ?? "";
   const sort = useSortParam(BUSINESS_OFFER_SORTS);
   const paging = usePageParam();
   const offers = useAdminBusinessOffers(
-    { search, status, inReview, showToEmployees, partnerId, organizationId, ordering: sort.value },
+    { search, status, inReview, showToEmployees, providerKind, providerId, ordering: sort.value },
     paging,
   );
   const canCreate = useCan(OfferAdminPermission.OFFER_CREATE);
@@ -191,11 +194,11 @@ export function AdminBusinessOffers() {
       ),
     },
     {
-      id: "organizations",
-      header: "Organizations",
+      id: "businesses",
+      header: "Businesses",
       className: "hidden md:table-cell",
       cell: (offer) => (
-        <VisibilityBadge visible={offer.visible_to_businesses} viewers="organizations" />
+        <VisibilityBadge visible={offer.visible_to_businesses} viewers="businesses" />
       ),
     },
     {
@@ -206,7 +209,7 @@ export function AdminBusinessOffers() {
         shownVersion(offer)?.business_policy?.show_to_employees ? (
           <VisibilityBadge offer={offer} />
         ) : (
-          <span className="text-muted-foreground">Organizations only</span>
+          <span className="text-muted-foreground">Businesses only</span>
         ),
     },
     {
@@ -229,7 +232,7 @@ export function AdminBusinessOffers() {
     },
   ];
   const filtered = Boolean(
-    search || status || inReview || showToEmployees || partnerId || organizationId,
+    search || status || inReview || showToEmployees || providerKind || providerId,
   );
 
   return (
@@ -257,13 +260,23 @@ export function AdminBusinessOffers() {
               ))}
             </SelectContent>
           </Select>
-          <PartnerFilter value={partnerId} onChange={(id) => set({ partner_id: id })} />
-          <OrganizationFilter
-            label="Audience organization"
-            allLabel="Any audience organization"
-            value={organizationId}
-            onChange={(id) => set({ organization_id: id })}
-          />
+          <Select
+            value={providerKind ?? ALL}
+            onValueChange={(value) => set({ provider_kind: value === ALL ? null : value })}
+          >
+            <SelectTrigger className="w-44" aria-label="Filter by provider kind">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Merchants and clients</SelectItem>
+              {PROVIDER_KINDS.map((kind) => (
+                <SelectItem key={kind} value={kind}>
+                  {BUSINESS_KIND_LABEL[kind]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <PartnerFilter value={providerId} onChange={(id) => set({ provider_id: id })} />
           <Button
             variant={inReview ? "secondary" : "ghost"}
             aria-pressed={inReview === true}
@@ -331,23 +344,23 @@ function BackToBusinessOffers() {
   );
 }
 
-/** The capacity an administrator posts in: a verified partner, or an employer organization. */
-type Provider = { kind: "partner"; id: string } | { kind: "employer"; id: string };
+/** The business an administrator posts for: a verified merchant or a client group. */
+type Provider = { kind: "merchant"; id: string } | { kind: "client"; id: string };
 
 /**
- * Posting on an organization's behalf: as a verified partner (?partner=) or as an employer
- * (?organization=), chosen here or linked from their records.
+ * Posting on a business's behalf: a verified merchant (?partner=) or a client group
+ * (?client=), chosen here or linked from their records.
  */
 export function NewAdminBusinessOffer() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const partnerId = uuidParam(searchParams.get("partner"));
-  const employerId = uuidParam(searchParams.get("organization"));
+  const clientId = uuidParam(searchParams.get("client"));
   const provider: Provider | null = partnerId
-    ? { kind: "partner", id: partnerId }
-    : employerId
-      ? { kind: "employer", id: employerId }
+    ? { kind: "merchant", id: partnerId }
+    : clientId
+      ? { kind: "client", id: clientId }
       : null;
   const choose = (param: string, id: string) =>
     router.replace(`${pathname}?${param}=${encodeURIComponent(id)}`);
@@ -363,10 +376,11 @@ export function NewAdminBusinessOffer() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Handshake className="size-5" aria-hidden />
-                As a verified partner
+                For a verified merchant
               </CardTitle>
               <CardDescription>
-                The partner confirms vouchers, so only a partner offer can be shown to employees.
+                The merchant confirms vouchers, so only a merchant&apos;s offer can be shown to
+                employees.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -377,15 +391,14 @@ export function NewAdminBusinessOffer() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="size-5" aria-hidden />
-                As an employer
+                For a client group
               </CardTitle>
               <CardDescription>
-                An organization whose Employer capacity is on; its offer reaches organizations
-                only.
+                A RealHRSoft client group, as one business; its offer is enquiry-only.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <OrganizationPicker selected={[]} onAdd={({ id }) => choose("organization", id)} />
+              <PartnerPicker kind="client" onChoose={({ id }) => choose("client", id)} />
             </CardContent>
           </Card>
         </div>
@@ -396,32 +409,20 @@ export function NewAdminBusinessOffer() {
 
 function ProviderHeading({ provider }: { provider: Provider }) {
   const canViewPartner = useCan(PartnerAdminPermission.PARTNER_VIEW);
-  const canViewOrganization = useCan(OrganizationAdminPermission.ORGANIZATION_VIEW);
-  const partner = usePartner(provider.id, {
-    enabled: provider.kind === "partner" && canViewPartner,
-  });
-  const organization = useOrganization(provider.id, {
-    enabled: provider.kind === "employer" && canViewOrganization,
-  });
-  if (provider.kind === "partner" && partner.isSuccess) {
+  const partner = usePartner(provider.id, { enabled: canViewPartner });
+  if (partner.isSuccess) {
+    const Icon = provider.kind === "merchant" ? Handshake : Building2;
     return (
       <span className="flex flex-wrap items-center gap-2">
-        <Handshake className="size-4" aria-hidden />
+        <Icon className="size-4" aria-hidden />
         <Link href={`/admin/partners/${provider.id}`} className="hover:underline">
           {partner.data.business_name}
         </Link>
-        <StatusBadge domain="partner" status={partner.data.status} />
-      </span>
-    );
-  }
-  if (provider.kind === "employer" && organization.isSuccess) {
-    return (
-      <span className="flex flex-wrap items-center gap-2">
-        <Building2 className="size-4" aria-hidden />
-        <Link href={`/admin/organizations/${provider.id}`} className="hover:underline">
-          {organization.data.name}
-        </Link>
-        <span>· Employer</span>
+        {provider.kind === "merchant" ? (
+          <StatusBadge domain="partner" status={partner.data.status} />
+        ) : (
+          <span>· Client group</span>
+        )}
       </span>
     );
   }
@@ -455,14 +456,14 @@ function BusinessOfferComposer({ provider }: { provider: Provider }) {
             defaultValues={EMPTY_BUSINESS_OFFER}
             categories={categories.options}
             intents={intents}
-            organizationPicker={(props) => <OrganizationPicker {...props} />}
-            employeeSwitchBlocked={provider.kind === "partner" ? null : EMPLOYER_ONLY}
+            organizationPicker={(props) => <AdminBusinessPicker {...props} />}
+            employeeSwitchBlocked={provider.kind === "merchant" ? null : CLIENT_ONLY}
             reasonHint="Optional note, recorded in the audit log with you as the poster."
             onSubmit={async (values, intent) => {
               const offer = await create.mutateAsync({
                 ...businessOfferBody(values),
-                partner_id: provider.kind === "partner" ? provider.id : null,
-                provider_organization_id: provider.kind === "employer" ? provider.id : null,
+                partner_id: provider.kind === "merchant" ? provider.id : null,
+                provider_client_id: provider.kind === "client" ? provider.id : null,
                 intent,
               });
               toast.success(
@@ -659,7 +660,6 @@ function BusinessOfferWorkspace({ offer }: { offer: Offer }) {
   const canUpdate = useCan(OfferAdminPermission.OFFER_UPDATE);
   const canViewDecisions = useCan(OfferAdminPermission.OFFER_DECISION_VIEW);
   const canViewPartner = useCan(PartnerAdminPermission.PARTNER_VIEW);
-  const canViewOrganization = useCan(OrganizationAdminPermission.ORGANIZATION_VIEW);
   const canViewClaims = useCan(ClaimAdminPermission.CLAIM_VIEW);
   const canViewEnquiries = useCan(BusinessAdminPermission.ENQUIRY_VIEW);
   const actions = useAvailableActions(offer);
@@ -668,12 +668,9 @@ function BusinessOfferWorkspace({ offer }: { offer: Offer }) {
   // overwrite of someone else's change (the API answers 409 instead).
   const [editingFrom, setEditingFrom] = useState<Offer | null>(null);
   const partner = offer.partner;
-  const providerHref = partner
-    ? canViewPartner && `/admin/partners/${partner.id}`
-    : canViewOrganization &&
-      offer.provider_organization &&
-      `/admin/organizations/${offer.provider_organization.id}`;
-  const providerName = partner?.business_name ?? offer.provider_organization?.name ?? "—";
+  const provider = offer.business_provider;
+  const providerHref = provider && canViewPartner && `/admin/partners/${provider.id}`;
+  const providerName = provider?.name ?? "—";
 
   // Two buttons at most; the rest go in the menu. Only a non-destructive first is cobalt.
   const [primary, secondary, ...menu] = actions;
@@ -693,7 +690,7 @@ function BusinessOfferWorkspace({ offer }: { offer: Offer }) {
               providerName
             )}
             <span aria-hidden>·</span>
-            {partner ? "Partner" : "Employer"}
+            {provider ? BUSINESS_KIND_LABEL[provider.kind] : null}
           </span>
         }
         actions={
@@ -794,7 +791,10 @@ function ActionButton({
 function Versions({ offerId }: { offerId: string }) {
   const paging = usePageParam("versions_");
   return (
-    <OfferVersionHistory versions={useAdminBusinessOfferVersions(offerId, paging)} paging={paging} />
+    <OfferVersionHistory
+      versions={useAdminBusinessOfferVersions(offerId, paging)}
+      paging={paging}
+    />
   );
 }
 
@@ -836,8 +836,8 @@ function AssistedEdit({ offer, onDone }: { offer: Offer; onDone: () => void }) {
             defaultValues={businessOfferValues(offer)}
             categories={categories.options}
             intents={intents}
-            organizationPicker={(props) => <OrganizationPicker {...props} />}
-            employeeSwitchBlocked={offer.partner ? null : EMPLOYER_ONLY}
+            organizationPicker={(props) => <AdminBusinessPicker {...props} />}
+            employeeSwitchBlocked={offer.partner ? null : CLIENT_ONLY}
             reasonHint="Optional note, recorded in the audit log."
             promoCodeLocked={Boolean(offer.first_published_at)}
             onCancel={onDone}

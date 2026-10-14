@@ -12,7 +12,13 @@ import { usePageParam } from "@/shared/hooks/use-page-param";
 import { useSortParam } from "@/shared/hooks/use-sort-param";
 import { formatDate } from "@/shared/lib/format";
 
-import { AD_SORTS, useAds, type AdDisplayStatus, type AdFilters, type Workspace } from "../api/queries";
+import {
+  AD_SORTS,
+  useAds,
+  type AdDisplayStatus,
+  type AdFilters,
+  type Workspace,
+} from "../api/queries";
 import { creativeView, CREATIVE_LABEL } from "../schemas/advertisement";
 import { adHref, campaignHref, POSTED_VIA_LABEL } from "./ad-details";
 

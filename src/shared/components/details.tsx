@@ -22,9 +22,7 @@ export function Detail({
 }) {
   return (
     <div className={className}>
-      <dt className="kicker text-muted-foreground mb-1.5 text-[11px]">
-        {label}
-      </dt>
+      <dt className="kicker text-muted-foreground mb-1.5 text-[11px]">{label}</dt>
       <dd className="break-words">{children}</dd>
     </div>
   );

@@ -84,9 +84,9 @@ export function Catalogue() {
 
   return (
     <div className="space-y-4">
-      <SearchField 
-        placeholder="Search offers or businesses" 
-        aria-label="Search offers by title, headline or business" 
+      <SearchField
+        placeholder="Search offers or businesses"
+        aria-label="Search offers by title, headline or business"
         className="max-w-md"
       />
 
@@ -317,7 +317,8 @@ function LoadedOffer({ offer }: { offer: MarketplaceOffer }) {
 
 /** What happens when the employee claims, explained before they do (acceptance mode). */
 function acceptanceText(offer: MarketplaceOffer): string {
-  if (offer.acceptance_mode === "auto_accept") return "Accepted at once; your voucher is issued immediately.";
+  if (offer.acceptance_mode === "auto_accept")
+    return "Accepted at once; your voucher is issued immediately.";
   return offer.approval_ttl_hours
     ? `${offer.partner.business_name} approves each request within ${offer.approval_ttl_hours} hours.`
     : `${offer.partner.business_name} approves each request.`;

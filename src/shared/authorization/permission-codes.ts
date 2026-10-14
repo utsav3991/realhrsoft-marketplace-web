@@ -14,6 +14,8 @@ export const IdentityPermission = {
   USER_CREATE: "identity.user.create",
   USER_DISABLE: "identity.user.disable",
   USER_REACTIVATE: "identity.user.reactivate",
+  /** Emails a new set-password link to an account that has not set a password yet. */
+  USER_PASSWORD_SETUP_RESEND: "identity.user.password_setup.resend",
   ROLE_VIEW: "identity.role.view",
   ROLE_CREATE: "identity.role.create",
   ROLE_PERMISSION_MANAGE: "identity.role_permission.manage",
@@ -103,9 +105,10 @@ export const BusinessAdminPermission = {
 } as const;
 
 /**
- * Organization: the Business portal (/business). The selected organization must be a verified
- * partner or an employer: its own business offers, the business catalogue of other
- * organizations' offers, the enquiries it sent and the enquiries (leads) it received.
+ * Organization: the Business portal (/business), for a merchant acting through its home
+ * organization; the merchant must be verified. Its own business offers, the catalogue of other
+ * businesses' offers (merchants and client groups), the enquiries it sent and the enquiries
+ * (leads) it received. A client group holds the same authority as ClientBusinessPermission.
  */
 export const BusinessOfferPermission = {
   OFFER_VIEW: "offers.own_business_offer.view",
@@ -284,6 +287,45 @@ export const ClientBenefitPermission = {
   BENEFIT_RETIRE: "offers.client_benefit.retire",
 } as const;
 
+/**
+ * Client: business (B2B) offers acting as the client group (/client/business, X-Client-ID).
+ * Each is the client equivalent of a BusinessOfferPermission code (CLIENT_BUSINESS_CODES).
+ * A client's own offers are enquiry-only: never shown to employees.
+ */
+export const ClientBusinessPermission = {
+  OFFER_VIEW: "offers.client_business_offer.view",
+  OFFER_CREATE: "offers.client_business_offer.create",
+  OFFER_UPDATE: "offers.client_business_offer.update",
+  OFFER_SUBMIT: "offers.client_business_offer.submit",
+  OFFER_WITHDRAW: "offers.client_business_offer.withdraw",
+  OFFER_PAUSE: "offers.client_business_offer.pause",
+  OFFER_RETIRE: "offers.client_business_offer.retire",
+  CATALOGUE_VIEW: "offers.client_business_catalogue.view",
+  SENT_ENQUIRY_VIEW: "offers.client_sent_enquiry.view",
+  SENT_ENQUIRY_CREATE: "offers.client_sent_enquiry.create",
+  RECEIVED_ENQUIRY_VIEW: "offers.client_received_enquiry.view",
+  RECEIVED_ENQUIRY_MANAGE: "offers.client_received_enquiry.manage",
+} as const;
+
+/** The client code for each merchant business code: one authority, two scopes. */
+export const CLIENT_BUSINESS_CODES: Readonly<
+  Record<ValueOf<typeof BusinessOfferPermission>, ValueOf<typeof ClientBusinessPermission>>
+> = {
+  [BusinessOfferPermission.OFFER_VIEW]: ClientBusinessPermission.OFFER_VIEW,
+  [BusinessOfferPermission.OFFER_CREATE]: ClientBusinessPermission.OFFER_CREATE,
+  [BusinessOfferPermission.OFFER_UPDATE]: ClientBusinessPermission.OFFER_UPDATE,
+  [BusinessOfferPermission.OFFER_SUBMIT]: ClientBusinessPermission.OFFER_SUBMIT,
+  [BusinessOfferPermission.OFFER_WITHDRAW]: ClientBusinessPermission.OFFER_WITHDRAW,
+  [BusinessOfferPermission.OFFER_PAUSE]: ClientBusinessPermission.OFFER_PAUSE,
+  [BusinessOfferPermission.OFFER_RETIRE]: ClientBusinessPermission.OFFER_RETIRE,
+  [BusinessOfferPermission.CATALOGUE_VIEW]: ClientBusinessPermission.CATALOGUE_VIEW,
+  [BusinessOfferPermission.SENT_ENQUIRY_VIEW]: ClientBusinessPermission.SENT_ENQUIRY_VIEW,
+  [BusinessOfferPermission.SENT_ENQUIRY_CREATE]: ClientBusinessPermission.SENT_ENQUIRY_CREATE,
+  [BusinessOfferPermission.RECEIVED_ENQUIRY_VIEW]: ClientBusinessPermission.RECEIVED_ENQUIRY_VIEW,
+  [BusinessOfferPermission.RECEIVED_ENQUIRY_MANAGE]:
+    ClientBusinessPermission.RECEIVED_ENQUIRY_MANAGE,
+};
+
 /** Client: usage of the client's benefits, in total and per company, as counts. */
 export const ClientAnalyticsPermission = {
   BENEFIT_REPORT_VIEW: "analytics.client_benefit_report.view",
@@ -293,6 +335,8 @@ export const ClientAnalyticsPermission = {
 export const ClientAdministrationPermission = {
   MEMBER_MANAGE: "partners.client_member.manage",
   ROLE_MANAGE: "partners.client_role.manage",
+  /** Adds, lists and ends each company's users (a few per company) and resends their links. */
+  COMPANY_USER_MANAGE: "partners.company_user.manage",
 } as const;
 
 type ValueOf<T> = T[keyof T];
@@ -324,12 +368,11 @@ export type OrganizationPermissionCode =
   | ValueOf<typeof PartnerMarketingPermission>;
 export type ClientPermissionCode =
   | ValueOf<typeof ClientBenefitPermission>
+  | ValueOf<typeof ClientBusinessPermission>
   | ValueOf<typeof ClientAnalyticsPermission>
   | ValueOf<typeof ClientAdministrationPermission>;
 export type PermissionCode =
-  | GlobalPermissionCode
-  | OrganizationPermissionCode
-  | ClientPermissionCode;
+  GlobalPermissionCode | OrganizationPermissionCode | ClientPermissionCode;
 
 /** Every administrative global code: holding any of them opens the admin console. */
 export const GLOBAL_PERMISSIONS: readonly GlobalPermissionCode[] = [
@@ -351,6 +394,7 @@ export const GLOBAL_PERMISSIONS: readonly GlobalPermissionCode[] = [
 /** Every client code: holding any of them in some client opens the Client portal. */
 export const CLIENT_PERMISSIONS: readonly ClientPermissionCode[] = [
   ...Object.values(ClientBenefitPermission),
+  ...Object.values(ClientBusinessPermission),
   ...Object.values(ClientAnalyticsPermission),
   ...Object.values(ClientAdministrationPermission),
 ];

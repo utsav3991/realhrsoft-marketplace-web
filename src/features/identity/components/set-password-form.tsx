@@ -24,6 +24,7 @@ import { applyApiFieldErrors } from "@/shared/forms/api-field-errors";
 
 import { useSetPassword } from "../api/mutations";
 import { usePasswordSetupLink } from "../api/queries";
+import { RequestSetupLinkForm } from "./request-setup-link-form";
 import { setPasswordSchema, type SetPasswordValues } from "../schemas/login";
 
 const FIELDS = [
@@ -61,10 +62,10 @@ export function SetPasswordForm({ uidb64, token }: { uidb64: string; token: stri
             {link.isError
               ? errorMessage(link.error)
               : (link.data.message ?? "This link is invalid or has expired.")}{" "}
-            Ask an administrator to send a new invitation.
+            Enter your email to get a new one.
           </AlertDescription>
         </Alert>
-        <SignInLink />
+        <RequestSetupLinkForm />
       </div>
     );
   }

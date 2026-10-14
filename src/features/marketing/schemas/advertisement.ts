@@ -101,7 +101,8 @@ export const adSchema = z
     const target = linkTarget(values);
     if (target === "external_url") {
       if (!HTTPS_URL.test(values.url)) issue("url", "Enter a link starting with https://");
-      else if (/^https:\/\/[^/]*@/.test(values.url)) issue("url", "Remove the user name or password");
+      else if (/^https:\/\/[^/]*@/.test(values.url))
+        issue("url", "Remove the user name or password");
     } else if (target === "offer" && !values.offerId) {
       issue("offerId", "Choose an offer");
     }
@@ -172,7 +173,11 @@ export function adBody(values: AdValues): AdContentBody {
 function destinationBody(values: AdValues): Record<string, string> {
   const target = linkTarget(values);
   const link: Record<string, string> =
-    target === "external_url" ? { url: values.url } : target === "offer" ? { offer_id: values.offerId } : {};
+    target === "external_url"
+      ? { url: values.url }
+      : target === "offer"
+        ? { offer_id: values.offerId }
+        : {};
   if (values.destinationType !== "ad_page") return link;
   return {
     title: values.pageTitle,
@@ -280,7 +285,14 @@ export function adValues(ad: Advertisement): AdValues {
 function destinationValues(
   destination: DestinationView,
 ): Pick<AdValues, "url" | "offerId" | "pageTitle" | "pageBody" | "pageAction" | "actionLabel"> {
-  const empty = { url: "", offerId: "", pageTitle: "", pageBody: "", pageAction: "none", actionLabel: "" } as const;
+  const empty = {
+    url: "",
+    offerId: "",
+    pageTitle: "",
+    pageBody: "",
+    pageAction: "none",
+    actionLabel: "",
+  } as const;
   switch (destination.type) {
     case "external_url":
       return { ...empty, url: destination.url };

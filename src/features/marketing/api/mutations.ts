@@ -68,7 +68,9 @@ export function useCampaignAction(organizationId: string, campaignId: string) {
       const params = { header: header(workspace), path: { campaign_id: pathId(campaignId) } };
       switch (action) {
         case "pause":
-          return unwrap(api.POST("/partner/marketing/campaigns/{campaign_id}/pause", { params, body }));
+          return unwrap(
+            api.POST("/partner/marketing/campaigns/{campaign_id}/pause", { params, body }),
+          );
         case "resume":
           return unwrap(
             api.POST("/partner/marketing/campaigns/{campaign_id}/resume", { params, body }),
@@ -279,10 +281,7 @@ export function useUpdateSlot(slotId: string) {
 
 export function useSlotState(slotId: string) {
   return useMutation({
-    mutationFn: ({
-      active,
-      ...body
-    }: Schemas["ExpectedVersionReason"] & { active: boolean }) => {
+    mutationFn: ({ active, ...body }: Schemas["ExpectedVersionReason"] & { active: boolean }) => {
       const params = { path: { slot_id: pathId(slotId) } };
       return unwrap(
         active

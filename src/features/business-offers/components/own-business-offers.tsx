@@ -70,12 +70,7 @@ import {
 import type { IntentButton } from "@/features/offers/components/offer-form";
 import { OFFER_STATUSES } from "@/features/offers/components/offers-directory";
 import { ApiError } from "@/shared/api";
-import { useSelectedOrganizationId, useSession } from "@/shared/auth";
-import {
-  BusinessOfferPermission,
-  useCanInOrganization,
-  type OrganizationPermissionCode,
-} from "@/shared/authorization";
+import { BusinessOfferPermission } from "@/shared/authorization";
 import { ConfirmDialog } from "@/shared/components/confirm-dialog";
 import { QueryDataTable, type RowOf } from "@/shared/components/query-data-table";
 import { StatusBadge } from "@/shared/components/status-badge";
@@ -105,43 +100,39 @@ import {
 } from "../schemas/business-offer";
 import { BusinessOfferForm } from "./business-offer-form";
 import { BusinessDirectoryPicker } from "./business-directory-picker";
+import { useBusinessCan, useBusinessPortal } from "./business-portal";
 
 const ALL = "all";
 
-/** Why the switch is off-limits: vouchers are partner-bound, so only a partner post may use it. */
-const EMPLOYER_ONLY =
-  "Only an offer posted as a verified partner can be shown to employees, because the partner confirms their vouchers.";
+type BusinessCode = (typeof BusinessOfferPermission)[keyof typeof BusinessOfferPermission];
 
-/** The selected organization's capacities, as listed in its membership. */
-function useSelectedMembership() {
-  const { actor } = useSession();
-  const organizationId = useSelectedOrganizationId();
-  return actor?.memberships.find((m) => m.organizationId === organizationId);
-}
+/** Why the switch is off-limits: vouchers are merchant-bound, so a client's offer can't use it. */
+const CLIENT_ONLY =
+  "A client group's offer is enquiry-only: it can't be shown to employees, because only a merchant confirms their vouchers.";
 
-/** The selected organization's business offers. */
+/** The acting business's own business offers. */
 export function OwnBusinessOffers() {
   const { searchParams, set } = useUrlParams();
-  const organizationId = useSelectedOrganizationId();
+  const { owner, base } = useBusinessPortal();
   const statusParam = searchParams.get("status");
   const status = OFFER_STATUSES.find((s) => s.value === statusParam)?.value ?? null;
   const sort = useSortParam(BUSINESS_OFFER_SORTS);
   const paging = usePageParam();
   const offers = useOwnBusinessOffers(
-    organizationId,
+    owner,
     {
       search: searchParams.get("search") ?? "",
       status,
       inReview: null,
       showToEmployees: null,
-      partnerId: null,
-      organizationId: null,
+      providerKind: null,
+      providerId: null,
       ordering: sort.value,
     },
     paging,
   );
-  const canCreate = useCanInOrganization(BusinessOfferPermission.OFFER_CREATE);
-  const canViewLeads = useCanInOrganization(BusinessOfferPermission.RECEIVED_ENQUIRY_VIEW);
+  const canCreate = useBusinessCan(BusinessOfferPermission.OFFER_CREATE);
+  const canViewLeads = useBusinessCan(BusinessOfferPermission.RECEIVED_ENQUIRY_VIEW);
 
   const columns: DataTableColumns<RowOf<typeof offers>> = [
     {
@@ -151,7 +142,7 @@ export function OwnBusinessOffers() {
         const version = shownVersion(offer);
         return (
           <>
-            <Link href={`/business/offers/${offer.id}`} className="font-medium hover:underline">
+            <Link href={`${base}/offers/${offer.id}`} className="font-medium hover:underline">
               {version?.title ?? "Untitled offer"}
             </Link>
             <p className="text-muted-foreground text-xs">
@@ -167,11 +158,11 @@ export function OwnBusinessOffers() {
       cell: (offer) => <StatusBadge domain="offer" status={offer.display_status} />,
     },
     {
-      id: "organizations",
-      header: "Organizations",
+      id: "businesses",
+      header: "Businesses",
       className: "hidden md:table-cell",
       cell: (offer) => (
-        <VisibilityBadge visible={offer.visible_to_businesses} viewers="organizations" />
+        <VisibilityBadge visible={offer.visible_to_businesses} viewers="businesses" />
       ),
     },
     {
@@ -182,7 +173,7 @@ export function OwnBusinessOffers() {
         shownVersion(offer)?.business_policy?.show_to_employees ? (
           <VisibilityBadge offer={offer} />
         ) : (
-          <span className="text-muted-foreground">Organizations only</span>
+          <span className="text-muted-foreground">Businesses only</span>
         ),
     },
     {
@@ -225,7 +216,7 @@ export function OwnBusinessOffers() {
         <div className="flex flex-wrap gap-2">
           {canViewLeads ? (
             <Button asChild variant="outline">
-              <Link href="/business/leads">
+              <Link href={`${base}/leads`}>
                 <Inbox aria-hidden />
                 Leads
               </Link>
@@ -233,7 +224,7 @@ export function OwnBusinessOffers() {
           ) : null}
           {canCreate ? (
             <Button asChild>
-              <Link href="/business/offers/new">
+              <Link href={`${base}/offers/new`}>
                 <Plus aria-hidden />
                 New business offer
               </Link>
@@ -256,7 +247,7 @@ export function OwnBusinessOffers() {
             description={
               status
                 ? "Try another status."
-                : "Offer your products or services to other organizations. Aayulogic reviews each one before it goes live."
+                : "Offer your products or services to other businesses. Aayulogic reviews each one before it goes live."
             }
           />
         }
@@ -266,9 +257,10 @@ export function OwnBusinessOffers() {
 }
 
 function BackToOwnOffers() {
+  const { base } = useBusinessPortal();
   return (
     <Button asChild variant="ghost" size="sm" className="-ml-3">
-      <Link href="/business/offers">
+      <Link href={`${base}/offers`}>
         <ArrowLeft aria-hidden />
         Business offers
       </Link>
@@ -278,7 +270,7 @@ function BackToOwnOffers() {
 
 /** Portal intents: save, plus submit when the member may submit. */
 function usePortalIntents(): IntentButton[] {
-  const canSubmit = useCanInOrganization(BusinessOfferPermission.OFFER_SUBMIT);
+  const canSubmit = useBusinessCan(BusinessOfferPermission.OFFER_SUBMIT);
   if (!canSubmit) return [{ intent: "save", label: "Save draft", primary: true }];
   return [
     { intent: "save", label: "Save draft" },
@@ -295,11 +287,10 @@ function PortalBusinessOfferForm({
   onSubmit: Parameters<typeof BusinessOfferForm>[0]["onSubmit"];
   onCancel?: () => void;
 }): ReactNode {
-  const organizationId = useSelectedOrganizationId();
-  const membership = useSelectedMembership();
+  const { owner, kind } = useBusinessPortal();
   const intents = usePortalIntents();
   const categories = categoryOptions(
-    useOwnBusinessCategories(organizationId),
+    useOwnBusinessCategories(owner),
     offer ? editableVersion(offer)?.business_policy?.category : undefined,
   );
   if (categories.query.isPending) return <Skeleton className="h-96 w-full" />;
@@ -308,16 +299,15 @@ function PortalBusinessOfferForm({
       <ErrorState error={categories.query.error} onRetry={() => void categories.query.refetch()} />
     );
   }
-  // An existing offer keeps the capacity it was posted in; a new one uses the partner capacity
-  // when the organization has a partner registration (the API requires it to be verified).
-  const asPartner = offer ? offer.partner !== null : Boolean(membership?.partner);
+  // Only a merchant's offer may be shown to employees (D7).
+  const asMerchant = offer ? offer.partner !== null : kind === "merchant";
   return (
     <BusinessOfferForm
       defaultValues={offer ? businessOfferValues(offer) : EMPTY_BUSINESS_OFFER}
       categories={categories.options}
       intents={intents}
       organizationPicker={(props) => <BusinessDirectoryPicker {...props} />}
-      employeeSwitchBlocked={asPartner ? null : EMPLOYER_ONLY}
+      employeeSwitchBlocked={asMerchant ? null : CLIENT_ONLY}
       reasonHint="Optional note, recorded in the audit log."
       promoCodeLocked={Boolean(offer?.first_published_at)}
       onSubmit={onSubmit}
@@ -326,12 +316,11 @@ function PortalBusinessOfferForm({
   );
 }
 
-/** Creating a business offer for the selected organization. */
+/** Creating a business offer for the acting business. */
 export function NewOwnBusinessOffer() {
   const router = useRouter();
-  const organizationId = useSelectedOrganizationId();
-  const membership = useSelectedMembership();
-  const create = useCreateOwnBusinessOffer(organizationId);
+  const { owner, kind, base } = useBusinessPortal();
+  const create = useCreateOwnBusinessOffer(owner);
 
   return (
     <div className="space-y-6">
@@ -340,10 +329,10 @@ export function NewOwnBusinessOffer() {
         <CardHeader>
           <CardTitle>New business offer</CardTitle>
           <CardDescription>
-            {membership?.partner
-              ? "Posted as your partner business, which must be verified."
-              : "Posted as your employer organization."}{" "}
-            Save it as a draft or submit it for Aayulogic review. Organizations see it only once
+            {kind === "merchant"
+              ? "Posted as your merchant, which must be verified."
+              : "Posted as your client group. It is enquiry-only: never shown to employees."}{" "}
+            Save it as a draft or submit it for Aayulogic review. Businesses see it only once
             approved, enabled and inside its dates.
           </CardDescription>
         </CardHeader>
@@ -355,7 +344,7 @@ export function NewOwnBusinessOffer() {
                 intent: intent === "submit" ? "submit" : "save",
               });
               toast.success(intent === "submit" ? "Offer submitted for review" : "Draft saved");
-              router.push(`/business/offers/${offer.id}`);
+              router.push(`${base}/offers/${offer.id}`);
             }}
           />
         </CardContent>
@@ -364,10 +353,10 @@ export function NewOwnBusinessOffer() {
   );
 }
 
-/** One of the selected organization's business offers: status, feedback, edits and history. */
+/** One of the acting business's offers: status, feedback, edits and history. */
 export function OwnBusinessOffer({ offerId }: { offerId: string }) {
-  const organizationId = useSelectedOrganizationId();
-  const offer = useOwnBusinessOffer(organizationId, offerId);
+  const { owner } = useBusinessPortal();
+  const offer = useOwnBusinessOffer(owner, offerId);
 
   if (offer.isPending) {
     return (
@@ -390,13 +379,13 @@ export function OwnBusinessOffer({ offerId }: { offerId: string }) {
       </div>
     );
   }
-  return <OwnBusinessOfferWorkspace offer={offer.data} organizationId={organizationId} />;
+  return <OwnBusinessOfferWorkspace offer={offer.data} />;
 }
 
 interface OwnerActionSpec {
   label: string;
   icon: LucideIcon;
-  permission: OrganizationPermissionCode;
+  permission: BusinessCode;
   available: (offer: Offer) => boolean;
   title: string;
   description: string;
@@ -437,7 +426,7 @@ const OWNER_ACTIONS: Record<OwnOfferAction, OwnerActionSpec> = {
     available: isResumable,
     title: "Resume this offer?",
     description:
-      "Organizations (and employees, if shown to them) can see it again while every other gate passes. An Aayulogic suspension stays in place.",
+      "Businesses (and employees, if shown to them) can see it again while every other gate passes. An Aayulogic suspension stays in place.",
     confirmLabel: "Resume",
     done: "Offer resumed",
   },
@@ -448,7 +437,7 @@ const OWNER_ACTIONS: Record<OwnOfferAction, OwnerActionSpec> = {
     available: isPausable,
     title: "Pause this offer?",
     description:
-      "Organizations stop seeing it and cannot enquire, and employees cannot claim it, until you resume it. Open enquiries, claims and vouchers are unaffected.",
+      "Businesses stop seeing it and cannot enquire, and employees cannot claim it, until you resume it. Open enquiries, claims and vouchers are unaffected.",
     confirmLabel: "Pause",
     done: "Offer paused",
   },
@@ -480,33 +469,28 @@ const OWNER_ACTIONS: Record<OwnOfferAction, OwnerActionSpec> = {
 
 function useOwnerActions(offer: Offer): OwnOfferAction[] {
   const granted: Record<OwnOfferAction, boolean> = {
-    submit: useCanInOrganization(OWNER_ACTIONS.submit.permission),
-    retract: useCanInOrganization(OWNER_ACTIONS.retract.permission),
-    resume: useCanInOrganization(OWNER_ACTIONS.resume.permission),
-    pause: useCanInOrganization(OWNER_ACTIONS.pause.permission),
-    unpublish: useCanInOrganization(OWNER_ACTIONS.unpublish.permission),
-    retire: useCanInOrganization(OWNER_ACTIONS.retire.permission),
+    submit: useBusinessCan(OWNER_ACTIONS.submit.permission),
+    retract: useBusinessCan(OWNER_ACTIONS.retract.permission),
+    resume: useBusinessCan(OWNER_ACTIONS.resume.permission),
+    pause: useBusinessCan(OWNER_ACTIONS.pause.permission),
+    unpublish: useBusinessCan(OWNER_ACTIONS.unpublish.permission),
+    retire: useBusinessCan(OWNER_ACTIONS.retire.permission),
   };
   return (Object.keys(OWNER_ACTIONS) as OwnOfferAction[]).filter(
     (action) => granted[action] && OWNER_ACTIONS[action].available(offer),
   );
 }
 
-function OwnBusinessOfferWorkspace({
-  offer,
-  organizationId,
-}: {
-  offer: Offer;
-  organizationId: string;
-}) {
-  const canUpdate = useCanInOrganization(BusinessOfferPermission.OFFER_UPDATE);
-  const canViewLeads = useCanInOrganization(BusinessOfferPermission.RECEIVED_ENQUIRY_VIEW);
+function OwnBusinessOfferWorkspace({ offer }: { offer: Offer }) {
+  const { owner, base } = useBusinessPortal();
+  const canUpdate = useBusinessCan(BusinessOfferPermission.OFFER_UPDATE);
+  const canViewLeads = useBusinessCan(BusinessOfferPermission.RECEIVED_ENQUIRY_VIEW);
   // The offer the edit started from: a background refetch must not turn a stale draft into an
   // overwrite of someone else's change (the API answers 409 instead).
   const [editingFrom, setEditingFrom] = useState<Offer | null>(null);
   const [acting, setActing] = useState<OwnOfferAction | null>(null);
-  const update = useUpdateOwnBusinessOffer(organizationId, offer.id);
-  const action = useOwnBusinessOfferAction(organizationId, offer.id);
+  const update = useUpdateOwnBusinessOffer(owner, offer.id);
+  const action = useOwnBusinessOfferAction(owner, offer.id);
   const actions = useOwnerActions(offer);
   const version = shownVersion(offer);
   const spec = OWNER_ACTIONS[acting ?? "submit"];
@@ -526,7 +510,7 @@ function OwnBusinessOfferWorkspace({
             <StatusBadge domain="offer" status={offer.display_status} />
             {canViewLeads ? (
               <Button asChild variant="outline">
-                <Link href={`/business/leads?offer_id=${offer.id}`}>
+                <Link href={`${base}/leads?offer_id=${offer.id}`}>
                   <Inbox aria-hidden />
                   Leads
                 </Link>
@@ -569,7 +553,7 @@ function OwnBusinessOfferWorkspace({
             <CardDescription>
               Saving replaces every field of the working draft, or starts a new one.{" "}
               {editingFrom.current_version
-                ? `Organizations keep seeing version ${editingFrom.current_version.number} until Aayulogic approves the change; turning the employee switch on or off takes effect then too.`
+                ? `Businesses keep seeing version ${editingFrom.current_version.number} until Aayulogic approves the change; turning the employee switch on or off takes effect then too.`
                 : "Submit it when it is ready for review."}
             </CardDescription>
           </CardHeader>
@@ -602,9 +586,9 @@ function OwnBusinessOfferWorkspace({
           }
         />
       )}
-      <PublicationCard offer={offer} partner={offer.partner?.business_name} />
-      <OwnVersions organizationId={organizationId} offerId={offer.id} />
-      <OwnDecisions organizationId={organizationId} offerId={offer.id} />
+      <PublicationCard offer={offer} partner={offer.business_provider?.name} />
+      <OwnVersions offerId={offer.id} />
+      <OwnDecisions offerId={offer.id} />
 
       <ConfirmDialog
         open={acting !== null}
@@ -623,21 +607,23 @@ function OwnBusinessOfferWorkspace({
   );
 }
 
-function OwnVersions({ organizationId, offerId }: { organizationId: string; offerId: string }) {
+function OwnVersions({ offerId }: { offerId: string }) {
+  const { owner } = useBusinessPortal();
   const paging = usePageParam("versions_");
   return (
     <OfferVersionHistory
-      versions={useOwnBusinessOfferVersions(organizationId, offerId, paging)}
+      versions={useOwnBusinessOfferVersions(owner, offerId, paging)}
       paging={paging}
     />
   );
 }
 
-function OwnDecisions({ organizationId, offerId }: { organizationId: string; offerId: string }) {
+function OwnDecisions({ offerId }: { offerId: string }) {
+  const { owner } = useBusinessPortal();
   const paging = usePageParam("decisions_");
   return (
     <OfferDecisionHistory
-      decisions={useOwnBusinessOfferDecisions(organizationId, offerId, paging)}
+      decisions={useOwnBusinessOfferDecisions(owner, offerId, paging)}
       paging={paging}
     />
   );

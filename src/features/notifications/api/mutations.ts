@@ -43,9 +43,7 @@ export function useSetEmailNotifications() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (emailEnabled: boolean) =>
-      unwrap(
-        api.PATCH("/me/notification-preferences", { body: { email_enabled: emailEnabled } }),
-      ),
+      unwrap(api.PATCH("/me/notification-preferences", { body: { email_enabled: emailEnabled } })),
     onSuccess: (preferences) =>
       queryClient.setQueryData(notificationKeys.preferences(), preferences),
   });

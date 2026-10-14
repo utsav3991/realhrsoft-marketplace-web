@@ -169,7 +169,10 @@ export type GrantState = "active" | "scheduled" | "expired" | "revoked";
 
 /** The grant's badge: revoked first, then its window against `now`. */
 export function grantState(
-  grant: Pick<AdvertisingGrant | PortalAdvertisingGrant, "revoked_at" | "valid_from" | "valid_until" | "active">,
+  grant: Pick<
+    AdvertisingGrant | PortalAdvertisingGrant,
+    "revoked_at" | "valid_from" | "valid_until" | "active"
+  >,
   now = new Date(),
 ): GrantState {
   if (grant.revoked_at) return "revoked";

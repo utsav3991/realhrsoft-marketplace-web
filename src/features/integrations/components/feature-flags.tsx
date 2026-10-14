@@ -51,7 +51,10 @@ export function FeatureFlags() {
         <CardContent>
           <ul className="divide-y">
             {flags.data.map((flag) => (
-              <li key={flag.key} className="flex flex-wrap items-start gap-4 py-4 first:pt-0 last:pb-0">
+              <li
+                key={flag.key}
+                className="flex flex-wrap items-start gap-4 py-4 first:pt-0 last:pb-0"
+              >
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-mono text-sm font-semibold">{flag.key}</span>

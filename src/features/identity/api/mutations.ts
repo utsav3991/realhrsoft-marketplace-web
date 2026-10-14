@@ -47,6 +47,21 @@ export function useDisableUser(userId: string) {
   });
 }
 
+/** Emails a new set-password link; earlier links stop working. 409 once a password is set. */
+export function useResendPasswordSetup(userId: string) {
+  const invalidate = useInvalidateUser();
+  return useMutation({
+    mutationFn: ({ reason }: { reason: string }) =>
+      unwrap(
+        api.POST("/admin/users/{user_id}/password-setup/resend", {
+          params: { path: { user_id: pathId(userId) } },
+          body: { reason },
+        }),
+      ),
+    onSettled: () => invalidate(userId),
+  });
+}
+
 export function useReactivateUser(userId: string) {
   const invalidate = useInvalidateUser();
   return useMutation({
@@ -155,5 +170,16 @@ export function useSetPassword(uidb64: string, token: string) {
       }
       throw normalizeApiError(error, response);
     },
+  });
+}
+
+/**
+ * Asks for a new set-password link (public). The answer is the same whether or not the
+ * account exists, so the caller always shows one acknowledgement; only 429 differs.
+ */
+export function useRequestPasswordSetupLink() {
+  return useMutation({
+    mutationFn: (body: Schemas["PasswordSetupResendRequest"]) =>
+      unwrap(api.POST("/users/auth/password-setup/resend/", { body })),
   });
 }

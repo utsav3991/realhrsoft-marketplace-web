@@ -353,36 +353,33 @@ async function fakeBackend(page: Page, { signedIn = false } = {}): Promise<Call[
         return Object.assign(target, profile, { version: (target.version as number) + 1 });
       },
     ],
-    ...(["verify", "reject", "resubmit"] as const).map(
-      (action): (typeof routes)[number] =>
-        [
-          `POST /admin/partners/{partner_id}/${action}`,
-          new RegExp(`^/admin/partners/([^/]+)/${action}$`),
-          (route: Route, match: RegExpMatchArray) => {
-            const target = partners.find((candidate) => candidate.id === match[1]);
-            if (!target) return 404;
-            const { expected_version, reason } = route.request().postDataJSON() as {
-              expected_version: number;
-              reason: string;
-            };
-            if (target.version !== expected_version) return 409;
-            const status = { verify: "verified", reject: "rejected", resubmit: "pending" }[action];
-            if (action !== "resubmit") {
-              const decision = {
-                id: `00000000-0000-4000-8000-00000000020${decisions.length}`,
-                outcome: status,
-                partner_version: expected_version,
-                reason,
-                decided_by: ADMIN_ID,
-                decided_at: NOW,
-              };
-              decisions.unshift(decision);
-              target.latest_decision = decision;
-            }
-            return Object.assign(target, { status, version: expected_version + 1 });
-          },
-        ],
-    ),
+    ...(["verify", "reject", "resubmit"] as const).map((action): (typeof routes)[number] => [
+      `POST /admin/partners/{partner_id}/${action}`,
+      new RegExp(`^/admin/partners/([^/]+)/${action}$`),
+      (route: Route, match: RegExpMatchArray) => {
+        const target = partners.find((candidate) => candidate.id === match[1]);
+        if (!target) return 404;
+        const { expected_version, reason } = route.request().postDataJSON() as {
+          expected_version: number;
+          reason: string;
+        };
+        if (target.version !== expected_version) return 409;
+        const status = { verify: "verified", reject: "rejected", resubmit: "pending" }[action];
+        if (action !== "resubmit") {
+          const decision = {
+            id: `00000000-0000-4000-8000-00000000020${decisions.length}`,
+            outcome: status,
+            partner_version: expected_version,
+            reason,
+            decided_by: ADMIN_ID,
+            decided_at: NOW,
+          };
+          decisions.unshift(decision);
+          target.latest_decision = decision;
+        }
+        return Object.assign(target, { status, version: expected_version + 1 });
+      },
+    ]),
     [
       "GET /admin/partners/{partner_id}/decisions",
       /^\/admin\/partners\/[^/]+\/decisions$/,
@@ -596,7 +593,8 @@ test("every API operation is reachable from the admin UI", async ({ page }) => {
   await page.getByRole("button", { name: "End", exact: true }).click();
   await page.getByRole("dialog").getByLabel("Reason").fill("Left the team");
   await page.getByRole("dialog").getByRole("button", { name: "End membership" }).click();
-  await expect(page.getByRole("main").getByText("Ended", { exact: true })).toBeVisible();
+  // The status badge, not the "Ended" column header.
+  await expect(page.getByRole("main").getByTitle("Membership was ended")).toBeVisible();
   expect(
     lastCall(calls, "POST /admin/organizations/{organization_id}/memberships/{membership_id}/end")
       .body,

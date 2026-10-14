@@ -82,9 +82,7 @@ export function ClientMembers() {
   const [admitting, setAdmitting] = useState(false);
   const [granting, setGranting] = useState<ClientMember | null>(null);
   const [ending, setEnding] = useState<ClientMember | null>(null);
-  const [revoking, setRevoking] = useState<{ member: ClientMember; role: MemberRole } | null>(
-    null,
-  );
+  const [revoking, setRevoking] = useState<{ member: ClientMember; role: MemberRole } | null>(null);
   const admit = useAdmitClientMember(clientId);
   const end = useEndClientMember(clientId);
   const revoke = useRevokeClientRole(clientId);
@@ -302,9 +300,9 @@ function GrantRoleDialog({
             <DialogHeader>
               <DialogTitle>Grant a client role</DialogTitle>
               <DialogDescription>
-                {member.user_email} receives the role&apos;s permissions in this client and, for
-                its organization permissions, in every company of the client. You can grant only
-                roles whose permissions you hold yourself.
+                {member.user_email} receives the role&apos;s permissions in this client and, for its
+                organization permissions, in every company of the client. You can grant only roles
+                whose permissions you hold yourself.
               </DialogDescription>
             </DialogHeader>
             {failure ? <FormAlert>{failure}</FormAlert> : null}

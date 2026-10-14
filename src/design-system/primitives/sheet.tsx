@@ -57,13 +57,21 @@ export function SheetHeader({ className, ...props }: ComponentProps<"div">) {
 }
 
 export function SheetFooter({ className, ...props }: ComponentProps<"div">) {
-  return <div className={cn("mt-auto flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)} {...props} />;
+  return (
+    <div
+      className={cn("mt-auto flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)}
+      {...props}
+    />
+  );
 }
 
 export function SheetTitle({ className, ...props }: ComponentProps<typeof SheetPrimitive.Title>) {
   return (
     <SheetPrimitive.Title
-      className={cn("text-foreground text-[1.625rem] leading-[1.05] font-semibold tracking-[-0.03em]", className)}
+      className={cn(
+        "text-foreground text-[1.625rem] leading-[1.05] font-semibold tracking-[-0.03em]",
+        className,
+      )}
       {...props}
     />
   );

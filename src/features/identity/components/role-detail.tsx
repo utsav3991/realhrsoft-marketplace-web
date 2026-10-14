@@ -57,7 +57,6 @@ function BackToRoles() {
   );
 }
 
-
 type RoleScope = "global" | "organization" | "client";
 
 const SCOPE_LABEL: Record<RoleScope, string> = {
@@ -145,9 +144,7 @@ function LoadedRole({ role }: { role: Role }) {
                 {role.is_system ? <Badge intent="info">System</Badge> : null}
               </span>
             </Detail>
-            <Detail label="Scope">
-              {SCOPE_LABEL[roleScope(role.scope)]}
-            </Detail>
+            <Detail label="Scope">{SCOPE_LABEL[roleScope(role.scope)]}</Detail>
             <Detail label="Holders">{role.active_assignments}</Detail>
             <Detail label="Version">{role.version}</Detail>
           </dl>

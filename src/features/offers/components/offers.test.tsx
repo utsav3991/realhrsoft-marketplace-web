@@ -110,6 +110,7 @@ const pending: Schemas["Offer"] = {
   kind: "marketplace_offer",
   provider_organization: { id: ORG, name: "Himalayan Coffee" },
   provider_client: null,
+  business_provider: null,
   partner: {
     id: "0b0b5e3c-3c3f-4bd6-9a55-8f3b7f0a8f2e",
     organization_id: ORG,
@@ -172,7 +173,12 @@ function json(body: unknown, status = 200) {
   });
 }
 
-const page = (results: unknown[]) => ({ count: results.length, next: null, previous: null, results });
+const page = (results: unknown[]) => ({
+  count: results.length,
+  next: null,
+  previous: null,
+  results,
+});
 
 function serve(offer: Schemas["Offer"]) {
   fetchMock.mockImplementation(async (request) => {
@@ -317,7 +323,13 @@ describe("offer schema", () => {
     expect(body.redemption_url).toBe("https://book.test");
     expect(body.audience_organization_ids).toEqual([]);
     expect(body.approval_ttl_hours).toBeNull();
-    expect(body.benefit).toEqual({ type: "percentage", description: "", percent: "20", currency: "", item: "" });
+    expect(body.benefit).toEqual({
+      type: "percentage",
+      description: "",
+      percent: "20",
+      currency: "",
+      item: "",
+    });
     expect(body.valid_from).toBe(new Date("2026-10-01T09:00").toISOString());
     const approval = offerBody({ ...valid, acceptanceMode: "partner_approval_required" });
     expect(approval.approval_ttl_hours).toBe(72);
@@ -331,7 +343,9 @@ describe("<OfferRecord>", () => {
       admin([OfferAdminPermission.OFFER_VIEW, OfferAdminPermission.OFFER_APPROVE]),
       <OfferRecord offerId={OFFER_ID} />,
     );
-    expect(await screen.findByRole("heading", { name: pending.working_version!.title })).toBeVisible();
+    expect(
+      await screen.findByRole("heading", { name: pending.working_version!.title }),
+    ).toBeVisible();
     expect(screen.getByRole("button", { name: "Approve" })).toBeVisible();
     expect(screen.queryByRole("button", { name: "Request changes" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "More actions" })).not.toBeInTheDocument();

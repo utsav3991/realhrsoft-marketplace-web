@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 
 import { LoginForm } from "@/features/identity/components/login-form";
@@ -20,6 +21,15 @@ export default function LoginPage() {
       <Suspense>
         <LoginForm />
       </Suspense>
+      <p className="text-muted-foreground text-center text-sm">
+        New here, or didn&apos;t get the email?{" "}
+        <Link
+          href="/set-password"
+          className="text-foreground font-medium underline-offset-4 hover:underline"
+        >
+          Set up your account
+        </Link>
+      </p>
     </div>
   );
 }

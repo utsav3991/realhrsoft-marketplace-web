@@ -167,13 +167,20 @@ export interface ChosenPartner {
  * Chooses the verified partner an administrator posts for. Browsing needs
  * partners.partner.view; otherwise the partner ID is pasted and the API checks it.
  */
-export function PartnerPicker({ onChoose }: { onChoose: (partner: ChosenPartner) => void }) {
+export function PartnerPicker({
+  onChoose,
+  kind = "merchant",
+}: {
+  onChoose: (partner: ChosenPartner) => void;
+  /** merchant (default): verified merchants; client: active client groups. */
+  kind?: "merchant" | "client";
+}) {
   const canBrowse = useCan(PartnerAdminPermission.PARTNER_VIEW);
   const [search, setSearch] = useState<string | null>(null);
   if (!canBrowse) {
     return (
       <IdEntry
-        label="Partner ID"
+        label={kind === "client" ? "Client ID" : "Partner ID"}
         submitLabel="Continue"
         onAdd={(id) => onChoose({ id, name: id })}
       />
@@ -181,40 +188,58 @@ export function PartnerPicker({ onChoose }: { onChoose: (partner: ChosenPartner)
   }
   return (
     <div className="space-y-2">
-      <SearchBox label="Search verified partners" onSearch={setSearch} />
-      <PartnerResults search={search ?? ""} onChoose={onChoose} />
+      <SearchBox
+        label={kind === "client" ? "Search client groups" : "Search verified partners"}
+        onSearch={setSearch}
+      />
+      <PartnerResults search={search ?? ""} kind={kind} onChoose={onChoose} />
     </div>
   );
 }
 
 function PartnerResults({
   search,
+  kind,
   onChoose,
 }: {
   search: string;
+  kind: "merchant" | "client";
   onChoose: (partner: ChosenPartner) => void;
 }) {
-  // Offers can be posted only for verified partners, whatever their source.
+  // Offers are posted only for verified merchants; clients need no verification.
   const partners = usePartners(
-    { search, status: "verified", intakePath: null, source: null, ordering: null },
+    {
+      search,
+      kind,
+      status: kind === "merchant" ? "verified" : null,
+      intakePath: null,
+      source: null,
+      ordering: null,
+    },
     FIRST_PAGE,
   );
   if (partners.isPending) return <p className="text-muted-foreground text-sm">Loading…</p>;
   if (partners.isError)
     return <p className="text-destructive text-sm">Partners could not be loaded.</p>;
-  const rows = partners.data.results.slice(0, 10);
+  const rows = partners.data.results.filter((partner) => partner.active).slice(0, 10);
   if (rows.length === 0)
-    return <p className="text-muted-foreground text-sm">No verified partners match.</p>;
+    return (
+      <p className="text-muted-foreground text-sm">
+        {kind === "client" ? "No active client groups match." : "No verified partners match."}
+      </p>
+    );
   return (
     <ul className="divide-y rounded-lg border">
       {rows.map((partner) => (
         <li key={partner.id} className="flex items-center justify-between gap-2 px-3 py-2">
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{partner.business_name}</p>
-            <p className="text-muted-foreground truncate text-xs">{partner.organization_name}</p>
+            <p className="text-muted-foreground truncate text-xs">
+              {partner.organization_name ?? "Client group"}
+            </p>
           </div>
           <div className="flex items-center gap-2">
-            <StatusBadge domain="partner" status={partner.status} />
+            {kind === "merchant" ? <StatusBadge domain="partner" status={partner.status} /> : null}
             <Button
               type="button"
               variant="outline"

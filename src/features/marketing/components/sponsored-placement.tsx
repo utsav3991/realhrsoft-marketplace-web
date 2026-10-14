@@ -12,12 +12,7 @@ import { ApiError } from "@/shared/api";
 import { cn } from "@/shared/lib/cn";
 
 import { reportRendered, useFollowAd } from "../api/mutations";
-import {
-  isCreativeChanged,
-  usePlacement,
-  useServedAdImage,
-  type ServedAd,
-} from "../api/queries";
+import { isCreativeChanged, usePlacement, useServedAdImage, type ServedAd } from "../api/queries";
 
 /** Placement slots the web app renders (keys never change; see the slot catalogue). */
 export const SLOTS = {

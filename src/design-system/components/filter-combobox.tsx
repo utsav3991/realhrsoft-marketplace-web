@@ -97,9 +97,9 @@ export function FilterCombobox({
             {chosen ? null : <ChevronDown className="size-4 shrink-0 opacity-50" aria-hidden />}
           </button>
         </PopoverTrigger>
-        <PopoverContent 
-          id={listId} 
-          align="start" 
+        <PopoverContent
+          id={listId}
+          align="start"
           className={cn("p-0", fullWidth ? "w-[var(--radix-popover-trigger-width)]" : "w-72")}
         >
           <Command shouldFilter={false}>

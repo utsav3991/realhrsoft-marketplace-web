@@ -112,7 +112,7 @@ export function SidebarProvider({
               ...style,
             } as CSSProperties
           }
-          className={cn("group/sidebar-wrapper flex min-h-svh w-full", className)}
+          className={cn("group/sidebar-wrapper flex min-h-full w-full", className)}
           {...props}
         >
           {children}
@@ -172,7 +172,7 @@ export function Sidebar({
 
   return (
     <div
-      className="group peer text-sidebar-foreground hidden md:block"
+      className="group peer text-sidebar-foreground sticky top-0 hidden h-[100cqh] shrink-0 self-start md:block"
       data-state={state}
       data-collapsible={state === "collapsed" ? collapsible : ""}
       data-side={side}
@@ -183,13 +183,13 @@ export function Sidebar({
         data-slot="sidebar-gap"
         className={cn(
           "relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear",
-          "group-data-[collapsible=offcanvas]:w-0 group-data-[collapsible=icon]:w-(--sidebar-width-icon)",
+          "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[collapsible=offcanvas]:w-0",
         )}
       />
       <div
         data-slot="sidebar-container"
         className={cn(
-          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
+          "absolute inset-y-0 z-10 hidden h-full w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
           side === "left"
             ? "left-0 border-r group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
             : "right-0 border-l group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
@@ -236,7 +236,7 @@ export function SidebarInset({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       data-slot="sidebar-inset"
-      className={cn("relative flex min-w-0 w-full flex-1 flex-col", className)}
+      className={cn("relative flex w-full min-w-0 flex-1 flex-col", className)}
       {...props}
     />
   );

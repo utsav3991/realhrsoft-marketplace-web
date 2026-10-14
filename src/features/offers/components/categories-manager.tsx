@@ -162,9 +162,9 @@ export function CategoriesManager() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <SearchField 
-            placeholder="Search categories" 
-            aria-label="Search categories by name" 
+          <SearchField
+            placeholder="Search categories"
+            aria-label="Search categories by name"
             className="max-w-sm"
           />
           <Select

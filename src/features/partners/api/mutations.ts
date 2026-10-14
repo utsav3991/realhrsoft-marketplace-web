@@ -63,6 +63,35 @@ export function useEndClientMembership(partnerId: string) {
   });
 }
 
+/**
+ * Gives the client's RealHRSoft contact an account (or links theirs) with the client
+ * administrator role. Idempotent: `outcome: "unchanged"` when they already hold it.
+ */
+export function useInviteClientContact(partnerId: string) {
+  const invalidatePartner = useInvalidatePartner(partnerId);
+  const invalidateMembers = useInvalidateMembers(partnerId);
+  return useMutation({
+    mutationFn: (body: Schemas["ReasonOnly"]) =>
+      unwrap(
+        api.POST("/admin/partners/{partner_id}/invite-contact", {
+          params: { path: { partner_id: pathId(partnerId) } },
+          body,
+        }),
+      ),
+    onSettled: () => Promise.all([invalidatePartner(), invalidateMembers()]),
+  });
+}
+
+/** Assisted onboarding: a new home organization, the pending merchant and its administrator. */
+export function useOnboardMerchant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schemas["MerchantOnboarding"]) =>
+      unwrap(api.POST("/admin/merchants", { body })),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: partnerKeys.lists() }),
+  });
+}
+
 /** The client-level Employer opt-in, inherited by companies synchronized later. */
 export function useSetEmployerAutoEnable(partnerId: string) {
   return useMutation({

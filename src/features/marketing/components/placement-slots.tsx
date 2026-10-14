@@ -1,7 +1,15 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LayoutTemplate, Loader2, MoreHorizontal, Pencil, Plus, Power, PowerOff } from "lucide-react";
+import {
+  LayoutTemplate,
+  Loader2,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Power,
+  PowerOff,
+} from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -313,7 +321,9 @@ function SlotDialog({ slot, onClose }: { slot: PlacementSlot | null; onClose: ()
                       />
                     </FormControl>
                     <FormDescription>
-                      {slot ? "Keys never change." : "What the marketplace requests, e.g. marketplace.home.top."}
+                      {slot
+                        ? "Keys never change."
+                        : "What the marketplace requests, e.g. marketplace.home.top."}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -365,7 +375,9 @@ function SlotDialog({ slot, onClose }: { slot: PlacementSlot | null; onClose: ()
                     <FormControl>
                       <Input type="number" inputMode="numeric" min={1} max={20} {...field} />
                     </FormControl>
-                    <FormDescription>1-20; rotation picks among the eligible at random.</FormDescription>
+                    <FormDescription>
+                      1-20; rotation picks among the eligible at random.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

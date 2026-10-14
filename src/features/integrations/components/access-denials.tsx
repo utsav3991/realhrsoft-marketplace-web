@@ -20,23 +20,22 @@ import { useAccessDenials, type AccessDenial } from "../api/queries";
 
 type Kind = AccessDenial["kind"];
 
-const KINDS: Record<Kind, { label: string; title: string; description: string; field: string }> =
-  {
-    employee: {
-      label: "Block an employee",
-      title: "Block a RealHRSoft employee",
-      description:
-        "Every request with any token of this employee is refused (403 ACCESS_BLOCKED) until you lift the block or it expires. Ask RealHRSoft to stop issuing tokens too; synchronized employment is not changed.",
-      field: "RealHRSoft employee UUID",
-    },
-    token: {
-      label: "Block a token",
-      title: "Block one employee token",
-      description:
-        "Refuses one leaked token by its jti. Tokens live at most 60 seconds, so the block lasts 5 minutes unless you set an end.",
-      field: "Token ID (jti)",
-    },
-  };
+const KINDS: Record<Kind, { label: string; title: string; description: string; field: string }> = {
+  employee: {
+    label: "Block an employee",
+    title: "Block a RealHRSoft employee",
+    description:
+      "Every request with any token of this employee is refused (403 ACCESS_BLOCKED) until you lift the block or it expires. Ask RealHRSoft to stop issuing tokens too; synchronized employment is not changed.",
+    field: "RealHRSoft employee UUID",
+  },
+  token: {
+    label: "Block a token",
+    title: "Block one employee token",
+    description:
+      "Refuses one leaked token by its jti. Tokens live at most 60 seconds, so the block lasts 5 minutes unless you set an end.",
+    field: "Token ID (jti)",
+  },
+};
 
 /** Emergency, local blocks on RealHRSoft employee access; newest first. */
 export function AccessDenials() {

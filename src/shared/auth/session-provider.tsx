@@ -65,7 +65,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  useEffect(() => listenForLogoutElsewhere(), []);
+  useEffect(() => listenForLogoutElsewhere((destination) => {
+    queryClient.clear();
+    if (destination) window.location.replace(destination);
+    else window.location.reload();
+  }), [queryClient]);
 
   // Signed out (logout, expiry, another tab): drop every cached read model and mutation
   // (whose variables can hold what an administrator typed).

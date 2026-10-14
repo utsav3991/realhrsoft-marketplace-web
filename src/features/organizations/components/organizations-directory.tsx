@@ -69,9 +69,9 @@ export function OrganizationsDirectory() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <SearchField 
-          placeholder="Search by name" 
-          aria-label="Search organizations by name" 
+        <SearchField
+          placeholder="Search by name"
+          aria-label="Search organizations by name"
           className="max-w-sm"
         />
         {canCreate ? (

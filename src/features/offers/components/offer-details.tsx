@@ -88,8 +88,7 @@ export function isEditable(offer: Offer): boolean {
   return !isRetired(offer) && workingState(offer) !== "in_review";
 }
 
-export const isSubmittable = (offer: Offer) =>
-  !isRetired(offer) && workingState(offer) === "draft";
+export const isSubmittable = (offer: Offer) => !isRetired(offer) && workingState(offer) === "draft";
 export const isInReview = (offer: Offer) => workingState(offer) === "in_review";
 export const isPublished = (offer: Offer) => offer.current_version !== null;
 export const isPausable = (offer: Offer) => offer.availability === "enabled";
@@ -197,14 +196,16 @@ export function VersionTermsCard({
             <>
               <Detail label="Business audience">
                 {BUSINESS_AUDIENCE_LABEL[business.audience_type]}
-                {business.audience_organizations.length > 0
-                  ? `: ${business.audience_organizations.map((o) => o.name).join(", ")}`
+                {business.audience_businesses.length > 0
+                  ? `: ${business.audience_businesses.map((o) => o.name).join(", ")}`
                   : null}
               </Detail>
               <Detail label="Employees">
                 {business.show_to_employees
-                  ? "Shown to the audience's employees"
-                  : "Organizations only"}
+                  ? business.audience_type === "all_businesses"
+                    ? "Shown to every RealHRSoft employee"
+                    : "Shown to the selected clients' employees"
+                  : "Businesses only"}
               </Detail>
               <Detail label="Enquiry instructions" className="sm:col-span-2 lg:col-span-3">
                 <span className="whitespace-pre-line">{empty(business.enquiry_instructions)}</span>
@@ -223,9 +224,7 @@ export function VersionTermsCard({
               )}
               <Detail label="Claims">
                 {ACCEPTANCE_LABEL[policy.acceptance_mode]}
-                {policy.approval_ttl_hours
-                  ? ` within ${policy.approval_ttl_hours} hours`
-                  : null}
+                {policy.approval_ttl_hours ? ` within ${policy.approval_ttl_hours} hours` : null}
               </Detail>
               <Detail label="Applied by">
                 {presentationLabel(policy.presentation_method, policy.custom_method_name)}
@@ -322,17 +321,15 @@ export function PublicationCard({ offer, partner }: { offer: Offer; partner?: Re
             <StatusBadge domain="offer" status={offer.display_status} />
           </Detail>
           {business ? (
-            <Detail label="Organizations">
-              <VisibilityBadge visible={offer.visible_to_businesses} viewers="organizations" />
+            <Detail label="Businesses">
+              <VisibilityBadge visible={offer.visible_to_businesses} viewers="businesses" />
             </Detail>
           ) : null}
           <Detail label="Employees">
             <VisibilityBadge offer={offer} />
           </Detail>
           <Detail label="Availability">{AVAILABILITY_LABEL[offer.availability]}</Detail>
-          {business ? (
-            <Detail label="Provider">{providerName(offer)}</Detail>
-          ) : null}
+          {business ? <Detail label="Provider">{providerName(offer)}</Detail> : null}
           {partner ? <Detail label="Partner">{partner}</Detail> : null}
           <Detail label="Posted via">{POSTED_VIA_LABEL[offer.posted_via]}</Detail>
           {business ? null : <Detail label="Featured">{offer.is_featured ? "Yes" : "No"}</Detail>}
@@ -371,9 +368,9 @@ export function OfferStatusCallout({
   const live = offer.current_version;
   const working = offer.working_version;
   const liveNote = live ? ` The live version ${live.number} stays live meanwhile.` : "";
-  // A business offer is seen by organizations (and, with the switch on, their employees).
+  // A business offer is seen by businesses (and, with the switch on, employees).
   const business = offer.kind === "business_offer";
-  const viewers = business ? "organizations" : "employees";
+  const viewers = business ? "businesses" : "employees";
   const owner = business ? "owner" : "partner";
   const visible = business ? offer.visible_to_businesses : offer.visible_to_employees;
 
@@ -423,13 +420,10 @@ export function OfferStatusCallout({
       return (
         <Alert>
           <Clock aria-hidden />
-          <AlertTitle>
-            {partner ? "Awaiting Aayulogic review" : "Awaiting your review"}
-          </AlertTitle>
+          <AlertTitle>{partner ? "Awaiting Aayulogic review" : "Awaiting your review"}</AlertTitle>
           <AlertDescription>
             Version {working.number} was submitted{" "}
-            {working.submitted_at ? formatDateTime(working.submitted_at) : ""}.
-            {liveNote}{" "}
+            {working.submitted_at ? formatDateTime(working.submitted_at) : ""}.{liveNote}{" "}
             {partner
               ? "Retract it if you need to change it."
               : "Approve, request changes or reject this version."}

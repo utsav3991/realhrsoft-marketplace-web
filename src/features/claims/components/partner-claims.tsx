@@ -37,12 +37,7 @@ import { usePageParam } from "@/shared/hooks/use-page-param";
 import { useUrlParams } from "@/shared/hooks/use-url-params";
 
 import { useDecidePartnerClaim, type ClaimDecision } from "../api/mutations";
-import {
-  CLAIM_SORTS,
-  usePartnerClaim,
-  usePartnerClaims,
-  type PartnerClaim,
-} from "../api/queries";
+import { CLAIM_SORTS, usePartnerClaim, usePartnerClaims, type PartnerClaim } from "../api/queries";
 import {
   CLAIM_STATUSES,
   ClaimStatusCallout,
@@ -102,7 +97,11 @@ function DecisionButtons({
         </Button>
       ) : null}
       {can.accept ? (
-        <Button variant={size === "sm" ? "outline" : "default"} size={size} onClick={() => onDecide("accept")}>
+        <Button
+          variant={size === "sm" ? "outline" : "default"}
+          size={size}
+          onClick={() => onDecide("accept")}
+        >
           <Check aria-hidden />
           Accept
         </Button>
@@ -187,8 +186,8 @@ function DecisionQueue() {
       <CardHeader>
         <CardTitle>Awaiting your decision</CardTitle>
         <CardDescription>
-          Requests for offers that need your approval. Undecided requests expire at their
-          deadline without a voucher.
+          Requests for offers that need your approval. Undecided requests expire at their deadline
+          without a voucher.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

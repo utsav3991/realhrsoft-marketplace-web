@@ -101,7 +101,9 @@ export function RegistrationCard({ partner }: { partner: Partner }) {
           <Detail label="Intake">{INTAKE_LABEL[partner.intake_path]}</Detail>
           <Detail label="Partner type">{SOURCE_LABEL[partner.source]}</Detail>
           <Detail label="Submitted for review">{formatDateTime(partner.submitted_at)}</Detail>
-          <Detail label="Organization">{partner.organization_name ?? "None (a client group)"}</Detail>
+          <Detail label="Organization">
+            {partner.organization_name ?? "None (a client group)"}
+          </Detail>
           <Detail label="Version">{partner.version}</Detail>
           <Detail label="Last updated">{formatDateTime(partner.updated_at)}</Detail>
         </DetailList>

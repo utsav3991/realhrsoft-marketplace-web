@@ -438,185 +438,185 @@ export function EmployeeTermsFields({
 
   return (
     <>
-    <FormSection
-      title="How it is applied"
-      description="Codes, links and instructions reach employees only with an issued voucher. The voucher's own QR code proves use; this method is how you apply the benefit."
-      disabled={disabled}
-    >
-      <FormField
-        control={control}
-        name="presentationMethod"
-        render={({ field }) => (
-          <FormItem className="sm:col-span-2">
-            <FormLabel>Method</FormLabel>
-            <Select value={field.value} onValueChange={field.onChange} disabled={disabled}>
-              <FormControl>
-                <SelectTrigger ref={field.ref} onBlur={field.onBlur} className="w-full sm:w-72">
-                  <SelectValue />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {PRESENTATION_METHODS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      {used.includes("customMethodName") ? (
+      <FormSection
+        title="How it is applied"
+        description="Codes, links and instructions reach employees only with an issued voucher. The voucher's own QR code proves use; this method is how you apply the benefit."
+        disabled={disabled}
+      >
         <FormField
           control={control}
-          name="customMethodName"
+          name="presentationMethod"
           render={({ field }) => (
             <FormItem className="sm:col-span-2">
-              <FormLabel>Method name</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
+              <FormLabel>Method</FormLabel>
+              <Select value={field.value} onValueChange={field.onChange} disabled={disabled}>
+                <FormControl>
+                  <SelectTrigger ref={field.ref} onBlur={field.onBlur} className="w-full sm:w-72">
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {PRESENTATION_METHODS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
         />
-      ) : null}
-      {used.includes("promoCode") ? (
+        {used.includes("customMethodName") ? (
+          <FormField
+            control={control}
+            name="customMethodName"
+            render={({ field }) => (
+              <FormItem className="sm:col-span-2">
+                <FormLabel>Method name</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : null}
+        {used.includes("promoCode") ? (
+          <FormField
+            control={control}
+            name="promoCode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Promo code</FormLabel>
+                <div className="flex gap-2">
+                  <FormControl>
+                    <Input
+                      className="font-mono uppercase"
+                      autoComplete="off"
+                      spellCheck={false}
+                      readOnly={promoCodeLocked}
+                      {...field}
+                      onChange={(event) => field.onChange(event.target.value.toUpperCase())}
+                    />
+                  </FormControl>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={promoCodeLocked || disabled}
+                    onClick={() =>
+                      setValue("promoCode", generatePromoCode(), {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                  >
+                    <RefreshCw aria-hidden />
+                    Regenerate
+                  </Button>
+                </div>
+                <FormDescription>
+                  {promoCodeLocked
+                    ? "Shared code your cashier applies. It is fixed once the offer has been published."
+                    : "Shared code your cashier applies; 3-64 upper case letters, digits, hyphens or underscores."}
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : null}
+        {used.includes("redemptionUrl") ? (
+          <FormField
+            control={control}
+            name="redemptionUrl"
+            render={({ field }) => (
+              <FormItem className="sm:col-span-2">
+                <FormLabel>Booking link</FormLabel>
+                <FormControl>
+                  <Input type="url" placeholder="https://" {...field} />
+                </FormControl>
+                <FormDescription>Must start with https://.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : null}
+        {used.includes("redemptionInstructions") ? (
+          <FormField
+            control={control}
+            name="redemptionInstructions"
+            render={({ field }) => (
+              <FormItem className="sm:col-span-2">
+                <FormLabel optional={!INSTRUCTION_METHODS.includes(method)}>Instructions</FormLabel>
+                <FormControl>
+                  <RichTextEditor {...controlledProps(field, disabled)} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : null}
+      </FormSection>
+
+      <FormSection
+        title="Claims"
+        description="Whether a claim is accepted at once or waits for the partner. Accepting a claim issues its voucher."
+        disabled={disabled}
+      >
         <FormField
           control={control}
-          name="promoCode"
+          name="acceptanceMode"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Promo code</FormLabel>
-              <div className="flex gap-2">
+              <FormLabel>Acceptance</FormLabel>
+              <Select value={field.value} onValueChange={field.onChange} disabled={disabled}>
+                <FormControl>
+                  <SelectTrigger ref={field.ref} onBlur={field.onBlur} className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="auto_accept">{ACCEPTANCE_LABEL.auto_accept}</SelectItem>
+                  <SelectItem value="partner_approval_required">
+                    {ACCEPTANCE_LABEL.partner_approval_required}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Each employee can request the offer once, whatever the decision.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {acceptanceMode === "partner_approval_required" ? (
+          <FormField
+            control={control}
+            name="approvalTtlHours"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Decision window (hours)</FormLabel>
                 <FormControl>
                   <Input
-                    className="font-mono uppercase"
-                    autoComplete="off"
-                    spellCheck={false}
-                    readOnly={promoCodeLocked}
+                    type="number"
+                    inputMode="numeric"
+                    min={APPROVAL_TTL_HOURS.min}
+                    max={APPROVAL_TTL_HOURS.max}
+                    step={1}
+                    className="sm:w-40"
                     {...field}
-                    onChange={(event) => field.onChange(event.target.value.toUpperCase())}
                   />
                 </FormControl>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={promoCodeLocked || disabled}
-                  onClick={() =>
-                    setValue("promoCode", generatePromoCode(), {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                  }
-                >
-                  <RefreshCw aria-hidden />
-                  Regenerate
-                </Button>
-              </div>
-              <FormDescription>
-                {promoCodeLocked
-                  ? "Shared code your cashier applies. It is fixed once the offer has been published."
-                  : "Shared code your cashier applies; 3-64 upper case letters, digits, hyphens or underscores."}
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      ) : null}
-      {used.includes("redemptionUrl") ? (
-        <FormField
-          control={control}
-          name="redemptionUrl"
-          render={({ field }) => (
-            <FormItem className="sm:col-span-2">
-              <FormLabel>Booking link</FormLabel>
-              <FormControl>
-                <Input type="url" placeholder="https://" {...field} />
-              </FormControl>
-              <FormDescription>Must start with https://.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      ) : null}
-      {used.includes("redemptionInstructions") ? (
-        <FormField
-          control={control}
-          name="redemptionInstructions"
-          render={({ field }) => (
-            <FormItem className="sm:col-span-2">
-              <FormLabel optional={!INSTRUCTION_METHODS.includes(method)}>Instructions</FormLabel>
-              <FormControl>
-                <RichTextEditor {...controlledProps(field, disabled)} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      ) : null}
-    </FormSection>
-
-    <FormSection
-      title="Claims"
-      description="Whether a claim is accepted at once or waits for the partner. Accepting a claim issues its voucher."
-      disabled={disabled}
-    >
-      <FormField
-        control={control}
-        name="acceptanceMode"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Acceptance</FormLabel>
-            <Select value={field.value} onValueChange={field.onChange} disabled={disabled}>
-              <FormControl>
-                <SelectTrigger ref={field.ref} onBlur={field.onBlur} className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="auto_accept">{ACCEPTANCE_LABEL.auto_accept}</SelectItem>
-                <SelectItem value="partner_approval_required">
-                  {ACCEPTANCE_LABEL.partner_approval_required}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <FormDescription>
-              Each employee can request the offer once, whatever the decision.
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      {acceptanceMode === "partner_approval_required" ? (
-        <FormField
-          control={control}
-          name="approvalTtlHours"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Decision window (hours)</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  inputMode="numeric"
-                  min={APPROVAL_TTL_HOURS.min}
-                  max={APPROVAL_TTL_HOURS.max}
-                  step={1}
-                  className="sm:w-40"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                A request expires if not decided in time, and never later than the offer
-                ends. {APPROVAL_TTL_HOURS.min}-{APPROVAL_TTL_HOURS.max} hours.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      ) : null}
-    </FormSection>
+                <FormDescription>
+                  A request expires if not decided in time, and never later than the offer ends.{" "}
+                  {APPROVAL_TTL_HOURS.min}-{APPROVAL_TTL_HOURS.max} hours.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : null}
+      </FormSection>
     </>
   );
 }

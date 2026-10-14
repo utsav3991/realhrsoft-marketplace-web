@@ -70,7 +70,7 @@ export interface paths {
         };
         /**
          * List all business enquiries
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.business_enquiry.view. Every organization's enquiries. Filter by status, offer_id, organization_id and provider_organization_id. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.business_enquiry.view. Every business's enquiries, with the enquiring business and the offer's provider as {kind, id, name}. Filter by status, offer_id, business_id (the enquirer) and provider_id. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
          */
         get: operations["v1_admin_business_enquiries_list"];
         put?: never;
@@ -110,13 +110,13 @@ export interface paths {
         };
         /**
          * List all business offers
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.view. Every organization's business offers in any state, with live and working versions. The review queue is in_review=true. Filter by display_status, availability, in_review, category_id, audience_type, show_to_employees, posted_via and (administrators) partner_id and organization_id; search matches the live or working title or the provider name (case-insensitive substring). Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.view. Every business's business offers in any state, merchants' and clients', with live and working versions and business_provider ({kind, id, name}). The review queue is in_review=true. Filter by display_status, availability, in_review, category_id, audience_type, show_to_employees, posted_via and (administrators) provider_kind and provider_id; search matches the live or working title or the provider's name (case-insensitive substring). Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
          */
         get: operations["v1_admin_business_offers_list"];
         put?: never;
         /**
-         * Post a business offer on behalf of an organization
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.create, plus offers.offer.submit for intent=submit or offers.offer.publish for intent=publish. Creates the offer with draft version 1, posted_via=admin_on_behalf, in the Partner capacity of partner_id (must be verified) or the Employer capacity of provider_organization_id (must be on); give exactly one. intent=save keeps the draft; submit sends it to review; publish approves it at once. Offer, version, decision, audit and OfferVersionPublished commit together. Business (B2B) offers are made by one organization to other organizations: a verified partner or an employer (Employer capacity on) posts them, and Aayulogic reviews every version before it goes live, as for marketplace offers. Organizations in the audience that are businesses themselves (a verified partner or an employer) see it in /business/offers and enquire; the provider follows up outside the platform. The show_to_employees switch also lists the live version in the employee marketplace for the audience's employees, who claim it for a voucher like a marketplace offer; only an offer posted as a verified partner can use it. Organizations see a business offer only while every gate passes: a live (approved, current) version, not paused, retired or suspended, its capacity in standing (a verified partner, or the Employer capacity) and now inside the version's window; the business audience then applies, and the provider never sees its own offer in the catalogue.
+         * Post a business offer on behalf of a business
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.create, plus offers.offer.submit for intent=submit or offers.offer.publish for intent=publish. Creates the offer with draft version 1, posted_via=admin_on_behalf, for the verified merchant partner_id or the active client group provider_client_id; give exactly one (422 otherwise, 404 when unknown, 409 when not in standing). A client's offer cannot be shown to employees (422). intent=save keeps the draft; submit sends it to review; publish approves it at once. Offer, version, decision, audit and OfferVersionPublished commit together. Business (B2B) offers are made by one business to other businesses. A business is a verified merchant or an active RealHRSoft client group; both post, browse and enquire, and Aayulogic reviews every version before it goes live, as for marketplace offers. Businesses in the audience see the offer and enquire; the provider follows up outside the platform. A merchant's show_to_employees switch also lists the live version in the employee marketplace (every RealHRSoft employee for all_businesses, otherwise the employees of the selected clients' companies), where employees claim it for a voucher the merchant confirms. A client's offer is enquiry-only. Businesses see a business offer only while every gate passes: a live (approved, current) version, not paused, retired or suspended, its provider in standing and now inside the version's window; the business audience then applies, and the provider never sees its own offer in the catalogue.
          */
         post: operations["v1_admin_business_offers_create"];
         delete?: never;
@@ -139,7 +139,7 @@ export interface paths {
         get: operations["v1_admin_business_offers_retrieve"];
         /**
          * Edit a business offer's draft on behalf of its owner
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.update, plus offers.offer.submit or offers.offer.publish for those intents. Replaces the working draft's terms (omitted optional fields are cleared), or starts a new draft when there is none. A live version stays live. 409 while a version is in review or when retired. An unchanged save is a no-op. Lifecycle: save (draft) -> submit (in_review) -> approve (live) | request-changes | reject; retract withdraws a version under review. The live version stays live while its replacement is edited and reviewed. unpublish takes the live version offline and keeps a draft; pause/resume and retire (final) are owner controls; suspend/reinstate are administrator moderation.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.update, plus offers.offer.submit or offers.offer.publish for those intents. Replaces the working draft's terms (omitted optional fields are cleared), or starts a new draft when there is none. A live version stays live. 409 while a version is in review or when retired. An unchanged save is a no-op. Lifecycle: save (draft) -> submit (in_review) -> approve (live) | request-changes | reject; retract withdraws a version under review. The live version stays live while its replacement is edited and reviewed. unpublish takes the live version offline and keeps a draft; pause/resume and retire (final) are owner controls; suspend/reinstate are administrator moderation. The provider must stay in standing (a verified, active merchant, or an active client group) to edit, submit, publish or reinstate (409 otherwise).
          */
         put: operations["v1_admin_business_offers_update"];
         post?: never;
@@ -160,7 +160,7 @@ export interface paths {
         put?: never;
         /**
          * Approve a business offer version under review
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.approve. Only the in_review working version you name (409 if it changed). It becomes the live version atomically; the replaced version stays in the history. Reason optional. The offer is posted in the organization's Partner capacity when its partner is verified, otherwise in its Employer capacity (409 when it has neither). The capacity must stay in standing to edit, submit, publish or reinstate. Organizations see a business offer only while every gate passes: a live (approved, current) version, not paused, retired or suspended, its capacity in standing (a verified partner, or the Employer capacity) and now inside the version's window; the business audience then applies, and the provider never sees its own offer in the catalogue.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.approve. Only the in_review working version you name (409 if it changed). It becomes the live version atomically; the replaced version stays in the history. Reason optional. The provider must stay in standing (a verified, active merchant, or an active client group) to edit, submit, publish or reinstate (409 otherwise). Businesses see a business offer only while every gate passes: a live (approved, current) version, not paused, retired or suspended, its provider in standing and now inside the version's window; the business audience then applies, and the provider never sees its own offer in the catalogue.
          */
         post: operations["v1_admin_business_offers_approve_create"];
         delete?: never;
@@ -200,7 +200,7 @@ export interface paths {
         put?: never;
         /**
          * Publish a business offer version directly
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.publish. Approves the named working version (draft, in_review, changes_requested, rejected or retracted) without a separate review and makes it live, recording an approved decision with via=admin_publish. The offer is posted in the organization's Partner capacity when its partner is verified, otherwise in its Employer capacity (409 when it has neither). The capacity must stay in standing to edit, submit, publish or reinstate. Organizations see a business offer only while every gate passes: a live (approved, current) version, not paused, retired or suspended, its capacity in standing (a verified partner, or the Employer capacity) and now inside the version's window; the business audience then applies, and the provider never sees its own offer in the catalogue.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.publish. Approves the named working version (draft, in_review, changes_requested, rejected or retracted) without a separate review and makes it live, recording an approved decision with via=admin_publish. The provider must stay in standing (a verified, active merchant, or an active client group) to edit, submit, publish or reinstate (409 otherwise). Businesses see a business offer only while every gate passes: a live (approved, current) version, not paused, retired or suspended, its provider in standing and now inside the version's window; the business audience then applies, and the provider never sees its own offer in the catalogue.
          */
         post: operations["v1_admin_business_offers_publish_create"];
         delete?: never;
@@ -220,7 +220,7 @@ export interface paths {
         put?: never;
         /**
          * Reinstate a suspended business offer
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.reinstate. Lifts the suspension; the offer is visible again if every other gate passes. Reason required. The offer is posted in the organization's Partner capacity when its partner is verified, otherwise in its Employer capacity (409 when it has neither). The capacity must stay in standing to edit, submit, publish or reinstate.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.reinstate. Lifts the suspension; the offer is visible again if every other gate passes. Reason required. The provider must stay in standing (a verified, active merchant, or an active client group) to edit, submit, publish or reinstate (409 otherwise).
          */
         post: operations["v1_admin_business_offers_reinstate_create"];
         delete?: never;
@@ -300,7 +300,7 @@ export interface paths {
         put?: never;
         /**
          * Submit a business offer's draft on its owner's behalf
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.submit. Freezes the working draft and moves it to in_review. The category must be active and valid_until, when set, in the future. The offer is posted in the organization's Partner capacity when its partner is verified, otherwise in its Employer capacity (409 when it has neither). The capacity must stay in standing to edit, submit, publish or reinstate.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.submit. Freezes the working draft and moves it to in_review. The category must be active and valid_until, when set, in the future. The provider must stay in standing (a verified, active merchant, or an active client group) to edit, submit, publish or reinstate (409 otherwise).
          */
         post: operations["v1_admin_business_offers_submit_create"];
         delete?: never;
@@ -320,7 +320,7 @@ export interface paths {
         put?: never;
         /**
          * Suspend a business offer
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.suspend. Hides the offer from organizations and employees whatever its owner does; only reinstatement lifts it. Issued vouchers keep their terms. Reason required.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.suspend. Hides the offer from businesses and employees whatever its owner does; only reinstatement lifts it. Issued vouchers keep their terms. Reason required.
          */
         post: operations["v1_admin_business_offers_suspend_create"];
         delete?: never;
@@ -340,7 +340,7 @@ export interface paths {
         put?: never;
         /**
          * Unpublish a business offer on its owner's behalf
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.withdraw. Takes the live version offline (organizations stop seeing it, no new employee claims) and keeps a draft copy. Open enquiries, accepted claims and vouchers are unaffected. Reason required.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires offers.offer.withdraw. Takes the live version offline (businesses stop seeing it, no new employee claims) and keeps a draft copy. Open enquiries, accepted claims and vouchers are unaffected. Reason required.
          */
         post: operations["v1_admin_business_offers_unpublish_create"];
         delete?: never;
@@ -628,7 +628,7 @@ export interface paths {
         put?: never;
         /**
          * Create an advertisement on behalf of a partner
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.manage. Creates the advertisement in any non-archived campaign with draft revision 1 (posted_via=admin_on_behalf); intent=submit also sends it for review. The asset and offer must belong to the campaign's owner. Marketing is separate from Offers: an advertisement is never claimed or redeemed and never counts as a claim or redemption. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). Revisions: content (creative, destination, slots) is edited only in a draft. Submitting freezes it with a content digest; frozen content never changes, and editing a declined or live revision starts a new draft. The approved current_revision keeps serving while its replacement is edited or reviewed (Q21, 2026-09-29); approving the replacement swaps it in atomically. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction. Serving (next increment) needs every gate at once: verified partner, an active advertising grant, an approved current revision, the advertisement active and not suspended, its campaign active and inside its schedule, active targeted slots and a destination visible to the viewer. Approval never bypasses the other gates.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.manage. Creates the advertisement in any non-archived campaign with draft revision 1 (posted_via=admin_on_behalf); intent=submit also sends it for review. The asset and offer must belong to the campaign's owner. Marketing is separate from Offers: an advertisement is never claimed or redeemed and never counts as a claim or redemption. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). A partner_id naming a client group synchronized from RealHRSoft returns 409 NOT_A_MERCHANT: client groups do not advertise. Revisions: content (creative, destination, slots) is edited only in a draft. Submitting freezes it with a content digest; frozen content never changes, and editing a declined or live revision starts a new draft. The approved current_revision keeps serving while its replacement is edited or reviewed (Q21, 2026-09-29); approving the replacement swaps it in atomically. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction. Serving (next increment) needs every gate at once: verified partner, an active advertising grant, an approved current revision, the advertisement active and not suspended, its campaign active and inside its schedule, active targeted slots and a destination visible to the viewer. Approval never bypasses the other gates.
          */
         post: operations["v1_admin_marketing_advertisements_create"];
         delete?: never;
@@ -651,7 +651,7 @@ export interface paths {
         get: operations["v1_admin_marketing_advertisements_retrieve"];
         /**
          * Edit an advertisement on behalf of its partner
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.manage. Replaces the name and working content (PUT): edits the draft, or starts a new draft from a declined or live revision. Editing while a revision is in review returns 409 (retract first). An unchanged save changes nothing. Never lifts a pause or suspension. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). Revisions: content (creative, destination, slots) is edited only in a draft. Submitting freezes it with a content digest; frozen content never changes, and editing a declined or live revision starts a new draft. The approved current_revision keeps serving while its replacement is edited or reviewed (Q21, 2026-09-29); approving the replacement swaps it in atomically. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.manage. Replaces the name and working content (PUT): edits the draft, or starts a new draft from a declined or live revision. Editing while a revision is in review returns 409 (retract first). An unchanged save changes nothing. Never lifts a pause or suspension. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). A partner_id naming a client group synchronized from RealHRSoft returns 409 NOT_A_MERCHANT: client groups do not advertise. Revisions: content (creative, destination, slots) is edited only in a draft. Submitting freezes it with a content digest; frozen content never changes, and editing a declined or live revision starts a new draft. The approved current_revision keeps serving while its replacement is edited or reviewed (Q21, 2026-09-29); approving the replacement swaps it in atomically. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
          */
         put: operations["v1_admin_marketing_advertisements_update"];
         post?: never;
@@ -940,7 +940,7 @@ export interface paths {
         put?: never;
         /**
          * Create a campaign on behalf of a partner
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.campaign.manage. Creates an active campaign owned by the named partner's organization (posted_via=admin_on_behalf). The owner must be a verified partner to create, edit, upload or submit (409 otherwise). Campaigns contain advertisements. Flights are schedule windows per channel (Q25 proposal): a channel without flights runs across the campaign window, a channel with flights only inside one of them. An ended window hides the campaign's advertisements; it never archives them. Writes an audit record and a durable outbox event in the same transaction.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.campaign.manage. Creates an active campaign owned by the named partner's organization (posted_via=admin_on_behalf). The owner must be a verified partner to create, edit, upload or submit (409 otherwise). A partner_id naming a client group synchronized from RealHRSoft returns 409 NOT_A_MERCHANT: client groups do not advertise. Campaigns contain advertisements. Flights are schedule windows per channel (Q25 proposal): a channel without flights runs across the campaign window, a channel with flights only inside one of them. An ended window hides the campaign's advertisements; it never archives them. Writes an audit record and a durable outbox event in the same transaction.
          */
         post: operations["v1_admin_marketing_campaigns_create"];
         delete?: never;
@@ -988,7 +988,7 @@ export interface paths {
         put?: never;
         /**
          * Upload a creative asset on behalf of a partner
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.manage. Send multipart/form-data with file and partner_id. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). Stored privately (Q22): never reachable through the public media location, readable only by the owner's members with marketing.own_ad.view and administrators with marketing.ad.view. The type is detected from the content, not the file name. Use the returned id as creative.asset_id. Assets are immutable.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.ad.manage. Send multipart/form-data with file and partner_id. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). A partner_id naming a client group synchronized from RealHRSoft returns 409 NOT_A_MERCHANT: client groups do not advertise. Stored privately (Q22): never reachable through the public media location, readable only by the owner's members with marketing.own_ad.view and administrators with marketing.ad.view. The type is detected from the content, not the file name. Use the returned id as creative.asset_id. Assets are immutable.
          */
         post: operations["v1_admin_marketing_creative_assets_create"];
         delete?: never;
@@ -1119,6 +1119,26 @@ export interface paths {
          * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires marketing.slot.manage. Requires a reason. Makes the slot available to revisions again. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
          */
         post: operations["v1_admin_marketing_placement_slots_reactivate_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/merchants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Onboard a merchant (assisted)
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires partners.partner.create, organizations.membership.manage and identity.organization_role.manage (403 otherwise; nothing changes). Use it to sign up a business that sells offers to RealHRSoft employees when nobody there has a Marketplace account yet. In one transaction it creates the merchant's native home organization, the merchant (kind merchant, intake_path assisted, status pending) and a seat for the administrator: an organization membership with the protected merchant_administrator role. One account per email (case-insensitive): an existing account is linked and emailed that it has access; otherwise a new one is created without a password and emailed a set-password link valid for 24 hours. The administrator can sign in at once and complete the profile; offers still need verification (and the other publishing gates) to go live. A disabled account for the email returns 409 ACCOUNT_DISABLED and nothing is created. Audited with the reason. Verification is one of three independent publishing gates: it never publishes content, records payment or grants commercial eligibility.
+         */
+        post: operations["v1_admin_merchants_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1619,7 +1639,7 @@ export interface paths {
         get: operations["v1_admin_organizations_retrieve"];
         /**
          * Update organization display name
-         * @description Authenticate with the existing Bearer access token. Global administration only; X-Organization-ID is not used and supplies no authority. Responses use Cache-Control: no-store. Requires organizations.organization.manage. organization_id is the public UUID. Send all fields and the latest expected_version. Each successful update increments version and writes an audit record atomically; stale writes return 409. UUID and memberships remain unchanged.
+         * @description Authenticate with the existing Bearer access token. Global administration only; X-Organization-ID is not used and supplies no authority. Responses use Cache-Control: no-store. Requires organizations.organization.manage. organization_id is the public UUID. Send all fields and the latest expected_version. Each successful update increments version and writes an audit record atomically; stale writes return 409. UUID and memberships remain unchanged. A company synchronized from RealHRSoft takes its name from RealHRSoft only: renaming it returns 409 SOURCE_OWNED.
          */
         put: operations["v1_admin_organizations_update"];
         post?: never;
@@ -1639,7 +1659,7 @@ export interface paths {
         get?: never;
         /**
          * Turn an organization's Employer capacity on or off
-         * @description Authenticate with the existing Bearer access token. Global administration only; X-Organization-ID is not used and supplies no authority. Responses use Cache-Control: no-store. Requires organizations.employer.manage. Use when an organization starts or stops offering Company Benefits to its own employees (EMR-01). The capacity is independent of partner registration: an organization can be an employer, a partner, both or neither. While it is off, members cannot author benefits and employees see none of its benefits; turning it off keeps every benefit and benefit claim, and turning it back on restores them in their stored states. It grants no role: members also need the employer_benefits organization permissions. Each change increments version and writes an audit record atomically. A stale expected_version, or asking for the state the organization is already in, returns 409.
+         * @description Authenticate with the existing Bearer access token. Global administration only; X-Organization-ID is not used and supplies no authority. Responses use Cache-Control: no-store. Requires organizations.employer.manage. Use when an organization starts or stops offering Company Benefits to its own employees (EMR-01). Only a company synchronized from RealHRSoft (external_uuid set) can be switched on: a native organization, such as a merchant's home organization, has no employees and returns 409 NOT_A_COMPANY. Switching off is always allowed. While it is off, members cannot author benefits and employees see none of its benefits; turning it off keeps every benefit and benefit claim, and turning it back on restores them in their stored states. It grants no role: members also need the employer_benefits organization permissions. Each change increments version and writes an audit record atomically. A stale expected_version, or asking for the state the organization is already in, returns 409.
          */
         put: operations["v1_admin_organizations_employer_update"];
         post?: never;
@@ -1702,13 +1722,13 @@ export interface paths {
         };
         /**
          * List partner registrations
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires partners.partner.view. The verification review queue and partner directory. Filter by status (pending, verified, rejected), intake_path (self_service, assisted) and source (partner_organization, external, realhrsoft); search matches business or organization name (case-insensitive substring). Offset pagination: limit (default 20), offset (default 0). Ordered by business name then UUID unless ordering is given.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires partners.partner.view. The verification review queue and partner directory, clients and merchants together unless kind is given. Filter by kind (client, merchant), status (pending, verified, rejected), intake_path (self_service, assisted, realhrsoft_sync) and source (partner_organization, external, realhrsoft); search matches business or organization name (case-insensitive substring). Offset pagination: limit (default 20), offset (default 0). Ordered by business name then UUID unless ordering is given.
          */
         get: operations["v1_admin_partners_list"];
         put?: never;
         /**
          * Register a partner on behalf of an organization (assisted intake)
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires partners.partner.create. Registers an existing organization as a partner with intake_path=assisted and status=pending, recording you as the registrant; it follows exactly the same rules as self-service. Each organization can be a partner once (409 otherwise). State and audit commit together. Omitted optional profile fields are stored empty; source defaults to partner_organization (use external for a business without portal users, realhrsoft for a RealHRsoft client). Verification is one of three independent publishing gates: it never publishes content, records payment or grants commercial eligibility.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires partners.partner.create. Registers an existing organization as a partner with intake_path=assisted and status=pending, recording you as the registrant; it follows exactly the same rules as self-service. Each organization can be a partner once (409 otherwise). State and audit commit together. Omitted optional profile fields are stored empty; source defaults to partner_organization (use external for a business without portal users, realhrsoft for a RealHRsoft client). The organization must be native: a company synchronized from RealHRSoft is refused (409). With administrator, the person also gets an account and the protected merchant_administrator role in the organization in the same transaction, which needs organizations.membership.manage and identity.organization_role.manage too (403 otherwise; nothing changes). To create the organization as well, use POST /api/v1/admin/merchants. Verification is one of three independent publishing gates: it never publishes content, records payment or grants commercial eligibility.
          */
         post: operations["v1_admin_partners_create"];
         delete?: never;
@@ -1731,7 +1751,7 @@ export interface paths {
         get: operations["v1_admin_partners_retrieve"];
         /**
          * Edit a partner profile on its behalf
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires partners.partner.update. Replaces every profile field (omitted optional fields are cleared; an omitted source is kept) and increments version. The status does not change: editing a verified partner keeps it verified, and a rejected one stays rejected until resubmitted. Stale expected_version returns 409.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires partners.partner.update. Replaces every profile field (omitted optional fields are cleared; an omitted source is kept) and increments version. The status does not change: editing a verified partner keeps it verified, and a rejected one stays rejected until resubmitted. Stale expected_version returns 409. Merchant partners only: a client group synchronized from RealHRSoft has its profile and lifecycle managed there and returns 409 NOT_A_MERCHANT.
          */
         put: operations["v1_admin_partners_update"];
         post?: never;
@@ -1772,9 +1792,29 @@ export interface paths {
         put?: never;
         /**
          * Set the client's Employer opt-in
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires organizations.employer.manage. When on, every company RealHRSoft synchronizes for this client from now on gets Employer capacity at once, so client benefits for all companies, including future ones, reach their employees without per-company setup; include_existing also switches on its current active companies. Each company's capacity can still be switched off on its own. Stale expected_version or no change returns 409. Audited.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires organizations.employer.manage. Clients only: a merchant partner has no companies, employees or client members and returns 409 NOT_A_CLIENT. When on, every company RealHRSoft synchronizes for this client from now on gets Employer capacity at once, so client benefits for all companies, including future ones, reach their employees without per-company setup; include_existing also switches on its current active companies. Each company's capacity can still be switched off on its own. Stale expected_version or no change returns 409. Audited. A plain enable never creates accounts, grants roles or sends email. With invite_contact true it also provisions the client's RealHRSoft contact as client administrator in the same transaction (see invite-contact), unless the client already has a member holding partners.client_role.manage (invite.skipped = administrator_exists). invite_contact needs the realhrsoft.client_provisioning flag (503 FEATURE_DISABLED), organizations.membership.manage and identity.organization_role.manage (403), and enabled true (422); a deactivated client returns 409.
          */
         post: operations["v1_admin_partners_employer_auto_enable_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/partners/{partner_id}/invite-contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Invite the client's contact as client administrator
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires organizations.membership.manage and identity.organization_role.manage, and the realhrsoft.client_provisioning flag (503 FEATURE_DISABLED while off). Clients only: a merchant partner has no companies, employees or client members and returns 409 NOT_A_CLIENT. Use it when the client has no administrator yet, or when RealHRSoft changed the contact (contact_is_member false on the client). Gives the current contact_email a seat: a current client membership plus the protected client_administrator role, even when other administrators exist. One account per email (case-insensitive): an existing account is linked and emailed that it has access; otherwise a new one is created without a password and emailed a set-password link valid for 24 hours. Idempotent: when the contact already holds the seat it returns outcome unchanged and sends nothing. A deactivated client, or a disabled account for the email (ACCOUNT_DISABLED; reactivate it first), returns 409. Reason required and audited (identity.seat.provisioned when anything changed).
+         */
+        post: operations["v1_admin_partners_invite_contact_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1790,13 +1830,13 @@ export interface paths {
         };
         /**
          * List a client's members
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires organizations.membership.manage and partners.partner.view. Every client membership, current and ended, newest first. A member can be granted client roles (POST /api/v1/admin/users/{user_id}/roles with client_id); a client role's organization permissions apply in every current and future company of the client. Offset pagination: limit (default 20), offset (default 0).
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires organizations.membership.manage and partners.partner.view. Clients only: a merchant partner has no companies, employees or client members and returns 409 NOT_A_CLIENT. Every client membership, current and ended, newest first. A member can be granted client roles (POST /api/v1/admin/users/{user_id}/roles with client_id); a client role's organization permissions apply in every current and future company of the client. Offset pagination: limit (default 20), offset (default 0).
          */
         get: operations["v1_admin_partners_members_list"];
         put?: never;
         /**
          * Admit a user as a client member
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires organizations.membership.manage. Membership alone grants nothing: grant a client role next. The user must be active; one current membership per user and client (409 otherwise). Audited with the reason.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires organizations.membership.manage. Clients only: a merchant partner has no companies, employees or client members and returns 409 NOT_A_CLIENT. Membership alone grants nothing: grant a client role next. The user must be active; one current membership per user and client (409 otherwise). Audited with the reason.
          */
         post: operations["v1_admin_partners_members_create"];
         delete?: never;
@@ -1816,7 +1856,7 @@ export interface paths {
         put?: never;
         /**
          * End a client membership
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires organizations.membership.manage. Client roles granted under the membership stop applying at once (in the client and all its companies) and stay as history; a later membership needs new grants. 409 when already ended.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires organizations.membership.manage. Clients only: a merchant partner has no companies, employees or client members and returns 409 NOT_A_CLIENT. Client roles granted under the membership stop applying at once (in the client and all its companies) and stay as history; a later membership needs new grants. 409 when already ended.
          */
         post: operations["v1_admin_partners_members_end_create"];
         delete?: never;
@@ -1836,7 +1876,7 @@ export interface paths {
         put?: never;
         /**
          * Reject a pending partner
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires partners.partner.reject. Same version and status rules as verify. Sets status=rejected; the reason is the feedback the applicant sees in latest_decision. The applicant may then edit the profile and resubmit.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires partners.partner.reject. Same version and status rules as verify. Sets status=rejected; the reason is the feedback the applicant sees in latest_decision. The applicant may then edit the profile and resubmit. Merchant partners only: a client group synchronized from RealHRSoft has its profile and lifecycle managed there and returns 409 NOT_A_MERCHANT.
          */
         post: operations["v1_admin_partners_reject_create"];
         delete?: never;
@@ -1856,7 +1896,7 @@ export interface paths {
         put?: never;
         /**
          * Resubmit a rejected partner on its behalf
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires partners.partner.resubmit. Only a rejected partner can be resubmitted; it returns to pending for a new review and submitted_at is refreshed. Earlier decisions stay in the history. The reason is required.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires partners.partner.resubmit. Only a rejected partner can be resubmitted; it returns to pending for a new review and submitted_at is refreshed. Earlier decisions stay in the history. The reason is required. Merchant partners only: a client group synchronized from RealHRSoft has its profile and lifecycle managed there and returns 409 NOT_A_MERCHANT.
          */
         post: operations["v1_admin_partners_resubmit_create"];
         delete?: never;
@@ -1876,7 +1916,7 @@ export interface paths {
         put?: never;
         /**
          * Verify a pending partner
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires partners.partner.verify. Only a pending partner can be decided, and only at the version you reviewed: a changed profile or a concurrent decision returns 409. Sets status=verified, appends a decision to the history and writes an audit record atomically. The reason is required. Verification is one of three independent publishing gates: it never publishes content, records payment or grants commercial eligibility.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires partners.partner.verify. Only a pending partner can be decided, and only at the version you reviewed: a changed profile or a concurrent decision returns 409. Sets status=verified, appends a decision to the history and writes an audit record atomically. The reason is required. Merchant partners only: a client group synchronized from RealHRSoft has its profile and lifecycle managed there and returns 409 NOT_A_MERCHANT. Verification is one of three independent publishing gates: it never publishes content, records payment or grants commercial eligibility.
          */
         post: operations["v1_admin_partners_verify_create"];
         delete?: never;
@@ -2133,6 +2173,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/users/{user_id}/password-setup/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resend a user's password-setup link
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires identity.user.password_setup.resend. Use when a user an administrator created, or one provisioned for a client, company or merchant, lost or let expire their set-password link: such an account has no password, so it cannot sign in to get one. Emails a new link valid for 24 hours and makes every earlier link stop working. Only while the account is active and still needs setup (password_setup_pending on the user). A reason is required and audited (identity.user.password_setup_resent). You cannot resend your own link here; use the public resend instead.
+         */
+        post: operations["v1_admin_users_password_setup_resend_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/users/{user_id}/reactivate": {
         parameters: {
             query?: never;
@@ -2264,6 +2324,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/impersonation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign in as a partner user (superusers only)
+         * @description Lets a superuser see and use the Marketplace exactly as a partner user does, to support them or check what they can reach, without knowing their password. Authenticate with the Bearer access token of your own session and send your refresh cookie (marketplace_refresh); the request must come from a trusted Origin. Only an active superuser (superuser on GET /api/v1/auth/me) may call it, never from an impersonation session.
+         *
+         *     Effect: starts a session as the user and returns its access token. The refresh cookie now holds that session, and your own refresh token is parked in the httpOnly marketplace_impersonator cookie (same path and flags) until POST /api/v1/auth/impersonation/end restores it. The impersonation lasts at most one hour and never beyond your own session; it stops working at once when you end it, sign out, are disabled or lose superuser status. GET /api/v1/auth/me then reports the user, with authentication_source impersonation and impersonator set to you. The user's last sign-in time is not changed. Starting it is audited (identity.user.impersonation_started) with the reason; every audit record written while impersonating carries impersonated_by with your user UUID. Only partner users may be impersonated: a current member of a merchant's organization (impersonable on GET /api/v1/admin/users/{user_id}). Client and company users, staff, superusers and system accounts may not, nor a disabled user. Users who have not set a password yet may be.
+         */
+        post: operations["v1_auth_impersonation_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/impersonation/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End an impersonation and return to your own account
+         * @description Ends the impersonation session in the refresh cookie and, when possible, signs the superuser back in to their own session. Authenticated by the refresh cookie (no Bearer token needed); the request must come from a trusted Origin. Audited as identity.user.impersonation_ended.
+         *
+         *     200: your own session was restored from the marketplace_impersonator cookie; the body is its new access token, the refresh cookie holds it again and the marketplace_impersonator cookie is cleared. 204: the impersonation ended but your own session could not be restored (it ended or expired meanwhile, or the cookie is missing); both cookies are cleared and you must sign in again.
+         */
+        post: operations["v1_auth_impersonation_end_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/login": {
         parameters: {
             query?: never;
@@ -2331,6 +2435,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/business/businesses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List businesses to choose as a business offer's audience
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.view in the selected organization. The acting business must be in standing: a verified, active merchant, or an active client group (403 otherwise). Other businesses in standing (verified merchants and active client groups), never your own, with their kind and name only: the choices for audience_business_ids. search matches the name (case-insensitive substring). Offset pagination: limit (default 20), offset (default 0). Ordered by name.
+         */
+        get: operations["v1_business_businesses_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/business/enquiries": {
         parameters: {
             query?: never;
@@ -2339,8 +2463,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List my organization's sent enquiries
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.sent_enquiry.view in the selected organization. Every enquiry it sent, open or closed, kept after the offer ends. Filter by status, offer_id, organization_id and provider_organization_id. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         * List my merchant's sent enquiries
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.sent_enquiry.view in the selected organization. Every enquiry the business sent, open or closed, kept after the offer ends and whatever the business's standing. Filter by status, offer_id, business_id (the enquirer) and provider_id. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
          */
         get: operations["v1_business_enquiries_list"];
         put?: never;
@@ -2359,7 +2483,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Read one of my organization's sent enquiries
+         * Read one of my merchant's sent enquiries
          * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.sent_enquiry.view in the selected organization. closing_note carries the provider's note once closed.
          */
         get: operations["v1_business_enquiries_retrieve"];
@@ -2379,8 +2503,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List categories of my organization's business catalogue
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.business_catalogue.view in the selected organization, which must be a verified partner or an employer (403 otherwise). Only other organizations' live business offers whose audience covers yours. Categories with at least one such offer now, for the category_id filter; not paginated. Ordered by sort_order then name.
+         * List categories of my merchant's business catalogue
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.business_catalogue.view in the selected organization. The acting business must be in standing: a verified, active merchant, or an active client group (403 otherwise). Only other businesses' live business offers whose audience covers yours. Categories with at least one such offer now, for the category_id filter; not paginated. Ordered by sort_order then name.
          */
         get: operations["v1_business_offer_categories_list"];
         put?: never;
@@ -2399,8 +2523,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Browse business offers available to my organization
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.business_catalogue.view in the selected organization, which must be a verified partner or an employer (403 otherwise). Only other organizations' live business offers whose audience covers yours. Filter by category_id and provider_organization_id; search matches the title or the provider name. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given. Organizations see a business offer only while every gate passes: a live (approved, current) version, not paused, retired or suspended, its capacity in standing (a verified partner, or the Employer capacity) and now inside the version's window; the business audience then applies, and the provider never sees its own offer in the catalogue.
+         * Browse business offers available to my merchant
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.business_catalogue.view in the selected organization. The acting business must be in standing: a verified, active merchant, or an active client group (403 otherwise). Only other businesses' live business offers whose audience covers yours. Filter by category_id and provider_id; search matches the title or the provider's name. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given. Businesses see a business offer only while every gate passes: a live (approved, current) version, not paused, retired or suspended, its provider in standing and now inside the version's window; the business audience then applies, and the provider never sees its own offer in the catalogue.
          */
         get: operations["v1_business_offers_list"];
         put?: never;
@@ -2419,8 +2543,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Read a business offer available to my organization
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.business_catalogue.view in the selected organization, which must be a verified partner or an employer (403 otherwise). Only other organizations' live business offers whose audience covers yours. 404 when it is not live or not available to your organization.
+         * Read a business offer available to my merchant
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.business_catalogue.view in the selected organization. The acting business must be in standing: a verified, active merchant, or an active client group (403 otherwise). Only other businesses' live business offers whose audience covers yours. 404 when it is not live or not available to your business.
          */
         get: operations["v1_business_offers_retrieve"];
         put?: never;
@@ -2442,29 +2566,9 @@ export interface paths {
         put?: never;
         /**
          * Enquire about a business offer
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.sent_enquiry.create in the selected organization, which must be a verified partner or an employer. Sends the provider an enquiry on your organization's behalf about the offer's live version; its members with offers.received_enquiry.view are notified and follow up with the contact you give. One open enquiry per organization and offer; after the provider closes it you may enquire again. No voucher or claim is created.
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.sent_enquiry.create in the selected organization. The acting business must be in standing: a verified, active merchant, or an active client group (403 otherwise). Sends the provider an enquiry on your business's behalf about the offer's live version; its members who handle received enquiries are notified and follow up with the contact you give. One open enquiry per business and offer; after the provider closes it you may enquire again. No voucher or claim is created.
          */
         post: operations["v1_business_offers_enquire_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/business/organizations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List businesses to choose as a business offer's audience
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.view in the selected organization, which must be a verified partner or an employer (403 otherwise). Other businesses (verified partners and employers), never the selected organization, with their names only: the choices for audience_organization_ids. search matches the name (case-insensitive substring). Offset pagination: limit (default 20), offset (default 0). Ordered by name.
-         */
-        get: operations["v1_business_organizations_list"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2479,7 +2583,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List categories for authoring business offers
+         * List categories for authoring my merchant's business offers
          * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.view in the selected organization. Every active category, ordered by sort_order then name; not paginated. Use the id as category_id when creating or editing a business offer.
          */
         get: operations["v1_business_own_offer_categories_list"];
@@ -2499,14 +2603,14 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List my organization's business offers
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.view in the selected organization. Its business offers in any state, including those posted by administrators on its behalf. Filter by display_status, availability, in_review, category_id, audience_type, show_to_employees, posted_via and (administrators) partner_id and organization_id; search matches the live or working title or the provider name (case-insensitive substring). Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         * List my merchant's business offers
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.view in the selected organization. Its business offers in any state, including those posted by administrators on its behalf. Filter by display_status, availability, in_review, category_id, audience_type, show_to_employees, posted_via and (administrators) provider_kind and provider_id; search matches the live or working title or the provider's name (case-insensitive substring). Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
          */
         get: operations["v1_business_own_offers_list"];
         put?: never;
         /**
-         * Create a business offer for my organization
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.create in the selected organization, plus offers.own_business_offer.submit for intent=submit. Creates the offer with draft version 1; intent=submit also sends it for Aayulogic review. Only administrators publish. The offer is posted in the organization's Partner capacity when its partner is verified, otherwise in its Employer capacity (409 when it has neither). The capacity must stay in standing to edit, submit, publish or reinstate. Business (B2B) offers are made by one organization to other organizations: a verified partner or an employer (Employer capacity on) posts them, and Aayulogic reviews every version before it goes live, as for marketplace offers. Organizations in the audience that are businesses themselves (a verified partner or an employer) see it in /business/offers and enquire; the provider follows up outside the platform. The show_to_employees switch also lists the live version in the employee marketplace for the audience's employees, who claim it for a voucher like a marketplace offer; only an offer posted as a verified partner can use it. Organizations see a business offer only while every gate passes: a live (approved, current) version, not paused, retired or suspended, its capacity in standing (a verified partner, or the Employer capacity) and now inside the version's window; the business audience then applies, and the provider never sees its own offer in the catalogue.
+         * Create a business offer for my merchant
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.create in the selected organization. Also offers.own_business_offer.submit for intent=submit. Creates the offer with draft version 1; intent=submit also sends it for Aayulogic review. Only Aayulogic publishes, after review. You act for the merchant whose home organization is selected (X-Organization-ID); it must be verified to post, browse or enquire. Business (B2B) offers are made by one business to other businesses. A business is a verified merchant or an active RealHRSoft client group; both post, browse and enquire, and Aayulogic reviews every version before it goes live, as for marketplace offers. Businesses in the audience see the offer and enquire; the provider follows up outside the platform. A merchant's show_to_employees switch also lists the live version in the employee marketplace (every RealHRSoft employee for all_businesses, otherwise the employees of the selected clients' companies), where employees claim it for a voucher the merchant confirms. A client's offer is enquiry-only. Businesses see a business offer only while every gate passes: a live (approved, current) version, not paused, retired or suspended, its provider in standing and now inside the version's window; the business audience then applies, and the provider never sees its own offer in the catalogue.
          */
         post: operations["v1_business_own_offers_create"];
         delete?: never;
@@ -2523,13 +2627,13 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Read one of my organization's business offers
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.view in the selected organization. 404 for another organization's offer. latest_decision holds review feedback.
+         * Read one of my merchant's business offers
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.view in the selected organization. 404 for another business's offer. latest_decision holds review feedback.
          */
         get: operations["v1_business_own_offers_retrieve"];
         /**
-         * Edit one of my organization's business offer drafts
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.update in the selected organization, plus offers.own_business_offer.submit for intent=submit. Replaces the working draft's terms, or starts a new draft from your edit when there is none. The live version stays live until the replacement is approved; turning show_to_employees on or off takes effect only then. Once published with employee terms, the promo code cannot change. 409 while a version is in review (retract it first) or when retired. Lifecycle: save (draft) -> submit (in_review) -> approve (live) | request-changes | reject; retract withdraws a version under review. The live version stays live while its replacement is edited and reviewed. unpublish takes the live version offline and keeps a draft; pause/resume and retire (final) are owner controls; suspend/reinstate are administrator moderation. The offer is posted in the organization's Partner capacity when its partner is verified, otherwise in its Employer capacity (409 when it has neither). The capacity must stay in standing to edit, submit, publish or reinstate.
+         * Edit one of my merchant's business offer drafts
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.update in the selected organization. Also offers.own_business_offer.submit for intent=submit. Replaces the working draft's terms, or starts a new draft from your edit when there is none. The live version stays live until the replacement is approved. Once published with employee terms, the promo code cannot change. 409 while a version is in review (retract it first) or when retired. Lifecycle: save (draft) -> submit (in_review) -> approve (live) | request-changes | reject; retract withdraws a version under review. The live version stays live while its replacement is edited and reviewed. unpublish takes the live version offline and keeps a draft; pause/resume and retire (final) are owner controls; suspend/reinstate are administrator moderation. The provider must stay in standing (a verified, active merchant, or an active client group) to edit, submit, publish or reinstate (409 otherwise).
          */
         put: operations["v1_business_own_offers_update"];
         post?: never;
@@ -2547,7 +2651,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List one of my organization's business offer decisions
+         * List one of my merchant's business offer decisions
          * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.view in the selected organization. Every decision with its feedback. Newest first. Offset pagination: limit (default 20), offset (default 0).
          */
         get: operations["v1_business_own_offers_decisions_list"];
@@ -2569,8 +2673,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Pause one of my organization's business offers
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.pause in the selected organization. enabled -> paused: hidden from organizations and employees until resumed.
+         * Pause one of my merchant's business offers
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.pause in the selected organization. enabled -> paused: hidden from businesses and employees until resumed.
          */
         post: operations["v1_business_own_offers_pause_create"];
         delete?: never;
@@ -2589,7 +2693,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Resume one of my organization's paused business offers
+         * Resume one of my merchant's paused business offers
          * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.pause in the selected organization. paused -> enabled. An administrator suspension still applies.
          */
         post: operations["v1_business_own_offers_resume_create"];
@@ -2609,7 +2713,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Retire one of my organization's business offers
+         * Retire one of my merchant's business offers
          * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.retire in the selected organization. Final: no new enquiries, claims or edits. Enquiries, claims, vouchers and history are kept.
          */
         post: operations["v1_business_own_offers_retire_create"];
@@ -2629,7 +2733,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Retract my organization's business offer version under review
+         * Retract my merchant's business offer version under review
          * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.withdraw in the selected organization. The in_review version becomes retracted; edit to start a new draft. A live version stays live.
          */
         post: operations["v1_business_own_offers_retract_create"];
@@ -2649,8 +2753,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Submit my organization's business offer draft for review
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.submit in the selected organization. Freezes the working draft and moves it to in_review. The category must be active and valid_until, when set, in the future. The offer is posted in the organization's Partner capacity when its partner is verified, otherwise in its Employer capacity (409 when it has neither). The capacity must stay in standing to edit, submit, publish or reinstate.
+         * Submit my merchant's business offer draft for review
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.submit in the selected organization. Freezes the working draft and moves it to in_review. The category must be active and valid_until, when set, in the future. The provider must stay in standing (a verified, active merchant, or an active client group) to edit, submit, publish or reinstate (409 otherwise).
          */
         post: operations["v1_business_own_offers_submit_create"];
         delete?: never;
@@ -2669,7 +2773,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Unpublish one of my organization's business offers
+         * Unpublish one of my merchant's business offers
          * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.withdraw in the selected organization. Takes the live version offline and keeps a draft copy to edit and resubmit. Open enquiries, accepted claims and vouchers are unaffected. Use retire to end the offer for good.
          */
         post: operations["v1_business_own_offers_unpublish_create"];
@@ -2687,7 +2791,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List one of my organization's business offer versions
+         * List one of my merchant's business offer versions
          * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_business_offer.view in the selected organization. Newest first. Offset pagination: limit (default 20), offset (default 0).
          */
         get: operations["v1_business_own_offers_versions_list"];
@@ -2707,8 +2811,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List enquiries about my organization's business offers
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.received_enquiry.view in the selected organization. Every enquiry other organizations sent about its business offers, with their contact details; status=open is the follow-up queue. Filter by status, offer_id, organization_id and provider_organization_id. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         * List enquiries about my merchant's business offers
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.received_enquiry.view in the selected organization. Every enquiry other businesses sent about its business offers, with their contact details; status=open is the follow-up queue. Filter by status, offer_id, business_id (the enquirer) and provider_id. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
          */
         get: operations["v1_business_received_enquiries_list"];
         put?: never;
@@ -2727,7 +2831,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Read an enquiry about my organization's business offer
+         * Read an enquiry about my merchant's business offer
          * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.received_enquiry.view in the selected organization.
          */
         get: operations["v1_business_received_enquiries_retrieve"];
@@ -2750,7 +2854,7 @@ export interface paths {
         put?: never;
         /**
          * Close an enquiry once followed up
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.received_enquiry.manage (and .view) in the selected organization. open -> closed (final); the enquirer is notified and sees closing_note. Their organization may then enquire again. 409 ENQUIRY_CLOSED when already closed.
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.received_enquiry.manage plus offers.received_enquiry.view in the selected organization. open -> closed (final); the enquiring business's members who follow its enquiries are notified and see closing_note. It may then enquire again. 409 ENQUIRY_CLOSED when already closed.
          */
         post: operations["v1_business_received_enquiries_close_create"];
         delete?: never;
@@ -2987,6 +3091,434 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/client/business/businesses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List businesses to choose as a business offer's audience
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_business_offer.view in the selected client. The acting business must be in standing: a verified, active merchant, or an active client group (403 otherwise). Other businesses in standing (verified merchants and active client groups), never your own, with their kind and name only: the choices for audience_business_ids. search matches the name (case-insensitive substring). Offset pagination: limit (default 20), offset (default 0). Ordered by name.
+         */
+        get: operations["v1_client_business_businesses_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/enquiries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my client group's sent enquiries
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_sent_enquiry.view in the selected client. Every enquiry the business sent, open or closed, kept after the offer ends and whatever the business's standing. Filter by status, offer_id, business_id (the enquirer) and provider_id. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         */
+        get: operations["v1_client_business_enquiries_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/enquiries/{enquiry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read one of my client group's sent enquiries
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_sent_enquiry.view in the selected client. closing_note carries the provider's note once closed.
+         */
+        get: operations["v1_client_business_enquiries_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/offer-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List categories of my client group's business catalogue
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_business_catalogue.view in the selected client. The acting business must be in standing: a verified, active merchant, or an active client group (403 otherwise). Only other businesses' live business offers whose audience covers yours. Categories with at least one such offer now, for the category_id filter; not paginated. Ordered by sort_order then name.
+         */
+        get: operations["v1_client_business_offer_categories_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Browse business offers available to my client group
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_business_catalogue.view in the selected client. The acting business must be in standing: a verified, active merchant, or an active client group (403 otherwise). Only other businesses' live business offers whose audience covers yours. Filter by category_id and provider_id; search matches the title or the provider's name. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given. Businesses see a business offer only while every gate passes: a live (approved, current) version, not paused, retired or suspended, its provider in standing and now inside the version's window; the business audience then applies, and the provider never sees its own offer in the catalogue.
+         */
+        get: operations["v1_client_business_offers_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/offers/{offer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a business offer available to my client group
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_business_catalogue.view in the selected client. The acting business must be in standing: a verified, active merchant, or an active client group (403 otherwise). Only other businesses' live business offers whose audience covers yours. 404 when it is not live or not available to your business.
+         */
+        get: operations["v1_client_business_offers_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/offers/{offer_id}/enquire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enquire about a business offer
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_sent_enquiry.create in the selected client. The acting business must be in standing: a verified, active merchant, or an active client group (403 otherwise). Sends the provider an enquiry on your business's behalf about the offer's live version; its members who handle received enquiries are notified and follow up with the contact you give. One open enquiry per business and offer; after the provider closes it you may enquire again. No voucher or claim is created.
+         */
+        post: operations["v1_client_business_offers_enquire_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/own-offer-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List categories for authoring my client group's business offers
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_business_offer.view in the selected client. Every active category, ordered by sort_order then name; not paginated. Use the id as category_id when creating or editing a business offer.
+         */
+        get: operations["v1_client_business_own_offer_categories_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/own-offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my client group's business offers
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_business_offer.view in the selected client. Its business offers in any state, including those posted by administrators on its behalf. Filter by display_status, availability, in_review, category_id, audience_type, show_to_employees, posted_via and (administrators) provider_kind and provider_id; search matches the live or working title or the provider's name (case-insensitive substring). Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         */
+        get: operations["v1_client_business_own_offers_list"];
+        put?: never;
+        /**
+         * Create a business offer for my client group
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_business_offer.create in the selected client. Also offers.client_business_offer.submit for intent=submit. Creates the offer with draft version 1; intent=submit also sends it for Aayulogic review. Only Aayulogic publishes, after review. A client's offer is enquiry-only: show_to_employees must be false (422 otherwise). You act for a RealHRSoft client group (X-Client-ID), as one business; its companies don't act separately. Business (B2B) offers are made by one business to other businesses. A business is a verified merchant or an active RealHRSoft client group; both post, browse and enquire, and Aayulogic reviews every version before it goes live, as for marketplace offers. Businesses in the audience see the offer and enquire; the provider follows up outside the platform. A merchant's show_to_employees switch also lists the live version in the employee marketplace (every RealHRSoft employee for all_businesses, otherwise the employees of the selected clients' companies), where employees claim it for a voucher the merchant confirms. A client's offer is enquiry-only. Businesses see a business offer only while every gate passes: a live (approved, current) version, not paused, retired or suspended, its provider in standing and now inside the version's window; the business audience then applies, and the provider never sees its own offer in the catalogue.
+         */
+        post: operations["v1_client_business_own_offers_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/own-offers/{offer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read one of my client group's business offers
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_business_offer.view in the selected client. 404 for another business's offer. latest_decision holds review feedback.
+         */
+        get: operations["v1_client_business_own_offers_retrieve"];
+        /**
+         * Edit one of my client group's business offer drafts
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_business_offer.update in the selected client. Also offers.client_business_offer.submit for intent=submit. Replaces the working draft's terms, or starts a new draft from your edit when there is none. The live version stays live until the replacement is approved. Once published with employee terms, the promo code cannot change. 409 while a version is in review (retract it first) or when retired. Lifecycle: save (draft) -> submit (in_review) -> approve (live) | request-changes | reject; retract withdraws a version under review. The live version stays live while its replacement is edited and reviewed. unpublish takes the live version offline and keeps a draft; pause/resume and retire (final) are owner controls; suspend/reinstate are administrator moderation. The provider must stay in standing (a verified, active merchant, or an active client group) to edit, submit, publish or reinstate (409 otherwise).
+         */
+        put: operations["v1_client_business_own_offers_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/own-offers/{offer_id}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List one of my client group's business offer decisions
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_business_offer.view in the selected client. Every decision with its feedback. Newest first. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_client_business_own_offers_decisions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/own-offers/{offer_id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pause one of my client group's business offers
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_business_offer.pause in the selected client. enabled -> paused: hidden from businesses and employees until resumed.
+         */
+        post: operations["v1_client_business_own_offers_pause_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/own-offers/{offer_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resume one of my client group's paused business offers
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_business_offer.pause in the selected client. paused -> enabled. An administrator suspension still applies.
+         */
+        post: operations["v1_client_business_own_offers_resume_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/own-offers/{offer_id}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retire one of my client group's business offers
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_business_offer.retire in the selected client. Final: no new enquiries, claims or edits. Enquiries, claims, vouchers and history are kept.
+         */
+        post: operations["v1_client_business_own_offers_retire_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/own-offers/{offer_id}/retract": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retract my client group's business offer version under review
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_business_offer.withdraw in the selected client. The in_review version becomes retracted; edit to start a new draft. A live version stays live.
+         */
+        post: operations["v1_client_business_own_offers_retract_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/own-offers/{offer_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit my client group's business offer draft for review
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_business_offer.submit in the selected client. Freezes the working draft and moves it to in_review. The category must be active and valid_until, when set, in the future. The provider must stay in standing (a verified, active merchant, or an active client group) to edit, submit, publish or reinstate (409 otherwise).
+         */
+        post: operations["v1_client_business_own_offers_submit_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/own-offers/{offer_id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unpublish one of my client group's business offers
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_business_offer.withdraw in the selected client. Takes the live version offline and keeps a draft copy to edit and resubmit. Open enquiries, accepted claims and vouchers are unaffected. Use retire to end the offer for good.
+         */
+        post: operations["v1_client_business_own_offers_unpublish_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/own-offers/{offer_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List one of my client group's business offer versions
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_business_offer.view in the selected client. Newest first. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_client_business_own_offers_versions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/received-enquiries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List enquiries about my client group's business offers
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_received_enquiry.view in the selected client. Every enquiry other businesses sent about its business offers, with their contact details; status=open is the follow-up queue. Filter by status, offer_id, business_id (the enquirer) and provider_id. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         */
+        get: operations["v1_client_business_received_enquiries_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/received-enquiries/{enquiry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read an enquiry about my client group's business offer
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_received_enquiry.view in the selected client.
+         */
+        get: operations["v1_client_business_received_enquiries_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/business/received-enquiries/{enquiry_id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Close an enquiry once followed up
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_received_enquiry.manage plus offers.client_received_enquiry.view in the selected client. open -> closed (final); the enquiring business's members who follow its enquiries are notified and see closing_note. It may then enquire again. 409 ENQUIRY_CLOSED when already closed.
+         */
+        post: operations["v1_client_business_received_enquiries_close_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/client/companies": {
         parameters: {
             query?: never;
@@ -3001,6 +3533,70 @@ export interface paths {
         get: operations["v1_client_companies_list"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/companies/{company_id}/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a company's users
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires partners.company_user.manage in the selected client. The company's current members (users who work in its employer portal), oldest first, with how many more you can add. Every current membership counts toward the limit (CLIENT_COMPANY_USER_LIMIT, default 3), including one a platform administrator admitted; ending one frees a slot. The company must be an active company of the client (404 otherwise).
+         */
+        get: operations["v1_client_companies_users_retrieve"];
+        put?: never;
+        /**
+         * Add a user to a company
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires partners.company_user.manage in the selected client and every permission of the company_user role (you only hand out what you hold). Gives the person a membership of this company with the protected company_user role: the company's benefits and benefit reports in the employer portal, nothing client-wide and no B2B. One account per email (case-insensitive): an existing account is linked and emailed that it has access; otherwise a new one is created without a password and emailed a set-password link valid for 24 hours. Idempotent: a current member returns outcome unchanged (or role_repaired) and is not counted twice. Refused with 409 COMPANY_USER_LIMIT when the company is full, 409 ACCOUNT_DISABLED for a disabled account, 409 for a deactivated company, and 403 for your own email. Employer capacity is not required. Audited (identity.seat.provisioned when anything changed).
+         */
+        post: operations["v1_client_companies_users_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/companies/{company_id}/users/{membership_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End a company user's membership
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires partners.company_user.manage in the selected client and every permission the user's roles in this company hold. The user stops working in the company at once and the slot is freed; role grants stay as history and the account itself is kept. You cannot end your own membership. Audited.
+         */
+        post: operations["v1_client_companies_users_end_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/companies/{company_id}/users/{membership_id}/resend-setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resend a company user's setup link
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires partners.company_user.manage in the selected client, with the same bounds as ending the membership. For a current user who has not set a password yet (password_setup_pending): emails a new set-password link valid for 24 hours and makes earlier links stop working. 409 when the user has already set a password or is disabled. Audited.
+         */
+        post: operations["v1_client_companies_users_resend_setup_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3390,7 +3986,7 @@ export interface paths {
         put?: never;
         /**
          * Requeue quarantined or dead sync events
-         * @description Operators only (Bearer token) with identity.realhrsoft_sync.redrive. Use after the cause is fixed (for example a missing client now delivered, or RealHRSoft corrected a conflicting revision); applied, pending and waiting events are left alone. Audited with the reason. Returns how many were requeued.
+         * @description Operators only (Bearer token) with identity.realhrsoft_sync.redrive. Use after the cause is fixed (for example a missing client now delivered, or RealHRSoft corrected a conflicting revision); applied, pending and waiting events are left alone, and so are failed events older than 30 days, whose data was erased by retention (reconcile their record instead). Audited with the reason. Returns how many were requeued.
          */
         post: operations["v1_integrations_realhrsoft_events_redrive_create"];
         delete?: never;
@@ -3450,7 +4046,7 @@ export interface paths {
         put?: never;
         /**
          * Follow a served advertisement
-         * @description Authenticate with the Bearer access token of any signed-in account (employers, partners and marketplace staff), or, for a RealHRSoft employee, with the RealHRSoft employee token sent by the RealHRSoft backend plus X-Company-ID for the company they act for. Everyone sees advertisements; no permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Call when the viewer activates the advertisement, then navigate to the returned link. Rechecks every serving gate for you now: An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee acting for a company they currently work for, whose catalogue has the offer). Advertisements are never claimed or redeemed. The link is built from the reviewed destination, never from client input. Counts a click. Counted at most once per advertisement, slot, viewer and local day (Asia/Kathmandu), so retries are safe. 404 when the advertisement is no longer available to you (show a notice instead of navigating). 409 AD_CREATIVE_CHANGED when a newer revision of the advertisement was approved since the placement returned revision: reload the placement rather than showing or following the newer creative.
+         * @description Authenticate with the Bearer access token of any signed-in account (employers, partners and marketplace staff), or, for a RealHRSoft employee, with the RealHRSoft employee token sent by the RealHRSoft backend plus X-Company-ID for the company they act for. Everyone sees advertisements; no permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. An employee needs current business access for that company, as for the offer catalogue: 403 EMPLOYEE_NOT_AUTHORIZED (disabled, not employed there, or a token without business scope), 409 AUTHORIZATION_SYNC_PENDING, AUTHORIZATION_CONTEXT_CHANGED or IDENTITY_NOT_SYNCED (retry or sign again). Call when the viewer activates the advertisement, then navigate to the returned link. Rechecks every serving gate for you now: An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee acting for a company they currently work for, whose catalogue has the offer). Advertisements are never claimed or redeemed. The link is built from the reviewed destination, never from client input. Counts a click. Counted at most once per advertisement, slot, viewer and local day (Asia/Kathmandu), so retries are safe. 404 when the advertisement is no longer available to you (show a notice instead of navigating). 409 AD_CREATIVE_CHANGED when a newer revision of the advertisement was approved since the placement returned revision: reload the placement rather than showing or following the newer creative.
          */
         post: operations["v1_marketplace_advertisements_click_create"];
         delete?: never;
@@ -3468,7 +4064,7 @@ export interface paths {
         };
         /**
          * Download a served advertisement's image
-         * @description Authenticate with the Bearer access token of any signed-in account (employers, partners and marketplace staff), or, for a RealHRSoft employee, with the RealHRSoft employee token sent by the RealHRSoft backend plus X-Company-ID for the company they act for. Everyone sees advertisements; no permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Streams the approved image of an image_banner advertisement inline (nosniff, no-store). Fetch it with the bearer token (e.g. as a blob). An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee acting for a company they currently work for, whose catalogue has the offer). Advertisements are never claimed or redeemed. 404 when the advertisement is not available to you in the slot now or has no image. 409 AD_CREATIVE_CHANGED when a newer revision of the advertisement was approved since the placement returned revision: reload the placement rather than showing or following the newer creative. Does not count an event. An image is immutable for a revision, so clients may cache it by revision.
+         * @description Authenticate with the Bearer access token of any signed-in account (employers, partners and marketplace staff), or, for a RealHRSoft employee, with the RealHRSoft employee token sent by the RealHRSoft backend plus X-Company-ID for the company they act for. Everyone sees advertisements; no permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. An employee needs current business access for that company, as for the offer catalogue: 403 EMPLOYEE_NOT_AUTHORIZED (disabled, not employed there, or a token without business scope), 409 AUTHORIZATION_SYNC_PENDING, AUTHORIZATION_CONTEXT_CHANGED or IDENTITY_NOT_SYNCED (retry or sign again). Streams the approved image of an image_banner advertisement inline (nosniff, no-store). Fetch it with the bearer token (e.g. as a blob). An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee acting for a company they currently work for, whose catalogue has the offer). Advertisements are never claimed or redeemed. 404 when the advertisement is not available to you in the slot now or has no image. 409 AD_CREATIVE_CHANGED when a newer revision of the advertisement was approved since the placement returned revision: reload the placement rather than showing or following the newer creative. Does not count an event. An image is immutable for a revision, so clients may cache it by revision.
          */
         get: operations["v1_marketplace_advertisements_image_retrieve"];
         put?: never;
@@ -3488,7 +4084,7 @@ export interface paths {
         };
         /**
          * Get a served advertisement's own page
-         * @description Authenticate with the Bearer access token of any signed-in account (employers, partners and marketplace staff), or, for a RealHRSoft employee, with the RealHRSoft employee token sent by the RealHRSoft backend plus X-Company-ID for the company they act for. Everyone sees advertisements; no permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. For an advertisement whose destination is ad_page: the click endpoint returns /marketplace/ads/{ad_id}?slot=&revision=, and that page loads its content here with the same slot and revision. Rechecks every serving gate for you now, as a click does: An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee acting for a company they currently work for, whose catalogue has the offer). Advertisements are never claimed or redeemed. The onward action is resolved for you and is null when the page has none or its offer is not available to you. Render title and body as plain text. The creative's image, when has_image is true, comes from the image endpoint with the same slot and revision. Does not count an event. 404 when the advertisement is not available to you in the slot now or has no page. 409 AD_CREATIVE_CHANGED when a newer revision of the advertisement was approved since the placement returned revision: reload the placement rather than showing or following the newer creative.
+         * @description Authenticate with the Bearer access token of any signed-in account (employers, partners and marketplace staff), or, for a RealHRSoft employee, with the RealHRSoft employee token sent by the RealHRSoft backend plus X-Company-ID for the company they act for. Everyone sees advertisements; no permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. An employee needs current business access for that company, as for the offer catalogue: 403 EMPLOYEE_NOT_AUTHORIZED (disabled, not employed there, or a token without business scope), 409 AUTHORIZATION_SYNC_PENDING, AUTHORIZATION_CONTEXT_CHANGED or IDENTITY_NOT_SYNCED (retry or sign again). For an advertisement whose destination is ad_page: the click endpoint returns /marketplace/ads/{ad_id}?slot=&revision=, and that page loads its content here with the same slot and revision. Rechecks every serving gate for you now, as a click does: An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee acting for a company they currently work for, whose catalogue has the offer). Advertisements are never claimed or redeemed. The onward action is resolved for you and is null when the page has none or its offer is not available to you. Render title and body as plain text. The creative's image, when has_image is true, comes from the image endpoint with the same slot and revision. Does not count an event. 404 when the advertisement is not available to you in the slot now or has no page. 409 AD_CREATIVE_CHANGED when a newer revision of the advertisement was approved since the placement returned revision: reload the placement rather than showing or following the newer creative.
          */
         get: operations["v1_marketplace_advertisements_page_retrieve"];
         put?: never;
@@ -3510,7 +4106,7 @@ export interface paths {
         put?: never;
         /**
          * Report a served advertisement as rendered
-         * @description Authenticate with the Bearer access token of any signed-in account (employers, partners and marketplace staff), or, for a RealHRSoft employee, with the RealHRSoft employee token sent by the RealHRSoft backend plus X-Company-ID for the company they act for. Everyone sees advertisements; no permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Send once the advertisement's creative is visible on screen. Counts a rendered impression only for an advertisement served to you in this slot today or yesterday, and only for the revision served or its current approved revision; otherwise 404. Counted at most once per advertisement, slot, viewer and local day (Asia/Kathmandu), so retries are safe. Responds 204 with no body.
+         * @description Authenticate with the Bearer access token of any signed-in account (employers, partners and marketplace staff), or, for a RealHRSoft employee, with the RealHRSoft employee token sent by the RealHRSoft backend plus X-Company-ID for the company they act for. Everyone sees advertisements; no permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. An employee needs current business access for that company, as for the offer catalogue: 403 EMPLOYEE_NOT_AUTHORIZED (disabled, not employed there, or a token without business scope), 409 AUTHORIZATION_SYNC_PENDING, AUTHORIZATION_CONTEXT_CHANGED or IDENTITY_NOT_SYNCED (retry or sign again). Send once the advertisement's creative is visible on screen. Counts a rendered impression only for an advertisement served to you in this slot today or yesterday, and only for the revision served or its current approved revision; otherwise 404. Counted at most once per advertisement, slot, viewer and local day (Asia/Kathmandu), so retries are safe. Responds 204 with no body.
          */
         post: operations["v1_marketplace_advertisements_rendered_create"];
         delete?: never;
@@ -3736,7 +4332,7 @@ export interface paths {
         };
         /**
          * Get the advertisements to show in a placement slot
-         * @description Authenticate with the Bearer access token of any signed-in account (employers, partners and marketplace staff), or, for a RealHRSoft employee, with the RealHRSoft employee token sent by the RealHRSoft backend plus X-Company-ID for the company they act for. Everyone sees advertisements; no permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Call when rendering a surface, once per slot on the page (e.g. app.home.top on every portal home, marketplace.home.top). Returns up to the slot's max_ads advertisements picked at random among those eligible for you (Q26); the list is empty when none is. An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee acting for a company they currently work for, whose catalogue has the offer). Advertisements are never claimed or redeemed. Each returned advertisement counts one served impression. Counted at most once per advertisement, slot, viewer and local day (Asia/Kathmandu), so retries are safe. Render it with a Sponsored label, fetch the image when has_image is true, report rendered once it is on screen and call click when it is followed. 404 when the slot key is unknown or deactivated.
+         * @description Authenticate with the Bearer access token of any signed-in account (employers, partners and marketplace staff), or, for a RealHRSoft employee, with the RealHRSoft employee token sent by the RealHRSoft backend plus X-Company-ID for the company they act for. Everyone sees advertisements; no permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. An employee needs current business access for that company, as for the offer catalogue: 403 EMPLOYEE_NOT_AUTHORIZED (disabled, not employed there, or a token without business scope), 409 AUTHORIZATION_SYNC_PENDING, AUTHORIZATION_CONTEXT_CHANGED or IDENTITY_NOT_SYNCED (retry or sign again). Call when rendering a surface, once per slot on the page (e.g. app.home.top on every portal home, marketplace.home.top). Returns up to the slot's max_ads advertisements picked at random among those eligible for you (Q26); the list is empty when none is. An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee acting for a company they currently work for, whose catalogue has the offer). Advertisements are never claimed or redeemed. Each returned advertisement counts one served impression. Counted at most once per advertisement, slot, viewer and local day (Asia/Kathmandu), so retries are safe. Render it with a Sponsored label, fetch the image when has_image is true, report rendered once it is on screen and call click when it is followed. 404 when the slot key is unknown or deactivated.
          */
         get: operations["v1_marketplace_placements_retrieve"];
         put?: never;
@@ -4010,7 +4606,7 @@ export interface paths {
         put?: never;
         /**
          * Create an advertisement for my organization
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.manage in the selected organization, plus marketing.own_ad.submit for intent=submit. Creates the advertisement in one of the organization's non-archived campaigns with draft revision 1; intent=submit also sends it for review. Use your own uploaded assets and marketplace offers. Marketing is separate from Offers: an advertisement is never claimed or redeemed and never counts as a claim or redemption. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). Revisions: content (creative, destination, slots) is edited only in a draft. Submitting freezes it with a content digest; frozen content never changes, and editing a declined or live revision starts a new draft. The approved current_revision keeps serving while its replacement is edited or reviewed (Q21, 2026-09-29); approving the replacement swaps it in atomically. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction. Serving (next increment) needs every gate at once: verified partner, an active advertising grant, an approved current revision, the advertisement active and not suspended, its campaign active and inside its schedule, active targeted slots and a destination visible to the viewer. Approval never bypasses the other gates.
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.manage in the selected organization, plus marketing.own_ad.submit for intent=submit. Creates the advertisement in one of the organization's non-archived campaigns with draft revision 1; intent=submit also sends it for review. Use your own uploaded assets and marketplace offers. Marketing is separate from Offers: an advertisement is never claimed or redeemed and never counts as a claim or redemption. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). A partner_id naming a client group synchronized from RealHRSoft returns 409 NOT_A_MERCHANT: client groups do not advertise. Revisions: content (creative, destination, slots) is edited only in a draft. Submitting freezes it with a content digest; frozen content never changes, and editing a declined or live revision starts a new draft. The approved current_revision keeps serving while its replacement is edited or reviewed (Q21, 2026-09-29); approving the replacement swaps it in atomically. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction. Serving (next increment) needs every gate at once: verified partner, an active advertising grant, an approved current revision, the advertisement active and not suspended, its campaign active and inside its schedule, active targeted slots and a destination visible to the viewer. Approval never bypasses the other gates.
          */
         post: operations["v1_partner_marketing_advertisements_create"];
         delete?: never;
@@ -4033,7 +4629,7 @@ export interface paths {
         get: operations["v1_partner_marketing_advertisements_retrieve"];
         /**
          * Edit one of my organization's advertisements
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.manage in the selected organization, plus marketing.own_ad.submit for intent=submit. Replaces the name and working content (PUT): edits the draft, or starts a new draft from a declined or live revision. Editing while a revision is in review returns 409 (retract first). An unchanged save changes nothing; intent=submit with nothing to submit returns 409. Never lifts a pause or suspension. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). Revisions: content (creative, destination, slots) is edited only in a draft. Submitting freezes it with a content digest; frozen content never changes, and editing a declined or live revision starts a new draft. The approved current_revision keeps serving while its replacement is edited or reviewed (Q21, 2026-09-29); approving the replacement swaps it in atomically. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.manage in the selected organization, plus marketing.own_ad.submit for intent=submit. Replaces the name and working content (PUT): edits the draft, or starts a new draft from a declined or live revision. Editing while a revision is in review returns 409 (retract first). An unchanged save changes nothing; intent=submit with nothing to submit returns 409. Never lifts a pause or suspension. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). A partner_id naming a client group synchronized from RealHRSoft returns 409 NOT_A_MERCHANT: client groups do not advertise. Revisions: content (creative, destination, slots) is edited only in a draft. Submitting freezes it with a content digest; frozen content never changes, and editing a declined or live revision starts a new draft. The approved current_revision keeps serving while its replacement is edited or reviewed (Q21, 2026-09-29); approving the replacement swaps it in atomically. Send the version you read as expected_version; a stale value returns 409. Writes an audit record and a durable outbox event in the same transaction.
          */
         put: operations["v1_partner_marketing_advertisements_update"];
         post?: never;
@@ -4238,7 +4834,7 @@ export interface paths {
         put?: never;
         /**
          * Create a campaign for my organization
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_campaign.manage in the selected organization. The organization must be a partner (404 otherwise). Creates an active campaign. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). Campaigns contain advertisements. Flights are schedule windows per channel (Q25 proposal): a channel without flights runs across the campaign window, a channel with flights only inside one of them. An ended window hides the campaign's advertisements; it never archives them. Writes an audit record and a durable outbox event in the same transaction.
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_campaign.manage in the selected organization. The organization must be a partner (404 otherwise). Creates an active campaign. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). A partner_id naming a client group synchronized from RealHRSoft returns 409 NOT_A_MERCHANT: client groups do not advertise. Campaigns contain advertisements. Flights are schedule windows per channel (Q25 proposal): a channel without flights runs across the campaign window, a channel with flights only inside one of them. An ended window hides the campaign's advertisements; it never archives them. Writes an audit record and a durable outbox event in the same transaction.
          */
         post: operations["v1_partner_marketing_campaigns_create"];
         delete?: never;
@@ -4346,7 +4942,7 @@ export interface paths {
         put?: never;
         /**
          * Upload a creative asset
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.manage in the selected organization. Send multipart/form-data with file. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). Stored privately (Q22): never reachable through the public media location, readable only by the owner's members with marketing.own_ad.view and administrators with marketing.ad.view. The type is detected from the content, not the file name. Use the returned id as creative.asset_id. Assets are immutable.
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires marketing.own_ad.manage in the selected organization. Send multipart/form-data with file. The owner must be a verified partner to create, edit, upload or submit (409 otherwise). A partner_id naming a client group synchronized from RealHRSoft returns 409 NOT_A_MERCHANT: client groups do not advertise. Stored privately (Q22): never reachable through the public media location, readable only by the owner's members with marketing.own_ad.view and administrators with marketing.ad.view. The type is detected from the content, not the file name. Use the returned id as creative.asset_id. Assets are immutable.
          */
         post: operations["v1_partner_marketing_creative_assets_create"];
         delete?: never;
@@ -4574,7 +5170,7 @@ export interface paths {
         put?: never;
         /**
          * Reject a pending claim
-         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.partner_claim.reject in the selected organization. Only a requested claim. It becomes rejected with your reason, which the claimant sees; no voucher is issued and the claimant cannot request the offer again. Accepting a claim is a separate permission from confirming a voucher at the counter. Claimant identity is never shown to partners.
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.partner_claim.reject in the selected organization. Only a requested claim. It becomes rejected with your reason, which the claimant sees; no voucher is issued and the claimant cannot request the offer again. Past decision_deadline the request has expired and cannot be rejected (409 CLAIM_DEADLINE_PASSED); it becomes expired within a minute. Accepting a claim is a separate permission from confirming a voucher at the counter. Claimant identity is never shown to partners.
          */
         post: operations["v1_partner_offer_claims_reject_create"];
         delete?: never;
@@ -4897,6 +5493,26 @@ export interface paths {
          *     expired / already used all look identical) to avoid enumeration.
          */
         post: operations["v1_users_auth_password_setup_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/auth/password-setup/resend/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send me a new password-setup link
+         * @description Public; no authentication. Use it when a set-password link has expired or was lost: an account an administrator created, or one provisioned for a client, company or merchant, has no password yet, so it cannot sign in to get a link. When the email belongs to an active account that still needs to set its password, a new link valid for 24 hours is emailed and every earlier link stops working. The response is always 202 with the same body, whether or not the account exists, is disabled or has already set its password, so it reveals nothing about accounts. Rate limited per email (default 3 per hour) and per client IP (default 10 per hour); over the limit returns 429 with Retry-After. Each request is audited (identity.user.password_setup_resend_requested) without the address in clear when no account matched.
+         */
+        post: operations["v1_users_auth_password_setup_resend_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5330,21 +5946,21 @@ export interface components {
              */
             category_id: string;
             /**
-             * @description all_businesses: every other verified partner and employer organization. selected_organizations: only audience_organization_ids. Your own organization never sees its own offer in the catalogue.
+             * @description all_businesses: every other verified merchant and active client group. selected_businesses: only audience_business_ids. You never see your own offer in the catalogue.
              *
              *     * `all_businesses` - All businesses
-             *     * `selected_organizations` - Selected organizations
+             *     * `selected_businesses` - Selected businesses
              */
             audience_type: components["schemas"]["BusinessAudienceTypeEnum"];
-            /** @description 1-200 organization UUIDs for selected_organizations; empty otherwise. Only those that are businesses see the offer. */
-            audience_organization_ids?: string[];
+            /** @description 1-200 business UUIDs (merchants or clients, from the businesses directory) for selected_businesses; empty otherwise. Only those in standing see the offer. */
+            audience_business_ids?: string[];
             /**
-             * @description What an enquiring organization should include (quantities, locations, timelines), up to 2000 chars.
+             * @description What an enquiring business should include (quantities, locations, timelines), up to 2000 chars.
              * @default
              */
             enquiry_instructions: string;
             /**
-             * @description The employee switch. false (default): only organizations see the offer and enquire. true: it is also listed in the employee marketplace for the audience's employees (every employee for all_businesses, the selected organizations' employees otherwise), who claim it for a voucher; needs employee_terms and valid_until, and the offer must be posted as a verified partner, who confirms the vouchers.
+             * @description The employee switch, merchants only. false (default): only businesses see the offer and enquire. true: it is also listed in the employee marketplace, for every RealHRSoft employee (all_businesses) or the employees of the selected clients' companies (selected merchants add nobody), who claim it for a voucher the merchant confirms; needs employee_terms and valid_until. A client's offer is enquiry-only: true is refused (422).
              * @default false
              */
             show_to_employees: boolean;
@@ -5361,14 +5977,14 @@ export interface components {
             intent: components["schemas"]["AdminOfferIntentEnum"];
             /**
              * Format: uuid
-             * @description Post in this verified partner's capacity. Give exactly one of partner_id or provider_organization_id.
+             * @description Post for this verified merchant. Give exactly one of partner_id or provider_client_id.
              */
             partner_id?: string | null;
             /**
              * Format: uuid
-             * @description Post in this organization's Employer capacity (it cannot be shown to employees). Give exactly one of partner_id or provider_organization_id.
+             * @description Post for this active client group (enquiry-only: never shown to employees). Give exactly one of partner_id or provider_client_id.
              */
-            provider_organization_id?: string | null;
+            provider_client_id?: string | null;
         };
         /** @description A version's common terms. PUT semantics: omitted optional fields are cleared. */
         AdminBusinessOfferUpdate: {
@@ -5406,21 +6022,21 @@ export interface components {
              */
             category_id: string;
             /**
-             * @description all_businesses: every other verified partner and employer organization. selected_organizations: only audience_organization_ids. Your own organization never sees its own offer in the catalogue.
+             * @description all_businesses: every other verified merchant and active client group. selected_businesses: only audience_business_ids. You never see your own offer in the catalogue.
              *
              *     * `all_businesses` - All businesses
-             *     * `selected_organizations` - Selected organizations
+             *     * `selected_businesses` - Selected businesses
              */
             audience_type: components["schemas"]["BusinessAudienceTypeEnum"];
-            /** @description 1-200 organization UUIDs for selected_organizations; empty otherwise. Only those that are businesses see the offer. */
-            audience_organization_ids?: string[];
+            /** @description 1-200 business UUIDs (merchants or clients, from the businesses directory) for selected_businesses; empty otherwise. Only those in standing see the offer. */
+            audience_business_ids?: string[];
             /**
-             * @description What an enquiring organization should include (quantities, locations, timelines), up to 2000 chars.
+             * @description What an enquiring business should include (quantities, locations, timelines), up to 2000 chars.
              * @default
              */
             enquiry_instructions: string;
             /**
-             * @description The employee switch. false (default): only organizations see the offer and enquire. true: it is also listed in the employee marketplace for the audience's employees (every employee for all_businesses, the selected organizations' employees otherwise), who claim it for a voucher; needs employee_terms and valid_until, and the offer must be posted as a verified partner, who confirms the vouchers.
+             * @description The employee switch, merchants only. false (default): only businesses see the offer and enquire. true: it is also listed in the employee marketplace, for every RealHRSoft employee (all_businesses) or the employees of the selected clients' companies (selected merchants add nobody), who claim it for a voucher the merchant confirms; needs employee_terms and valid_until. A client's offer is enquiry-only: true is refused (422).
              * @default false
              */
             show_to_employees: boolean;
@@ -5712,6 +6328,31 @@ export interface components {
             /** @description Required current version; stale versions return 409. */
             expected_version: number;
         };
+        /** @description What onboarding did to the merchant administrator's account and seat. */
+        AdministratorSeat: {
+            /**
+             * @description created: a new account, emailed a set-password link; added or rejoined: an existing account, emailed that it has access; role_repaired or unchanged: no email.
+             *
+             *     * `unchanged` - unchanged
+             *     * `created` - created
+             *     * `added` - added
+             *     * `rejoined` - rejoined
+             *     * `role_repaired` - role_repaired
+             */
+            outcome: components["schemas"]["SeatOutcomeEnum"];
+            /** @description True when a new account was created. */
+            created_account: boolean;
+            /**
+             * Format: uuid
+             * @description The administrator's account UUID.
+             */
+            user_id: string;
+            /**
+             * Format: uuid
+             * @description The administrator's membership of the home organization.
+             */
+            membership_id: string;
+        };
         /** @description Owner and administrator view of an advertisement and its revisions. */
         Advertisement: {
             /**
@@ -5874,7 +6515,7 @@ export interface components {
             organization_id?: string | null;
             /**
              * Format: uuid
-             * @description Client (Partner) UUID for a client role; it then applies in every current and future company of that client. Never with organization_id.
+             * @description Client (Partner) UUID for a client role; it then applies in every current and future company of that client. Never with organization_id. A merchant partner's UUID returns 409 NOT_A_CLIENT.
              */
             client_id?: string | null;
             reason: string;
@@ -5923,6 +6564,8 @@ export interface components {
              * @default partner_organization
              */
             source: components["schemas"]["SourceEnum"];
+            /** @description Optional: also give this person an account with the protected merchant_administrator role in the organization. Requires organizations.membership.manage and identity.organization_role.manage as well. */
+            administrator?: components["schemas"]["MerchantAdministrator"] | null;
         };
         /** @description Self-service registration. PUT semantics: omitted optional fields are cleared. */
         AssistedUpdate: {
@@ -6324,12 +6967,12 @@ export interface components {
         };
         /**
          * @description * `all_businesses` - All businesses
-         *     * `selected_organizations` - Selected organizations
+         *     * `selected_businesses` - Selected businesses
          * @enum {string}
          */
-        BusinessAudienceTypeEnum: "all_businesses" | "selected_organizations";
+        BusinessAudienceTypeEnum: "all_businesses" | "selected_businesses";
         /**
-         * @description A business offer as another organization sees it. Never carries employee
+         * @description A business offer as another business sees it. Never carries employee
          *     promo codes, links or instructions.
          */
         BusinessCatalogueOffer: {
@@ -6358,19 +7001,17 @@ export interface components {
              */
             valid_until: string | null;
             benefit: components["schemas"]["BenefitValue"];
-            /** @description The organization making the offer. */
-            provider_organization: components["schemas"]["OrganizationRef"];
-            /** @description The partner business, when the offer was posted as a partner; null when posted as an employer. */
-            partner: components["schemas"]["CataloguePartner"] | null;
+            /** @description The business making the offer: a merchant or a client group. */
+            readonly provider: components["schemas"]["BusinessRef"];
             /** @description The offer's category. */
             category: components["schemas"]["CatalogueCategory"];
             /** @description What to include when enquiring; may be empty. */
             enquiry_instructions: string;
-            /** @description Your employees may also see and claim it in their marketplace. */
+            /** @description RealHRSoft employees in the audience may also see and claim it in their marketplace. */
             shown_to_employees: boolean;
             /**
              * Format: uuid
-             * @description Your organization's open enquiry about this offer, or null. While one is open, enquiring again fails with 409 ENQUIRY_ALREADY_OPEN.
+             * @description Your business's open enquiry about this offer, or null. While one is open, enquiring again fails with 409 ENQUIRY_ALREADY_OPEN.
              */
             my_open_enquiry_id: string | null;
         };
@@ -6383,8 +7024,8 @@ export interface components {
             id: string;
             /** @description The offer and version enquired about. */
             readonly offer: components["schemas"]["EnquiryOffer"];
-            /** @description The organization that enquired. */
-            organization: components["schemas"]["OrganizationRef"];
+            /** @description The business that enquired: a merchant or a client group. */
+            business: components["schemas"]["BusinessRef"];
             /**
              * Format: uuid
              * @description Public UUID of the member who enquired.
@@ -6461,21 +7102,21 @@ export interface components {
              */
             category_id: string;
             /**
-             * @description all_businesses: every other verified partner and employer organization. selected_organizations: only audience_organization_ids. Your own organization never sees its own offer in the catalogue.
+             * @description all_businesses: every other verified merchant and active client group. selected_businesses: only audience_business_ids. You never see your own offer in the catalogue.
              *
              *     * `all_businesses` - All businesses
-             *     * `selected_organizations` - Selected organizations
+             *     * `selected_businesses` - Selected businesses
              */
             audience_type: components["schemas"]["BusinessAudienceTypeEnum"];
-            /** @description 1-200 organization UUIDs for selected_organizations; empty otherwise. Only those that are businesses see the offer. */
-            audience_organization_ids?: string[];
+            /** @description 1-200 business UUIDs (merchants or clients, from the businesses directory) for selected_businesses; empty otherwise. Only those in standing see the offer. */
+            audience_business_ids?: string[];
             /**
-             * @description What an enquiring organization should include (quantities, locations, timelines), up to 2000 chars.
+             * @description What an enquiring business should include (quantities, locations, timelines), up to 2000 chars.
              * @default
              */
             enquiry_instructions: string;
             /**
-             * @description The employee switch. false (default): only organizations see the offer and enquire. true: it is also listed in the employee marketplace for the audience's employees (every employee for all_businesses, the selected organizations' employees otherwise), who claim it for a voucher; needs employee_terms and valid_until, and the offer must be posted as a verified partner, who confirms the vouchers.
+             * @description The employee switch, merchants only. false (default): only businesses see the offer and enquire. true: it is also listed in the employee marketplace, for every RealHRSoft employee (all_businesses) or the employees of the selected clients' companies (selected merchants add nobody), who claim it for a voucher the merchant confirms; needs employee_terms and valid_until. A client's offer is enquiry-only: true is refused (422).
              * @default false
              */
             show_to_employees: boolean;
@@ -6526,21 +7167,21 @@ export interface components {
              */
             category_id: string;
             /**
-             * @description all_businesses: every other verified partner and employer organization. selected_organizations: only audience_organization_ids. Your own organization never sees its own offer in the catalogue.
+             * @description all_businesses: every other verified merchant and active client group. selected_businesses: only audience_business_ids. You never see your own offer in the catalogue.
              *
              *     * `all_businesses` - All businesses
-             *     * `selected_organizations` - Selected organizations
+             *     * `selected_businesses` - Selected businesses
              */
             audience_type: components["schemas"]["BusinessAudienceTypeEnum"];
-            /** @description 1-200 organization UUIDs for selected_organizations; empty otherwise. Only those that are businesses see the offer. */
-            audience_organization_ids?: string[];
+            /** @description 1-200 business UUIDs (merchants or clients, from the businesses directory) for selected_businesses; empty otherwise. Only those in standing see the offer. */
+            audience_business_ids?: string[];
             /**
-             * @description What an enquiring organization should include (quantities, locations, timelines), up to 2000 chars.
+             * @description What an enquiring business should include (quantities, locations, timelines), up to 2000 chars.
              * @default
              */
             enquiry_instructions: string;
             /**
-             * @description The employee switch. false (default): only organizations see the offer and enquire. true: it is also listed in the employee marketplace for the audience's employees (every employee for all_businesses, the selected organizations' employees otherwise), who claim it for a voucher; needs employee_terms and valid_until, and the offer must be posted as a verified partner, who confirms the vouchers.
+             * @description The employee switch, merchants only. false (default): only businesses see the offer and enquire. true: it is also listed in the employee marketplace, for every RealHRSoft employee (all_businesses) or the employees of the selected clients' companies (selected merchants add nobody), who claim it for a voucher the merchant confirms; needs employee_terms and valid_until. A client's offer is enquiry-only: true is refused (422).
              * @default false
              */
             show_to_employees: boolean;
@@ -6562,18 +7203,35 @@ export interface components {
             /** @description The version's category. */
             category: components["schemas"]["CategoryRef"];
             /**
-             * @description all_businesses (every other verified partner and employer organization) or selected_organizations.
+             * @description all_businesses (every other verified merchant and active client group) or selected_businesses.
              *
              *     * `all_businesses` - All businesses
-             *     * `selected_organizations` - Selected organizations
+             *     * `selected_businesses` - Selected businesses
              */
             audience_type: components["schemas"]["BusinessAudienceTypeEnum"];
-            /** @description Targeted organizations for selected_organizations; otherwise empty. */
-            audience_organizations: components["schemas"]["OrganizationRef"][];
-            /** @description Also listed in the employee marketplace for the audience's employees, who claim it for a voucher under marketplace_policy. */
+            /** @description Targeted businesses for selected_businesses; otherwise empty. */
+            audience_businesses: components["schemas"]["BusinessRef"][];
+            /** @description Merchants only: also listed in the employee marketplace, for every RealHRSoft employee (all_businesses) or the employees of the selected clients' companies, who claim it for a voucher under marketplace_policy. Always false for a client's offer. */
             show_to_employees: boolean;
             /** @description What an enquiring organization should include; may be empty. */
             enquiry_instructions: string;
+        };
+        /** @description A business in B2B: a merchant or a client group. */
+        BusinessRef: {
+            /**
+             * Format: uuid
+             * @description Business (Partner) UUID.
+             */
+            id: string;
+            /**
+             * @description merchant or client (a RealHRSoft client group).
+             *
+             *     * `client` - Client
+             *     * `merchant` - Merchant
+             */
+            kind: components["schemas"]["PartnerKindEnum"];
+            /** @description The business's name. */
+            name: string;
         };
         /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
         Campaign: {
@@ -7204,7 +7862,7 @@ export interface components {
             id: string;
             /** @description The company that owns the offer; null for a client benefit. */
             provider_organization: components["schemas"]["OrganizationRef"] | null;
-            /** @description The client that owns a client benefit (for its companies); null otherwise. */
+            /** @description The client that owns a client benefit (for its companies) or a client's business offer; null otherwise. */
             provider_client: components["schemas"]["ClientRef"] | null;
             /**
              * @description Owner control: enabled, paused or retired (final).
@@ -7285,7 +7943,7 @@ export interface components {
             id: string;
             /** @description The company that owns the offer; null for a client benefit. */
             provider_organization: components["schemas"]["OrganizationRef"] | null;
-            /** @description The client that owns a client benefit (for its companies); null otherwise. */
+            /** @description The client that owns a client benefit (for its companies) or a client's business offer; null otherwise. */
             provider_client: components["schemas"]["ClientRef"] | null;
             /**
              * @description Owner control: enabled, paused or retired (final).
@@ -7356,6 +8014,80 @@ export interface components {
             /** Format: date-time */
             readonly updated_at: string;
         };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        CompanyUser: {
+            /**
+             * Format: uuid
+             * @description The company membership UUID; end it with this.
+             */
+            id: string;
+            /**
+             * Format: uuid
+             * @description User UUID.
+             */
+            user_id: string;
+            /** Format: email */
+            email: string;
+            first_name: string | null;
+            last_name: string | null;
+            /** @description True until the user sets a password; a new setup link can then be sent (resend-setup). */
+            password_setup_pending: boolean;
+            /** @description False once ended; an ended membership frees its slot. */
+            readonly is_current: boolean;
+            /** Format: date-time */
+            verified_at: string;
+            verified_by: string;
+            /** Format: date-time */
+            ended_at?: string | null;
+            ended_by?: string | null;
+        };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        CompanyUserCreate: {
+            /**
+             * Format: email
+             * @description Required. Matched case-insensitively to an existing account; otherwise a new account is created with this address.
+             */
+            email: string;
+            /** @description Required for a new account; ignored otherwise. */
+            first_name: string;
+            /** @description Required for a new account; ignored otherwise. */
+            last_name: string;
+            /** @description Required audited reason, 1-500 characters. */
+            reason: string;
+        };
+        /**
+         * @description A Serializer that takes an additional `fields` argument that
+         *     controls which fields should be displayed.
+         */
+        CompanyUserCreated: {
+            /**
+             * @description created: new account, emailed a set-password link; added or rejoined: an existing account, emailed that it has access; role_repaired: the member's company_user role was granted again (no email); unchanged: already a company user (no email).
+             *
+             *     * `unchanged` - unchanged
+             *     * `created` - created
+             *     * `added` - added
+             *     * `rejoined` - rejoined
+             *     * `role_repaired` - role_repaired
+             */
+            outcome: components["schemas"]["SeatOutcomeEnum"];
+            created_account: boolean;
+            user: components["schemas"]["CompanyUser"];
+        };
+        /**
+         * @description A Serializer that takes an additional `fields` argument that
+         *     controls which fields should be displayed.
+         */
+        CompanyUsers: {
+            /** Format: uuid */
+            company_id: string;
+            company_name: string;
+            /** @description Most current users the company can have through this portal. */
+            limit: number;
+            /** @description Users you can still add: limit minus current memberships (never below 0). */
+            remaining: number;
+            /** @description Every current member of the company, oldest first, including any a platform administrator admitted (they count toward the limit). */
+            users: components["schemas"]["CompanyUser"][];
+        };
         /** @description Reject body/query keys the serializer does not declare as writable (422). */
         ConfirmInput: {
             /**
@@ -7373,6 +8105,40 @@ export interface components {
              * @default
              */
             sale_reference: string;
+        };
+        /**
+         * @description A Serializer that takes an additional `fields` argument that
+         *     controls which fields should be displayed.
+         */
+        ContactInvite: {
+            /**
+             * @description created: a new account was made and emailed a set-password link; added: an existing account became a member and was emailed that it has access; rejoined: as added, after an earlier membership had ended; role_repaired: the member's missing client_administrator role was granted again (no email); unchanged: nothing to do (no email). Null when skipped.
+             *
+             *     * `unchanged` - unchanged
+             *     * `created` - created
+             *     * `added` - added
+             *     * `rejoined` - rejoined
+             *     * `role_repaired` - role_repaired
+             */
+            outcome: (components["schemas"]["SeatOutcomeEnum"] | components["schemas"]["NullEnum"]) | null;
+            /** @description True when a new account was created. */
+            created_account: boolean;
+            /**
+             * Format: uuid
+             * @description The contact's account UUID.
+             */
+            user_id: string | null;
+            /**
+             * Format: uuid
+             * @description The contact's current client membership UUID.
+             */
+            membership_id: string | null;
+            /**
+             * @description administrator_exists: the client already has a member holding partners.client_role.manage, so nobody was invited. Use invite-contact to invite the contact anyway.
+             *
+             *     * `administrator_exists` - administrator_exists
+             */
+            skipped: (components["schemas"]["SkippedEnum"] | components["schemas"]["NullEnum"]) | null;
         };
         CreateOrganization: {
             /** @description Required nonblank display name; surrounding whitespace is trimmed. */
@@ -7481,6 +8247,10 @@ export interface components {
             client_permissions: string[];
             /** @description Clients you hold a client role in (X-Client-ID values). */
             clients: components["schemas"]["ClientAccess"][];
+            /** @description True for an active superuser: full access, and may sign in as another user (POST /api/v1/auth/impersonation). */
+            superuser: boolean;
+            /** @description Set while a superuser is signed in as this user (an impersonation session; authentication_source is impersonation): who it is. End it with POST /api/v1/auth/impersonation/end. Null otherwise. */
+            impersonator: components["schemas"]["Impersonator"] | null;
         };
         /**
          * @description A Serializer that takes an additional `fields` argument that
@@ -7583,6 +8353,11 @@ export interface components {
              * @default false
              */
             include_existing: boolean;
+            /**
+             * @description With enabled true: also create or link a Marketplace account for the client's RealHRSoft contact and grant it client_administrator, unless the client already has a member holding partners.client_role.manage. Needs the realhrsoft.client_provisioning flag (503 FEATURE_DISABLED otherwise) and organizations.membership.manage plus identity.organization_role.manage (403 otherwise; nothing changes).
+             * @default false
+             */
+            invite_contact: boolean;
         };
         EmployerCapacity: {
             /** @description Required. true turns the Employer capacity on, false turns it off. */
@@ -7591,6 +8366,89 @@ export interface components {
             expected_version: number;
             /** @description Required audited reason, 1-500 characters after trimming. */
             reason: string;
+        };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        EmployerOptIn: {
+            /**
+             * Format: uuid
+             * @description Immutable partner UUID.
+             */
+            id: string;
+            /**
+             * @description client: a RealHRSoft client group, synchronized, owning companies with employees; never a merchant. merchant: registered in the Marketplace, sells offers to RealHRSoft employees, has a home organization and no employees. Fixed for life.
+             *
+             *     * `client` - Client
+             *     * `merchant` - Merchant
+             */
+            kind: components["schemas"]["PartnerKindEnum"];
+            /**
+             * Format: uuid
+             * @description The merchant's home organization (partner offers and redemption); always null for a client.
+             */
+            organization_id?: string | null;
+            /** @description Home organization's display name, or null. */
+            organization_name?: string | null;
+            /**
+             * Format: uuid
+             * @description RealHRSoft client UUID when synchronized; its name, contact and lifecycle then come from RealHRSoft.
+             */
+            external_uuid: string | null;
+            /** @description False once RealHRSoft deactivated the client. */
+            active: boolean;
+            /** @description Client-level Employer opt-in: companies synchronized later get Employer capacity at once. */
+            readonly employer_auto_enabled: boolean;
+            /** @description Clients: whether the RealHRSoft contact (contact_email) is a current client member. When false, POST /api/v1/admin/partners/{partner_id}/invite-contact gives the contact an account and the client_administrator role. Null for merchants and where not computed. */
+            readonly contact_is_member: boolean | null;
+            country?: string;
+            business_name: string;
+            category?: string;
+            description?: string;
+            contact_name: string;
+            /** Format: email */
+            contact_email: string;
+            contact_phone?: string;
+            website?: string;
+            /**
+             * @description pending: awaiting review; verified: passed the verification gate; rejected: see latest_decision.reason, edit and resubmit.
+             *
+             *     * `pending` - Pending
+             *     * `verified` - Verified
+             *     * `rejected` - Rejected
+             */
+            status: components["schemas"]["StatusEnum"];
+            /**
+             * @description self_service when registered by an organization member, assisted when registered by an Aayulogic administrator.
+             *
+             *     * `self_service` - Self-service
+             *     * `assisted` - Assisted by Aayulogic
+             *     * `realhrsoft_sync` - RealHRSoft synchronization
+             */
+            intake_path: components["schemas"]["IntakePathEnum"];
+            /**
+             * @description Kind of partner, set by administrators: partner_organization (a business with portal members), external (no portal login; administrators post for it) or realhrsoft (an organization that is also a RealHRsoft client).
+             *
+             *     * `partner_organization` - Partner organization
+             *     * `external` - External partner
+             *     * `realhrsoft` - RealHRsoft partner
+             */
+            source: components["schemas"]["SourceEnum"];
+            /** @description Public UUID of the user who registered the partner. */
+            registered_by: string;
+            /**
+             * Format: date-time
+             * @description Time of the latest submission for review (registration or resubmission).
+             */
+            submitted_at: string;
+            /** @description Current revision; send as expected_version on every write. Increments on edits, resubmission and decisions. */
+            version: number;
+            /** @description Most recent verification decision, or null if never decided. */
+            readonly latest_decision: components["schemas"]["PartnerDecision"] | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+            /** @description What invite_contact did; null when it was not requested. */
+            invite: components["schemas"]["ContactInvite"] | null;
         };
         /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
         EmployerReportRow: {
@@ -7679,7 +8537,7 @@ export interface components {
         };
         /** @description Reject body/query keys the serializer does not declare as writable (422). */
         EnquiryInput: {
-            /** @description Required, up to 2000 chars: what your organization needs. */
+            /** @description Required, up to 2000 chars: what your business needs. */
             message: string;
             /** @description Required person the provider should contact. */
             contact_name: string;
@@ -7714,8 +8572,8 @@ export interface components {
             version_number: number;
             title: string;
             headline: string;
-            /** @description The organization making the offer. */
-            provider_organization: components["schemas"]["OrganizationRef"];
+            /** @description The business making the offer: a merchant or a client group. */
+            readonly provider: components["schemas"]["BusinessRef"];
         };
         /**
          * @description * `open` - Open
@@ -7936,6 +8794,26 @@ export interface components {
              */
             reason: string;
         };
+        ImpersonateRequest: {
+            /**
+             * Format: uuid
+             * @description The user to sign in as.
+             */
+            user_id: string;
+            reason: string;
+        };
+        Impersonator: {
+            /**
+             * Format: uuid
+             * @description The superuser's user UUID.
+             */
+            actor_id: string;
+            /**
+             * Format: email
+             * @description The superuser's email.
+             */
+            email: string;
+        };
         /**
          * @description * `self_service` - Self-service
          *     * `assisted` - Assisted by Aayulogic
@@ -8130,6 +9008,145 @@ export interface components {
             /** @description Page ordered by verification time descending then UUID descending. */
             results: components["schemas"]["PortalMembership"][];
         };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        MerchantAdministrator: {
+            /**
+             * Format: email
+             * @description Sign-in email of the merchant's administrator. Matched case-insensitively to an existing account (linked and emailed that it has access); otherwise a new account is created and emailed a set-password link valid for 24 hours.
+             */
+            email: string;
+            /** @description Used for a new account; ignored otherwise. */
+            first_name: string;
+            /** @description Used for a new account; ignored otherwise. */
+            last_name: string;
+        };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        MerchantOnboarded: {
+            /**
+             * Format: uuid
+             * @description Immutable partner UUID.
+             */
+            id: string;
+            /**
+             * @description client: a RealHRSoft client group, synchronized, owning companies with employees; never a merchant. merchant: registered in the Marketplace, sells offers to RealHRSoft employees, has a home organization and no employees. Fixed for life.
+             *
+             *     * `client` - Client
+             *     * `merchant` - Merchant
+             */
+            kind: components["schemas"]["PartnerKindEnum"];
+            /**
+             * Format: uuid
+             * @description The merchant's home organization (partner offers and redemption); always null for a client.
+             */
+            organization_id?: string | null;
+            /** @description Home organization's display name, or null. */
+            organization_name?: string | null;
+            /**
+             * Format: uuid
+             * @description RealHRSoft client UUID when synchronized; its name, contact and lifecycle then come from RealHRSoft.
+             */
+            external_uuid: string | null;
+            /** @description False once RealHRSoft deactivated the client. */
+            active: boolean;
+            /** @description Client-level Employer opt-in: companies synchronized later get Employer capacity at once. */
+            readonly employer_auto_enabled: boolean;
+            /** @description Clients: whether the RealHRSoft contact (contact_email) is a current client member. When false, POST /api/v1/admin/partners/{partner_id}/invite-contact gives the contact an account and the client_administrator role. Null for merchants and where not computed. */
+            readonly contact_is_member: boolean | null;
+            country?: string;
+            business_name: string;
+            category?: string;
+            description?: string;
+            contact_name: string;
+            /** Format: email */
+            contact_email: string;
+            contact_phone?: string;
+            website?: string;
+            /**
+             * @description pending: awaiting review; verified: passed the verification gate; rejected: see latest_decision.reason, edit and resubmit.
+             *
+             *     * `pending` - Pending
+             *     * `verified` - Verified
+             *     * `rejected` - Rejected
+             */
+            status: components["schemas"]["StatusEnum"];
+            /**
+             * @description self_service when registered by an organization member, assisted when registered by an Aayulogic administrator.
+             *
+             *     * `self_service` - Self-service
+             *     * `assisted` - Assisted by Aayulogic
+             *     * `realhrsoft_sync` - RealHRSoft synchronization
+             */
+            intake_path: components["schemas"]["IntakePathEnum"];
+            /**
+             * @description Kind of partner, set by administrators: partner_organization (a business with portal members), external (no portal login; administrators post for it) or realhrsoft (an organization that is also a RealHRsoft client).
+             *
+             *     * `partner_organization` - Partner organization
+             *     * `external` - External partner
+             *     * `realhrsoft` - RealHRsoft partner
+             */
+            source: components["schemas"]["SourceEnum"];
+            /** @description Public UUID of the user who registered the partner. */
+            registered_by: string;
+            /**
+             * Format: date-time
+             * @description Time of the latest submission for review (registration or resubmission).
+             */
+            submitted_at: string;
+            /** @description Current revision; send as expected_version on every write. Increments on edits, resubmission and decisions. */
+            version: number;
+            /** @description Most recent verification decision, or null if never decided. */
+            readonly latest_decision: components["schemas"]["PartnerDecision"] | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+            /** @description What happened to the administrator's account and seat. */
+            administrator: components["schemas"]["AdministratorSeat"];
+        };
+        /** @description Self-service registration. PUT semantics: omitted optional fields are cleared. */
+        MerchantOnboarding: {
+            /** @description Required trading name shown to employees. */
+            business_name: string;
+            /** @description Required name of the business contact person. */
+            contact_name: string;
+            /**
+             * Format: email
+             * @description Required business contact email.
+             */
+            contact_email: string;
+            /**
+             * @description Optional E.164 phone number, e.g. +9779801234567.
+             * @default
+             */
+            contact_phone: string;
+            /** @description Optional http(s) website URL. */
+            website?: string;
+            /**
+             * @description Optional free-text business category (e.g. Restaurant). Not the offer category list.
+             * @default
+             */
+            category: string;
+            /**
+             * @description Optional business description, up to 2000 characters.
+             * @default
+             */
+            description: string;
+            /** @description Required audited reason, 1-500 characters. */
+            reason: string;
+            /** @description Required name of the merchant's new home organization (legal name), created natively. */
+            organization_name: string;
+            /**
+             * @description Optional kind of partner: partner_organization (default), external or realhrsoft.
+             *
+             *     * `partner_organization` - Partner organization
+             *     * `external` - External partner
+             *     * `realhrsoft` - RealHRsoft partner
+             * @default partner_organization
+             */
+            source: components["schemas"]["SourceEnum"];
+            /** @description Required: the merchant's first administrator, who gets the protected merchant_administrator role. */
+            administrator: components["schemas"]["MerchantAdministrator"];
+        };
         /**
          * @description A Serializer that takes an additional `fields` argument that
          *     controls which fields should be displayed.
@@ -8190,6 +9207,8 @@ export interface components {
             /** @description Always true: in-app notifications cannot be turned off. */
             readonly in_app_enabled: boolean;
         };
+        /** @enum {unknown} */
+        NullEnum: null;
         /** @description Owner and administrator view of an offer and its live and working versions. */
         Offer: {
             /**
@@ -8207,10 +9226,12 @@ export interface components {
             kind: components["schemas"]["OfferKindEnum"];
             /** @description The company that owns the offer; null for a client benefit. */
             provider_organization: components["schemas"]["OrganizationRef"] | null;
-            /** @description The client that owns a client benefit (for its companies); null otherwise. */
+            /** @description The client that owns a client benefit (for its companies) or a client's business offer; null otherwise. */
             provider_client: components["schemas"]["ClientRef"] | null;
-            /** @description The partner capacity the offer was posted in: every marketplace offer, and a business offer posted as a partner. Null for a benefit and for a business offer posted as an employer. */
+            /** @description The merchant: every marketplace offer, and a merchant's business offer. Null for a benefit and for a client's business offer. */
             partner: components["schemas"]["OfferPartner"] | null;
+            /** @description Business offers: the business making it (a merchant or a client group). Null for other kinds. */
+            readonly business_provider: components["schemas"]["BusinessRef"] | null;
             /**
              * @description partner_portal, employer_portal, client_portal or admin_on_behalf.
              *
@@ -9147,6 +10168,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["BusinessEnquiry"][];
         };
+        PaginatedBusinessRefList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["BusinessRef"][];
+        };
         PaginatedCampaignList: {
             /** @example 123 */
             count: number;
@@ -9372,21 +10408,6 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["OfferVersion"][];
         };
-        PaginatedOrganizationRefList: {
-            /** @example 123 */
-            count: number;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?offset=400&limit=100
-             */
-            next?: string | null;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?offset=200&limit=100
-             */
-            previous?: string | null;
-            results: components["schemas"]["OrganizationRef"][];
-        };
         PaginatedOwnClaimListItemList: {
             /** @example 123 */
             count: number;
@@ -9560,8 +10581,15 @@ export interface components {
              */
             id: string;
             /**
+             * @description client: a RealHRSoft client group, synchronized, owning companies with employees; never a merchant. merchant: registered in the Marketplace, sells offers to RealHRSoft employees, has a home organization and no employees. Fixed for life.
+             *
+             *     * `client` - Client
+             *     * `merchant` - Merchant
+             */
+            kind: components["schemas"]["PartnerKindEnum"];
+            /**
              * Format: uuid
-             * @description The merchant's home organization (partner offers and redemption); null for a client synchronized from RealHRSoft that is not a merchant.
+             * @description The merchant's home organization (partner offers and redemption); always null for a client.
              */
             organization_id?: string | null;
             /** @description Home organization's display name, or null. */
@@ -9575,6 +10603,8 @@ export interface components {
             active: boolean;
             /** @description Client-level Employer opt-in: companies synchronized later get Employer capacity at once. */
             readonly employer_auto_enabled: boolean;
+            /** @description Clients: whether the RealHRSoft contact (contact_email) is a current client member. When false, POST /api/v1/admin/partners/{partner_id}/invite-contact gives the contact an account and the client_administrator role. Null for merchants and where not computed. */
+            readonly contact_is_member: boolean | null;
             country?: string;
             business_name: string;
             category?: string;
@@ -9728,6 +10758,12 @@ export interface components {
              */
             decided_at: string;
         };
+        /**
+         * @description * `client` - Client
+         *     * `merchant` - Merchant
+         * @enum {string}
+         */
+        PartnerKindEnum: "client" | "merchant";
         /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
         PartnerOfferReport: {
             /**
@@ -9924,6 +10960,13 @@ export interface components {
         PasswordSetupLinkResponse: {
             valid: boolean;
             message?: string;
+        };
+        PasswordSetupResendRequest: {
+            /**
+             * Format: email
+             * @description The account's email address (case-insensitive).
+             */
+            email: string;
         };
         /** @description Reject body/query keys the serializer does not declare as writable (422). */
         PatchedNotificationPreferenceInput: {
@@ -10477,6 +11520,15 @@ export interface components {
             benefit: unknown;
         };
         /**
+         * @description * `unchanged` - unchanged
+         *     * `created` - created
+         *     * `added` - added
+         *     * `rejoined` - rejoined
+         *     * `role_repaired` - role_repaired
+         * @enum {string}
+         */
+        SeatOutcomeEnum: "unchanged" | "created" | "added" | "rejoined" | "role_repaired";
+        /**
          * @description A Serializer that takes an additional `fields` argument that
          *     controls which fields should be displayed.
          */
@@ -10586,6 +11638,11 @@ export interface components {
             password: string;
             confirm_password: string;
         };
+        /**
+         * @description * `administrator_exists` - administrator_exists
+         * @enum {string}
+         */
+        SkippedEnum: "administrator_exists";
         /**
          * @description A Serializer that takes an additional `fields` argument that
          *     controls which fields should be displayed.
@@ -10811,7 +11868,11 @@ export interface components {
             contact: string | null;
             actor_type: string;
             readonly status: string;
+            /** @description True until the user sets a password through a setup link; a new link can then be sent (POST /api/v1/admin/users/{user_id}/password-setup/resend). */
+            password_setup_pending: boolean;
             grants: components["schemas"]["Grant"][];
+            /** @description True for an active partner user (a current member of a merchant's organization): a superuser may sign in as them with POST /api/v1/auth/impersonation. */
+            readonly impersonable: boolean;
         };
         UserPageResponse: {
             /** @description Users matching the filters before pagination. */
@@ -10829,6 +11890,8 @@ export interface components {
             contact: string | null;
             actor_type: string;
             readonly status: string;
+            /** @description True until the user sets a password through a setup link; a new link can then be sent (POST /api/v1/admin/users/{user_id}/password-setup/resend). */
+            password_setup_pending: boolean;
         };
         /** @description Reject body/query keys the serializer does not declare as writable (422). */
         ValidateInput: {
@@ -11222,6 +12285,8 @@ export interface operations {
     v1_admin_business_enquiries_list: {
         parameters: {
             query?: {
+                /** @description Received and administrator lists: one enquiring business. */
+                business_id?: string;
                 /** @description Number of results to return per page. */
                 limit?: number;
                 /** @description One offer. */
@@ -11237,10 +12302,8 @@ export interface operations {
                  *     * `-closed_at` - Closed at (descending)
                  */
                 ordering?: ("-closed_at" | "-created_at" | "closed_at" | "created_at")[];
-                /** @description Received and administrator lists: one enquiring organization. */
-                organization_id?: string;
-                /** @description Sent and administrator lists: one provider organization. */
-                provider_organization_id?: string;
+                /** @description Sent and administrator lists: one providing business. */
+                provider_id?: string;
                 /** @description A search term. */
                 search?: string;
                 /**
@@ -11274,7 +12337,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Required permission missing or revoked, the organization scope was denied, or the organization is neither a verified partner nor an employer (FORBIDDEN). */
+            /** @description Required permission missing or revoked, the organization or client scope was denied, or the acting party is not a business in standing (a verified merchant or an active client group) (FORBIDDEN). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -11283,7 +12346,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Invalid, missing or unknown fields or X-Organization-ID (VALIDATION_ERROR). */
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Organization-ID / X-Client-ID (VALIDATION_ERROR). */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -11322,7 +12385,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Required permission missing or revoked, the organization scope was denied, or the organization is neither a verified partner nor an employer (FORBIDDEN). */
+            /** @description Required permission missing or revoked, the organization or client scope was denied, or the acting party is not a business in standing (a verified merchant or an active client group) (FORBIDDEN). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -11331,7 +12394,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Enquiry not found, or not your organization's (NOT_FOUND). */
+            /** @description Enquiry not found, or not your business's (NOT_FOUND). */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -11346,12 +12409,12 @@ export interface operations {
         parameters: {
             query?: {
                 /**
-                 * @description Live version's business audience: all_businesses or selected_organizations.
+                 * @description Live version's business audience: all_businesses or selected_businesses.
                  *
                  *     * `all_businesses` - All businesses
-                 *     * `selected_organizations` - Selected organizations
+                 *     * `selected_businesses` - Selected businesses
                  */
-                audience_type?: "all_businesses" | "selected_organizations";
+                audience_type?: "all_businesses" | "selected_businesses";
                 /**
                  * @description enabled, paused or retired.
                  *
@@ -11395,12 +12458,8 @@ export interface operations {
                  *     * `-updated_at` - Updated at (descending)
                  */
                 ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
-                /** @description Administrators: only this provider organization's offers. */
-                organization_id?: string;
-                /** @description Administrators: only offers posted in this partner's capacity. */
-                partner_id?: string;
                 /**
-                 * @description partner_portal, employer_portal or admin_on_behalf.
+                 * @description partner_portal, client_portal or admin_on_behalf.
                  *
                  *     * `partner_portal` - Partner portal
                  *     * `employer_portal` - Employer portal
@@ -11408,6 +12467,15 @@ export interface operations {
                  *     * `admin_on_behalf` - Administrator on behalf
                  */
                 posted_via?: "admin_on_behalf" | "client_portal" | "employer_portal" | "partner_portal";
+                /** @description Administrators: only this business's offers (a merchant or client UUID). */
+                provider_id?: string;
+                /**
+                 * @description Administrators: only merchants' or only clients' offers.
+                 *
+                 *     * `merchant` - Merchant
+                 *     * `client` - Client
+                 */
+                provider_kind?: "client" | "merchant";
                 /** @description A search term. */
                 search?: string;
                 /** @description Live version is also listed for the audience's employees. */
@@ -11749,12 +12817,12 @@ export interface operations {
         parameters: {
             query?: {
                 /**
-                 * @description Live version's business audience: all_businesses or selected_organizations.
+                 * @description Live version's business audience: all_businesses or selected_businesses.
                  *
                  *     * `all_businesses` - All businesses
-                 *     * `selected_organizations` - Selected organizations
+                 *     * `selected_businesses` - Selected businesses
                  */
-                audience_type?: "all_businesses" | "selected_organizations";
+                audience_type?: "all_businesses" | "selected_businesses";
                 /**
                  * @description enabled, paused or retired.
                  *
@@ -11798,12 +12866,8 @@ export interface operations {
                  *     * `-updated_at` - Updated at (descending)
                  */
                 ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
-                /** @description Administrators: only this provider organization's offers. */
-                organization_id?: string;
-                /** @description Administrators: only offers posted in this partner's capacity. */
-                partner_id?: string;
                 /**
-                 * @description partner_portal, employer_portal or admin_on_behalf.
+                 * @description partner_portal, client_portal or admin_on_behalf.
                  *
                  *     * `partner_portal` - Partner portal
                  *     * `employer_portal` - Employer portal
@@ -11811,6 +12875,15 @@ export interface operations {
                  *     * `admin_on_behalf` - Administrator on behalf
                  */
                 posted_via?: "admin_on_behalf" | "client_portal" | "employer_portal" | "partner_portal";
+                /** @description Administrators: only this business's offers (a merchant or client UUID). */
+                provider_id?: string;
+                /**
+                 * @description Administrators: only merchants' or only clients' offers.
+                 *
+                 *     * `merchant` - Merchant
+                 *     * `client` - Client
+                 */
+                provider_kind?: "client" | "merchant";
                 /** @description A search term. */
                 search?: string;
                 /** @description Live version is also listed for the audience's employees. */
@@ -12522,12 +13595,12 @@ export interface operations {
         parameters: {
             query?: {
                 /**
-                 * @description Live version's business audience: all_businesses or selected_organizations.
+                 * @description Live version's business audience: all_businesses or selected_businesses.
                  *
                  *     * `all_businesses` - All businesses
-                 *     * `selected_organizations` - Selected organizations
+                 *     * `selected_businesses` - Selected businesses
                  */
-                audience_type?: "all_businesses" | "selected_organizations";
+                audience_type?: "all_businesses" | "selected_businesses";
                 /**
                  * @description enabled, paused or retired.
                  *
@@ -12571,12 +13644,8 @@ export interface operations {
                  *     * `-updated_at` - Updated at (descending)
                  */
                 ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
-                /** @description Administrators: only this provider organization's offers. */
-                organization_id?: string;
-                /** @description Administrators: only offers posted in this partner's capacity. */
-                partner_id?: string;
                 /**
-                 * @description partner_portal, employer_portal or admin_on_behalf.
+                 * @description partner_portal, client_portal or admin_on_behalf.
                  *
                  *     * `partner_portal` - Partner portal
                  *     * `employer_portal` - Employer portal
@@ -12584,6 +13653,15 @@ export interface operations {
                  *     * `admin_on_behalf` - Administrator on behalf
                  */
                 posted_via?: "admin_on_behalf" | "client_portal" | "employer_portal" | "partner_portal";
+                /** @description Administrators: only this business's offers (a merchant or client UUID). */
+                provider_id?: string;
+                /**
+                 * @description Administrators: only merchants' or only clients' offers.
+                 *
+                 *     * `merchant` - Merchant
+                 *     * `client` - Client
+                 */
+                provider_kind?: "client" | "merchant";
                 /** @description A search term. */
                 search?: string;
                 /** @description Live version is also listed for the audience's employees. */
@@ -15822,6 +16900,76 @@ export interface operations {
             };
         };
     };
+    v1_admin_merchants_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchantOnboarding"];
+                "application/x-www-form-urlencoded": components["schemas"]["MerchantOnboarding"];
+                "multipart/form-data": components["schemas"]["MerchantOnboarding"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchantOnboarded"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, or the organization scope was denied (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version, the organization is already a partner, or the current status does not allow the operation (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     v1_admin_offer_categories_list: {
         parameters: {
             query?: {
@@ -18549,6 +19697,11 @@ export interface operations {
                  *     * `realhrsoft_sync` - RealHRSoft synchronization
                  */
                 intake_path?: "assisted" | "realhrsoft_sync" | "self_service";
+                /**
+                 * @description * `client` - Client
+                 *     * `merchant` - Merchant
+                 */
+                kind?: "client" | "merchant";
                 /** @description Number of results to return per page. */
                 limit?: number;
                 /** @description The initial index from which to return the results. */
@@ -18839,6 +19992,11 @@ export interface operations {
                  *     * `realhrsoft_sync` - RealHRSoft synchronization
                  */
                 intake_path?: "assisted" | "realhrsoft_sync" | "self_service";
+                /**
+                 * @description * `client` - Client
+                 *     * `merchant` - Merchant
+                 */
+                kind?: "client" | "merchant";
                 /** @description Number of results to return per page. */
                 limit?: number;
                 /** @description The initial index from which to return the results. */
@@ -18936,7 +20094,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Partner"];
+                    "application/json": components["schemas"]["EmployerOptIn"];
                 };
             };
             /** @description Malformed JSON (BAD_REQUEST). */
@@ -18993,6 +20151,105 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
+            /** @description invite_contact while the flag is off (FEATURE_DISABLED). */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_partners_invite_contact_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonOnly"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReasonOnly"];
+                "multipart/form-data": components["schemas"]["ReasonOnly"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactInvite"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, or the organization scope was denied (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Partner or organization not found (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version, the organization is already a partner, or the current status does not allow the operation (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The provisioning flag is off (FEATURE_DISABLED). */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     v1_admin_partners_members_list: {
@@ -19004,6 +20261,11 @@ export interface operations {
                  *     * `realhrsoft_sync` - RealHRSoft synchronization
                  */
                 intake_path?: "assisted" | "realhrsoft_sync" | "self_service";
+                /**
+                 * @description * `client` - Client
+                 *     * `merchant` - Merchant
+                 */
+                kind?: "client" | "merchant";
                 /** @description Number of results to return per page. */
                 limit?: number;
                 /** @description The initial index from which to return the results. */
@@ -20189,6 +21451,77 @@ export interface operations {
             };
         };
     };
+    v1_admin_users_password_setup_resend_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReasonRequest"];
+                "multipart/form-data": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Permission missing or revoked, or your own account (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description User not found (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The user is disabled or has already set a password (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing or invalid reason (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     v1_admin_users_reactivate_create: {
         parameters: {
             query?: never;
@@ -20561,6 +21894,129 @@ export interface operations {
             };
         };
     };
+    v1_auth_impersonation_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImpersonateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ImpersonateRequest"];
+                "multipart/form-data": components["schemas"]["ImpersonateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+            /** @description Missing or invalid access token, no refresh cookie, or a refresh cookie of another session (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Untrusted Origin, not a superuser, already impersonating, your own account, or the user is not a partner user (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No such user (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The user is disabled, or your session ends in under five minutes (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing or invalid user_id or reason (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_auth_impersonation_end_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+            /** @description Ended; sign in again. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No refresh cookie, or not a valid session (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Untrusted Origin (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The refresh cookie holds an ordinary session, not an impersonation; nothing was changed (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     v1_auth_login_create: {
         parameters: {
             query?: never;
@@ -20646,9 +22102,66 @@ export interface operations {
             };
         };
     };
+    v1_business_businesses_list: {
+        parameters: {
+            query?: {
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /** @description A search term. */
+                search?: string;
+            };
+            header: {
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBusinessRefList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     v1_business_enquiries_list: {
         parameters: {
             query?: {
+                /** @description Received and administrator lists: one enquiring business. */
+                business_id?: string;
                 /** @description Number of results to return per page. */
                 limit?: number;
                 /** @description One offer. */
@@ -20664,10 +22177,8 @@ export interface operations {
                  *     * `-closed_at` - Closed at (descending)
                  */
                 ordering?: ("-closed_at" | "-created_at" | "closed_at" | "created_at")[];
-                /** @description Received and administrator lists: one enquiring organization. */
-                organization_id?: string;
-                /** @description Sent and administrator lists: one provider organization. */
-                provider_organization_id?: string;
+                /** @description Sent and administrator lists: one providing business. */
+                provider_id?: string;
                 /** @description A search term. */
                 search?: string;
                 /**
@@ -20703,7 +22214,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Required permission missing or revoked, the organization scope was denied, or the organization is neither a verified partner nor an employer (FORBIDDEN). */
+            /** @description Required permission missing or revoked, the organization or client scope was denied, or the acting party is not a business in standing (a verified merchant or an active client group) (FORBIDDEN). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -20712,7 +22223,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Invalid, missing or unknown fields or X-Organization-ID (VALIDATION_ERROR). */
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Organization-ID / X-Client-ID (VALIDATION_ERROR). */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -20753,7 +22264,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Required permission missing or revoked, the organization scope was denied, or the organization is neither a verified partner nor an employer (FORBIDDEN). */
+            /** @description Required permission missing or revoked, the organization or client scope was denied, or the acting party is not a business in standing (a verified merchant or an active client group) (FORBIDDEN). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -20762,7 +22273,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Enquiry not found, or not your organization's (NOT_FOUND). */
+            /** @description Enquiry not found, or not your business's (NOT_FOUND). */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -20771,7 +22282,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Invalid, missing or unknown fields or X-Organization-ID (VALIDATION_ERROR). */
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Organization-ID / X-Client-ID (VALIDATION_ERROR). */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -20848,8 +22359,8 @@ export interface operations {
                  *     * `-valid_until` - Valid until (descending)
                  */
                 ordering?: ("-first_published_at" | "-valid_until" | "first_published_at" | "valid_until")[];
-                /** @description Only this provider organization's offers. */
-                provider_organization_id?: string;
+                /** @description Only this business's offers (a merchant or client UUID). */
+                provider_id?: string;
                 /** @description A search term. */
                 search?: string;
             };
@@ -21002,7 +22513,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Required permission missing or revoked, the organization scope was denied, or the organization is neither a verified partner nor an employer (FORBIDDEN). */
+            /** @description Required permission missing or revoked, the organization or client scope was denied, or the acting party is not a business in standing (a verified merchant or an active client group) (FORBIDDEN). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -21011,7 +22522,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description OFFER_NOT_CLAIMABLE: the offer is not live or not available to your organization; OFFER_VERSION_CHANGED: another version went live since you saw it (current_version_id is included); ENQUIRY_ALREADY_OPEN: your organization already has an open enquiry about it (enquiry_id is included); ENQUIRY_CLOSED: the enquiry is already closed. */
+            /** @description OFFER_NOT_CLAIMABLE: the offer is not live or not available to your business; OFFER_VERSION_CHANGED: another version went live since you saw it (current_version_id is included); ENQUIRY_ALREADY_OPEN: your business already has an open enquiry about it (enquiry_id is included); ENQUIRY_CLOSED: the enquiry is already closed. */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -21020,62 +22531,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Invalid, missing or unknown fields or X-Organization-ID (VALIDATION_ERROR). */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    v1_business_organizations_list: {
-        parameters: {
-            query?: {
-                /** @description Number of results to return per page. */
-                limit?: number;
-                /** @description The initial index from which to return the results. */
-                offset?: number;
-                /** @description A search term. */
-                search?: string;
-            };
-            header: {
-                "X-Organization-ID": string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedOrganizationRefList"];
-                };
-            };
-            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Organization-ID / X-Client-ID (VALIDATION_ERROR). */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -21138,12 +22594,12 @@ export interface operations {
         parameters: {
             query?: {
                 /**
-                 * @description Live version's business audience: all_businesses or selected_organizations.
+                 * @description Live version's business audience: all_businesses or selected_businesses.
                  *
                  *     * `all_businesses` - All businesses
-                 *     * `selected_organizations` - Selected organizations
+                 *     * `selected_businesses` - Selected businesses
                  */
-                audience_type?: "all_businesses" | "selected_organizations";
+                audience_type?: "all_businesses" | "selected_businesses";
                 /**
                  * @description enabled, paused or retired.
                  *
@@ -21187,12 +22643,8 @@ export interface operations {
                  *     * `-updated_at` - Updated at (descending)
                  */
                 ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
-                /** @description Administrators: only this provider organization's offers. */
-                organization_id?: string;
-                /** @description Administrators: only offers posted in this partner's capacity. */
-                partner_id?: string;
                 /**
-                 * @description partner_portal, employer_portal or admin_on_behalf.
+                 * @description partner_portal, client_portal or admin_on_behalf.
                  *
                  *     * `partner_portal` - Partner portal
                  *     * `employer_portal` - Employer portal
@@ -21200,6 +22652,15 @@ export interface operations {
                  *     * `admin_on_behalf` - Administrator on behalf
                  */
                 posted_via?: "admin_on_behalf" | "client_portal" | "employer_portal" | "partner_portal";
+                /** @description Administrators: only this business's offers (a merchant or client UUID). */
+                provider_id?: string;
+                /**
+                 * @description Administrators: only merchants' or only clients' offers.
+                 *
+                 *     * `merchant` - Merchant
+                 *     * `client` - Client
+                 */
+                provider_kind?: "client" | "merchant";
                 /** @description A search term. */
                 search?: string;
                 /** @description Live version is also listed for the audience's employees. */
@@ -21468,12 +22929,12 @@ export interface operations {
         parameters: {
             query?: {
                 /**
-                 * @description Live version's business audience: all_businesses or selected_organizations.
+                 * @description Live version's business audience: all_businesses or selected_businesses.
                  *
                  *     * `all_businesses` - All businesses
-                 *     * `selected_organizations` - Selected organizations
+                 *     * `selected_businesses` - Selected businesses
                  */
-                audience_type?: "all_businesses" | "selected_organizations";
+                audience_type?: "all_businesses" | "selected_businesses";
                 /**
                  * @description enabled, paused or retired.
                  *
@@ -21517,12 +22978,8 @@ export interface operations {
                  *     * `-updated_at` - Updated at (descending)
                  */
                 ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
-                /** @description Administrators: only this provider organization's offers. */
-                organization_id?: string;
-                /** @description Administrators: only offers posted in this partner's capacity. */
-                partner_id?: string;
                 /**
-                 * @description partner_portal, employer_portal or admin_on_behalf.
+                 * @description partner_portal, client_portal or admin_on_behalf.
                  *
                  *     * `partner_portal` - Partner portal
                  *     * `employer_portal` - Employer portal
@@ -21530,6 +22987,15 @@ export interface operations {
                  *     * `admin_on_behalf` - Administrator on behalf
                  */
                 posted_via?: "admin_on_behalf" | "client_portal" | "employer_portal" | "partner_portal";
+                /** @description Administrators: only this business's offers (a merchant or client UUID). */
+                provider_id?: string;
+                /**
+                 * @description Administrators: only merchants' or only clients' offers.
+                 *
+                 *     * `merchant` - Merchant
+                 *     * `client` - Client
+                 */
+                provider_kind?: "client" | "merchant";
                 /** @description A search term. */
                 search?: string;
                 /** @description Live version is also listed for the audience's employees. */
@@ -22093,12 +23559,12 @@ export interface operations {
         parameters: {
             query?: {
                 /**
-                 * @description Live version's business audience: all_businesses or selected_organizations.
+                 * @description Live version's business audience: all_businesses or selected_businesses.
                  *
                  *     * `all_businesses` - All businesses
-                 *     * `selected_organizations` - Selected organizations
+                 *     * `selected_businesses` - Selected businesses
                  */
-                audience_type?: "all_businesses" | "selected_organizations";
+                audience_type?: "all_businesses" | "selected_businesses";
                 /**
                  * @description enabled, paused or retired.
                  *
@@ -22142,12 +23608,8 @@ export interface operations {
                  *     * `-updated_at` - Updated at (descending)
                  */
                 ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
-                /** @description Administrators: only this provider organization's offers. */
-                organization_id?: string;
-                /** @description Administrators: only offers posted in this partner's capacity. */
-                partner_id?: string;
                 /**
-                 * @description partner_portal, employer_portal or admin_on_behalf.
+                 * @description partner_portal, client_portal or admin_on_behalf.
                  *
                  *     * `partner_portal` - Partner portal
                  *     * `employer_portal` - Employer portal
@@ -22155,6 +23617,15 @@ export interface operations {
                  *     * `admin_on_behalf` - Administrator on behalf
                  */
                 posted_via?: "admin_on_behalf" | "client_portal" | "employer_portal" | "partner_portal";
+                /** @description Administrators: only this business's offers (a merchant or client UUID). */
+                provider_id?: string;
+                /**
+                 * @description Administrators: only merchants' or only clients' offers.
+                 *
+                 *     * `merchant` - Merchant
+                 *     * `client` - Client
+                 */
+                provider_kind?: "client" | "merchant";
                 /** @description A search term. */
                 search?: string;
                 /** @description Live version is also listed for the audience's employees. */
@@ -22219,6 +23690,8 @@ export interface operations {
     v1_business_received_enquiries_list: {
         parameters: {
             query?: {
+                /** @description Received and administrator lists: one enquiring business. */
+                business_id?: string;
                 /** @description Number of results to return per page. */
                 limit?: number;
                 /** @description One offer. */
@@ -22234,10 +23707,8 @@ export interface operations {
                  *     * `-closed_at` - Closed at (descending)
                  */
                 ordering?: ("-closed_at" | "-created_at" | "closed_at" | "created_at")[];
-                /** @description Received and administrator lists: one enquiring organization. */
-                organization_id?: string;
-                /** @description Sent and administrator lists: one provider organization. */
-                provider_organization_id?: string;
+                /** @description Sent and administrator lists: one providing business. */
+                provider_id?: string;
                 /** @description A search term. */
                 search?: string;
                 /**
@@ -22273,7 +23744,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Required permission missing or revoked, the organization scope was denied, or the organization is neither a verified partner nor an employer (FORBIDDEN). */
+            /** @description Required permission missing or revoked, the organization or client scope was denied, or the acting party is not a business in standing (a verified merchant or an active client group) (FORBIDDEN). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -22282,7 +23753,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Invalid, missing or unknown fields or X-Organization-ID (VALIDATION_ERROR). */
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Organization-ID / X-Client-ID (VALIDATION_ERROR). */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -22323,7 +23794,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Required permission missing or revoked, the organization scope was denied, or the organization is neither a verified partner nor an employer (FORBIDDEN). */
+            /** @description Required permission missing or revoked, the organization or client scope was denied, or the acting party is not a business in standing (a verified merchant or an active client group) (FORBIDDEN). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -22332,7 +23803,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Enquiry not found, or not your organization's (NOT_FOUND). */
+            /** @description Enquiry not found, or not your business's (NOT_FOUND). */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -22341,7 +23812,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Invalid, missing or unknown fields or X-Organization-ID (VALIDATION_ERROR). */
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Organization-ID / X-Client-ID (VALIDATION_ERROR). */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -22397,7 +23868,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Required permission missing or revoked, the organization scope was denied, or the organization is neither a verified partner nor an employer (FORBIDDEN). */
+            /** @description Required permission missing or revoked, the organization or client scope was denied, or the acting party is not a business in standing (a verified merchant or an active client group) (FORBIDDEN). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -22406,7 +23877,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Enquiry not found, or not your organization's (NOT_FOUND). */
+            /** @description Enquiry not found, or not your business's (NOT_FOUND). */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -22415,7 +23886,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description OFFER_NOT_CLAIMABLE: the offer is not live or not available to your organization; OFFER_VERSION_CHANGED: another version went live since you saw it (current_version_id is included); ENQUIRY_ALREADY_OPEN: your organization already has an open enquiry about it (enquiry_id is included); ENQUIRY_CLOSED: the enquiry is already closed. */
+            /** @description OFFER_NOT_CLAIMABLE: the offer is not live or not available to your business; OFFER_VERSION_CHANGED: another version went live since you saw it (current_version_id is included); ENQUIRY_ALREADY_OPEN: your business already has an open enquiry about it (enquiry_id is included); ENQUIRY_CLOSED: the enquiry is already closed. */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -22424,7 +23895,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Invalid, missing or unknown fields or X-Organization-ID (VALIDATION_ERROR). */
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Organization-ID / X-Client-ID (VALIDATION_ERROR). */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -23484,6 +24955,1833 @@ export interface operations {
             };
         };
     };
+    v1_client_business_businesses_list: {
+        parameters: {
+            query?: {
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /** @description A search term. */
+                search?: string;
+            };
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBusinessRefList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_enquiries_list: {
+        parameters: {
+            query?: {
+                /** @description Received and administrator lists: one enquiring business. */
+                business_id?: string;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description One offer. */
+                offer_id?: string;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by created_at, closed_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `closed_at` - Closed at
+                 *     * `-closed_at` - Closed at (descending)
+                 */
+                ordering?: ("-closed_at" | "-created_at" | "closed_at" | "created_at")[];
+                /** @description Sent and administrator lists: one providing business. */
+                provider_id?: string;
+                /** @description A search term. */
+                search?: string;
+                /**
+                 * @description open or closed.
+                 *
+                 *     * `open` - Open
+                 *     * `closed` - Closed by the provider
+                 */
+                status?: "closed" | "open";
+            };
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBusinessEnquiryList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization or client scope was denied, or the acting party is not a business in standing (a verified merchant or an active client group) (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Organization-ID / X-Client-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_enquiries_retrieve: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                enquiry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessEnquiry"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization or client scope was denied, or the acting party is not a business in standing (a verified merchant or an active client group) (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Enquiry not found, or not your business's (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Organization-ID / X-Client-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_offer_categories_list: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferCategoryOption"][];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_offers_list: {
+        parameters: {
+            query?: {
+                /** @description Only offers in this category. */
+                category_id?: string;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by first_published_at, valid_until; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `first_published_at` - First published at
+                 *     * `-first_published_at` - First published at (descending)
+                 *     * `valid_until` - Valid until
+                 *     * `-valid_until` - Valid until (descending)
+                 */
+                ordering?: ("-first_published_at" | "-valid_until" | "first_published_at" | "valid_until")[];
+                /** @description Only this business's offers (a merchant or client UUID). */
+                provider_id?: string;
+                /** @description A search term. */
+                search?: string;
+            };
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBusinessCatalogueOfferList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_offers_retrieve: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessCatalogueOffer"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_offers_enquire_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnquiryInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["EnquiryInput"];
+                "multipart/form-data": components["schemas"]["EnquiryInput"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessEnquiry"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization or client scope was denied, or the acting party is not a business in standing (a verified merchant or an active client group) (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description OFFER_NOT_CLAIMABLE: the offer is not live or not available to your business; OFFER_VERSION_CHANGED: another version went live since you saw it (current_version_id is included); ENQUIRY_ALREADY_OPEN: your business already has an open enquiry about it (enquiry_id is included); ENQUIRY_CLOSED: the enquiry is already closed. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Organization-ID / X-Client-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_own_offer_categories_list: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferCategoryOption"][];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_own_offers_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Live version's business audience: all_businesses or selected_businesses.
+                 *
+                 *     * `all_businesses` - All businesses
+                 *     * `selected_businesses` - Selected businesses
+                 */
+                audience_type?: "all_businesses" | "selected_businesses";
+                /**
+                 * @description enabled, paused or retired.
+                 *
+                 *     * `enabled` - Enabled
+                 *     * `paused` - Paused
+                 *     * `retired` - Retired
+                 */
+                availability?: "enabled" | "paused" | "retired";
+                /** @description Only offers whose live version is in this category. */
+                category_id?: string;
+                /**
+                 * @description The display_status badge, evaluated now.
+                 *
+                 *     * `draft` - draft
+                 *     * `in_review` - in_review
+                 *     * `changes_requested` - changes_requested
+                 *     * `rejected` - rejected
+                 *     * `retracted` - retracted
+                 *     * `scheduled` - scheduled
+                 *     * `active` - active
+                 *     * `expired` - expired
+                 *     * `paused` - paused
+                 *     * `suspended` - suspended
+                 *     * `retired` - retired
+                 */
+                display_status?: "active" | "changes_requested" | "draft" | "expired" | "in_review" | "paused" | "rejected" | "retired" | "retracted" | "scheduled" | "suspended";
+                /** @description true: only offers with a version awaiting review (the review queue); false: only offers without one. */
+                in_review?: boolean;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by first_published_at, created_at, updated_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `first_published_at` - First published at
+                 *     * `-first_published_at` - First published at (descending)
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `updated_at` - Updated at
+                 *     * `-updated_at` - Updated at (descending)
+                 */
+                ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
+                /**
+                 * @description partner_portal, client_portal or admin_on_behalf.
+                 *
+                 *     * `partner_portal` - Partner portal
+                 *     * `employer_portal` - Employer portal
+                 *     * `client_portal` - Client portal
+                 *     * `admin_on_behalf` - Administrator on behalf
+                 */
+                posted_via?: "admin_on_behalf" | "client_portal" | "employer_portal" | "partner_portal";
+                /** @description Administrators: only this business's offers (a merchant or client UUID). */
+                provider_id?: string;
+                /**
+                 * @description Administrators: only merchants' or only clients' offers.
+                 *
+                 *     * `merchant` - Merchant
+                 *     * `client` - Client
+                 */
+                provider_kind?: "client" | "merchant";
+                /** @description A search term. */
+                search?: string;
+                /** @description Live version is also listed for the audience's employees. */
+                show_to_employees?: boolean;
+            };
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedOfferList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_own_offers_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BusinessOfferInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["BusinessOfferInput"];
+                "multipart/form-data": components["schemas"]["BusinessOfferInput"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_own_offers_retrieve: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_own_offers_update: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BusinessOfferUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["BusinessOfferUpdate"];
+                "multipart/form-data": components["schemas"]["BusinessOfferUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_own_offers_decisions_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Live version's business audience: all_businesses or selected_businesses.
+                 *
+                 *     * `all_businesses` - All businesses
+                 *     * `selected_businesses` - Selected businesses
+                 */
+                audience_type?: "all_businesses" | "selected_businesses";
+                /**
+                 * @description enabled, paused or retired.
+                 *
+                 *     * `enabled` - Enabled
+                 *     * `paused` - Paused
+                 *     * `retired` - Retired
+                 */
+                availability?: "enabled" | "paused" | "retired";
+                /** @description Only offers whose live version is in this category. */
+                category_id?: string;
+                /**
+                 * @description The display_status badge, evaluated now.
+                 *
+                 *     * `draft` - draft
+                 *     * `in_review` - in_review
+                 *     * `changes_requested` - changes_requested
+                 *     * `rejected` - rejected
+                 *     * `retracted` - retracted
+                 *     * `scheduled` - scheduled
+                 *     * `active` - active
+                 *     * `expired` - expired
+                 *     * `paused` - paused
+                 *     * `suspended` - suspended
+                 *     * `retired` - retired
+                 */
+                display_status?: "active" | "changes_requested" | "draft" | "expired" | "in_review" | "paused" | "rejected" | "retired" | "retracted" | "scheduled" | "suspended";
+                /** @description true: only offers with a version awaiting review (the review queue); false: only offers without one. */
+                in_review?: boolean;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by first_published_at, created_at, updated_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `first_published_at` - First published at
+                 *     * `-first_published_at` - First published at (descending)
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `updated_at` - Updated at
+                 *     * `-updated_at` - Updated at (descending)
+                 */
+                ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
+                /**
+                 * @description partner_portal, client_portal or admin_on_behalf.
+                 *
+                 *     * `partner_portal` - Partner portal
+                 *     * `employer_portal` - Employer portal
+                 *     * `client_portal` - Client portal
+                 *     * `admin_on_behalf` - Administrator on behalf
+                 */
+                posted_via?: "admin_on_behalf" | "client_portal" | "employer_portal" | "partner_portal";
+                /** @description Administrators: only this business's offers (a merchant or client UUID). */
+                provider_id?: string;
+                /**
+                 * @description Administrators: only merchants' or only clients' offers.
+                 *
+                 *     * `merchant` - Merchant
+                 *     * `client` - Client
+                 */
+                provider_kind?: "client" | "merchant";
+                /** @description A search term. */
+                search?: string;
+                /** @description Live version is also listed for the audience's employees. */
+                show_to_employees?: boolean;
+            };
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedOfferDecisionList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_own_offers_pause_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_own_offers_resume_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_own_offers_retire_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_own_offers_retract_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_own_offers_submit_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_own_offers_unpublish_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offer"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_own_offers_versions_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Live version's business audience: all_businesses or selected_businesses.
+                 *
+                 *     * `all_businesses` - All businesses
+                 *     * `selected_businesses` - Selected businesses
+                 */
+                audience_type?: "all_businesses" | "selected_businesses";
+                /**
+                 * @description enabled, paused or retired.
+                 *
+                 *     * `enabled` - Enabled
+                 *     * `paused` - Paused
+                 *     * `retired` - Retired
+                 */
+                availability?: "enabled" | "paused" | "retired";
+                /** @description Only offers whose live version is in this category. */
+                category_id?: string;
+                /**
+                 * @description The display_status badge, evaluated now.
+                 *
+                 *     * `draft` - draft
+                 *     * `in_review` - in_review
+                 *     * `changes_requested` - changes_requested
+                 *     * `rejected` - rejected
+                 *     * `retracted` - retracted
+                 *     * `scheduled` - scheduled
+                 *     * `active` - active
+                 *     * `expired` - expired
+                 *     * `paused` - paused
+                 *     * `suspended` - suspended
+                 *     * `retired` - retired
+                 */
+                display_status?: "active" | "changes_requested" | "draft" | "expired" | "in_review" | "paused" | "rejected" | "retired" | "retracted" | "scheduled" | "suspended";
+                /** @description true: only offers with a version awaiting review (the review queue); false: only offers without one. */
+                in_review?: boolean;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by first_published_at, created_at, updated_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `first_published_at` - First published at
+                 *     * `-first_published_at` - First published at (descending)
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `updated_at` - Updated at
+                 *     * `-updated_at` - Updated at (descending)
+                 */
+                ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
+                /**
+                 * @description partner_portal, client_portal or admin_on_behalf.
+                 *
+                 *     * `partner_portal` - Partner portal
+                 *     * `employer_portal` - Employer portal
+                 *     * `client_portal` - Client portal
+                 *     * `admin_on_behalf` - Administrator on behalf
+                 */
+                posted_via?: "admin_on_behalf" | "client_portal" | "employer_portal" | "partner_portal";
+                /** @description Administrators: only this business's offers (a merchant or client UUID). */
+                provider_id?: string;
+                /**
+                 * @description Administrators: only merchants' or only clients' offers.
+                 *
+                 *     * `merchant` - Merchant
+                 *     * `client` - Client
+                 */
+                provider_kind?: "client" | "merchant";
+                /** @description A search term. */
+                search?: string;
+                /** @description Live version is also listed for the audience's employees. */
+                show_to_employees?: boolean;
+            };
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedOfferVersionList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_received_enquiries_list: {
+        parameters: {
+            query?: {
+                /** @description Received and administrator lists: one enquiring business. */
+                business_id?: string;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description One offer. */
+                offer_id?: string;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by created_at, closed_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `closed_at` - Closed at
+                 *     * `-closed_at` - Closed at (descending)
+                 */
+                ordering?: ("-closed_at" | "-created_at" | "closed_at" | "created_at")[];
+                /** @description Sent and administrator lists: one providing business. */
+                provider_id?: string;
+                /** @description A search term. */
+                search?: string;
+                /**
+                 * @description open or closed.
+                 *
+                 *     * `open` - Open
+                 *     * `closed` - Closed by the provider
+                 */
+                status?: "closed" | "open";
+            };
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBusinessEnquiryList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization or client scope was denied, or the acting party is not a business in standing (a verified merchant or an active client group) (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Organization-ID / X-Client-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_received_enquiries_retrieve: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                enquiry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessEnquiry"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization or client scope was denied, or the acting party is not a business in standing (a verified merchant or an active client group) (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Enquiry not found, or not your business's (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Organization-ID / X-Client-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_business_received_enquiries_close_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                enquiry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CloseEnquiryInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["CloseEnquiryInput"];
+                "multipart/form-data": components["schemas"]["CloseEnquiryInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessEnquiry"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization or client scope was denied, or the acting party is not a business in standing (a verified merchant or an active client group) (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Enquiry not found, or not your business's (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description OFFER_NOT_CLAIMABLE: the offer is not live or not available to your business; OFFER_VERSION_CHANGED: another version went live since you saw it (current_version_id is included); ENQUIRY_ALREADY_OPEN: your business already has an open enquiry about it (enquiry_id is included); ENQUIRY_CLOSED: the enquiry is already closed. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Organization-ID / X-Client-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     v1_client_companies_list: {
         parameters: {
             query?: never;
@@ -23515,6 +26813,320 @@ export interface operations {
             };
             /** @description No current membership of the selected client, a missing client permission, a role or member holding permissions you do not hold, or a change to your own membership or roles (FORBIDDEN). */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Client-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_companies_users_retrieve: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyUsers"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No current membership of the selected client, a missing client permission, a role or member holding permissions you do not hold, or a change to your own membership or roles (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The company is not an active company of the client. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Client-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_companies_users_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompanyUserCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["CompanyUserCreate"];
+                "multipart/form-data": components["schemas"]["CompanyUserCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyUserCreated"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No current membership of the selected client, a missing client permission, a role or member holding permissions you do not hold, or a change to your own membership or roles (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The company is not a company of the client. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description COMPANY_USER_LIMIT, ACCOUNT_DISABLED, or a deactivated company. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Client-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_companies_users_end_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                company_id: string;
+                membership_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonOnly"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReasonOnly"];
+                "multipart/form-data": components["schemas"]["ReasonOnly"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyUser"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No current membership of the selected client, a missing client permission, a role or member holding permissions you do not hold, or a change to your own membership or roles (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Company or current membership not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The company is deactivated. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Client-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_companies_users_resend_setup_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                company_id: string;
+                membership_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonOnly"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReasonOnly"];
+                "multipart/form-data": components["schemas"]["ReasonOnly"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyUser"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No current membership of the selected client, a missing client permission, a role or member holding permissions you do not hold, or a change to your own membership or roles (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Company or current membership not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Already set a password, a disabled user, or a deactivated company. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -25341,6 +28953,15 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
             /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
             404: {
                 headers: {
@@ -25405,6 +29026,15 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
             /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
             404: {
                 headers: {
@@ -25460,6 +29090,15 @@ export interface operations {
             };
             /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -25538,8 +29177,26 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
             /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -26343,8 +30000,26 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Required permission missing or revoked, the organization scope was denied, or the action is not available to your side, e.g. a partner reviewing or an administrator pausing (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
             /** @description The campaign, advertisement, slot, asset, grant, partner or organization does not exist or belongs to another organization; on marketplace advertising endpoints, the slot is unknown or inactive or the advertisement is not available to you there now (NOT_FOUND). */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version; the partner is not verified; the state does not allow the operation (archived, already paused, nothing awaiting review, editing while in review); a slot key is taken; ADVERTISING_NOT_ELIGIBLE when submitting without an active advertising grant; AD_REVISION_CHANGED when a different revision is under review than the revision_id sent; AD_CREATIVE_CHANGED on marketplace advertising endpoints when a newer revision was approved since the placement returned revision (CONFLICT). */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -31177,6 +34852,46 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["BaseResponse"];
                 };
+            };
+        };
+    };
+    v1_users_auth_password_setup_resend_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordSetupResendRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PasswordSetupResendRequest"];
+                "multipart/form-data": components["schemas"]["PasswordSetupResendRequest"];
+            };
+        };
+        responses: {
+            /** @description Request accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse"];
+                };
+            };
+            /** @description email missing or not a valid address (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Too many requests for this email or from this IP (RATE_LIMITED); retry after the Retry-After seconds. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

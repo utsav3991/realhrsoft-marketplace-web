@@ -5,15 +5,16 @@ import { useState } from "react";
 
 import { Button } from "@/design-system/primitives/button";
 import { Input } from "@/design-system/primitives/input";
-import type { AudienceOrganization } from "@/features/offers/schemas/offer";
-import { useSelectedOrganizationId } from "@/shared/auth";
+import { Badge } from "@/design-system/primitives/badge";
+import { BUSINESS_KIND_LABEL, type AudienceOrganization } from "@/features/offers/schemas/offer";
 import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
 
 import { useBusinessDirectory } from "../api/queries";
+import { useBusinessPortal } from "./business-portal";
 
 /**
- * Adds audience organizations from the business directory: other verified partners and
- * employers, names only, never the selected organization itself.
+ * Adds audience businesses from the directory: other verified merchants and active client
+ * groups, kind and name only, never the acting business itself.
  */
 export function BusinessDirectoryPicker({
   selected,
@@ -52,8 +53,8 @@ function DirectoryResults({
   selected: readonly AudienceOrganization[];
   onAdd: (organization: AudienceOrganization) => void;
 }) {
-  const organizationId = useSelectedOrganizationId();
-  const directory = useBusinessDirectory(organizationId, search);
+  const { owner } = useBusinessPortal();
+  const directory = useBusinessDirectory(owner, search);
   if (directory.isPending) return <p className="text-muted-foreground text-sm">Searching…</p>;
   if (directory.isError)
     return <p className="text-destructive text-sm">Businesses could not be loaded.</p>;
@@ -63,14 +64,17 @@ function DirectoryResults({
   if (rows.length === 0) return <p className="text-muted-foreground text-sm">No matches.</p>;
   return (
     <ul className="divide-y rounded-lg border">
-      {rows.map((organization) => (
-        <li key={organization.id} className="flex items-center justify-between gap-2 px-3 py-2">
-          <span className="text-sm">{organization.name}</span>
+      {rows.map((business) => (
+        <li key={business.id} className="flex items-center justify-between gap-2 px-3 py-2">
+          <span className="flex items-center gap-2 text-sm">
+            {business.name}
+            <Badge intent="outline">{BUSINESS_KIND_LABEL[business.kind]}</Badge>
+          </span>
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => onAdd({ id: organization.id, name: organization.name })}
+            onClick={() => onAdd({ id: business.id, name: business.name })}
           >
             <Plus aria-hidden />
             Add

@@ -35,7 +35,7 @@ export function SearchField({
 
   return (
     <div className={`relative flex w-full max-w-sm items-center ${className || ""}`}>
-      <Search className="absolute left-3 size-4 text-muted-foreground" aria-hidden />
+      <Search className="text-muted-foreground absolute left-3 size-4" aria-hidden />
       <Input
         type="search"
         placeholder={placeholder}

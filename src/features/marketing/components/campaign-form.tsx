@@ -74,7 +74,11 @@ export function CampaignForm({
     }
   });
 
-  const controlled = (field: { value: string; onChange: (v: string) => void; onBlur: () => void }) => ({
+  const controlled = (field: {
+    value: string;
+    onChange: (v: string) => void;
+    onBlur: () => void;
+  }) => ({
     value: field.value,
     onChange: field.onChange,
     onBlur: field.onBlur,

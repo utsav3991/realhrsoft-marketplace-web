@@ -293,9 +293,7 @@ export function BenefitForm({
             <div className="bg-muted/50 flex items-start gap-3 rounded-lg border p-4">
               <Users className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
               <div className="space-y-1">
-                <p className="text-sm font-medium">
-                  Own employees of {audience.organizationName}
-                </p>
+                <p className="text-sm font-medium">Own employees of {audience.organizationName}</p>
                 <p className="text-muted-foreground text-xs">
                   Company benefits always go to your own employees only. Other organizations never
                   see them.
@@ -380,8 +378,8 @@ function ClientAudienceFields({
               </SelectContent>
             </Select>
             <FormDescription>
-              Only employees of companies with Employer capacity receive it, while the company
-              is active in RealHRSoft. Each employee&apos;s uses count across all their companies.
+              Only employees of companies with Employer capacity receive it, while the company is
+              active in RealHRSoft. Each employee&apos;s uses count across all their companies.
             </FormDescription>
             <FormMessage />
           </FormItem>

@@ -184,7 +184,13 @@ export function AdsDirectory({ workspace }: { workspace: Workspace }) {
         filters={{ search, status, inReview, partnerId, campaignId }}
         empty={
           <NoAds
-            title={inReview ? "Nothing awaiting review" : filtered ? "No advertisements found" : "No advertisements yet"}
+            title={
+              inReview
+                ? "Nothing awaiting review"
+                : filtered
+                  ? "No advertisements found"
+                  : "No advertisements yet"
+            }
             description={
               filtered
                 ? "Try different filters."
@@ -353,8 +359,7 @@ function AdComposer({ workspace, campaignId }: { workspace: Workspace; campaignI
       <CardHeader>
         <CardTitle>New advertisement</CardTitle>
         <CardDescription>
-          Save a draft, or submit it for Aayulogic review. Nothing is served until it is
-          approved.
+          Save a draft, or submit it for Aayulogic review. Nothing is served until it is approved.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -582,9 +587,7 @@ const REVIEW_ACTIONS: Record<ReviewAction, ReviewSpec> = {
   },
 };
 
-type Acting =
-  | { kind: "owner"; action: OwnerAdAction }
-  | { kind: "review"; action: ReviewAction };
+type Acting = { kind: "owner"; action: OwnerAdAction } | { kind: "review"; action: ReviewAction };
 
 function useAvailableActions(workspace: Workspace, ad: Advertisement): Acting[] {
   const canSubmit = useWorkspaceCan(workspace, "adSubmit");
@@ -741,7 +744,12 @@ function AdWorkspace({ workspace, ad }: { workspace: Workspace; ad: Advertisemen
       {ad.first_approved_at ? <AdPerformance workspace={workspace} adId={ad.id} /> : null}
       <Revisions workspace={workspace} adId={ad.id} />
       <Decisions workspace={workspace} adId={ad.id} />
-      <ActionDialogs workspace={workspace} ad={ad} acting={acting} onClose={() => setActing(null)} />
+      <ActionDialogs
+        workspace={workspace}
+        ad={ad}
+        acting={acting}
+        onClose={() => setActing(null)}
+      />
     </>
   );
 }
@@ -910,7 +918,11 @@ function ActionDialogs({
                 : undefined,
             });
           } else {
-            await owner.mutateAsync({ action: acting.action, reason, expected_version: ad.version });
+            await owner.mutateAsync({
+              action: acting.action,
+              reason,
+              expected_version: ad.version,
+            });
           }
           toast.success(spec.done);
         }}
@@ -927,7 +939,11 @@ function ActionDialogs({
       destructive={spec.destructive}
       onConfirm={async () => {
         if (acting?.kind !== "owner") return;
-        await owner.mutateAsync({ action: acting.action, reason: "", expected_version: ad.version });
+        await owner.mutateAsync({
+          action: acting.action,
+          reason: "",
+          expected_version: ad.version,
+        });
         toast.success(spec.done);
       }}
     />

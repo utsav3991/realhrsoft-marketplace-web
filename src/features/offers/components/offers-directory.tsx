@@ -181,23 +181,23 @@ export function OffersDirectory() {
   ];
   const filtered = Boolean(
     search ||
-      status ||
-      inReview ||
-      acceptanceMode ||
-      source ||
-      postedVia ||
-      featured ||
-      partnerId ||
-      organizationId,
+    status ||
+    inReview ||
+    acceptanceMode ||
+    source ||
+    postedVia ||
+    featured ||
+    partnerId ||
+    organizationId,
   );
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <SearchField 
-            placeholder="Search title, headline or partner" 
-            aria-label="Search offers by title, headline or partner name" 
+          <SearchField
+            placeholder="Search title, headline or partner"
+            aria-label="Search offers by title, headline or partner name"
             className="max-w-sm"
           />
           <Select

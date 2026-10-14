@@ -165,7 +165,9 @@ export function AdForm({
                 <FormControl>
                   <Input className="sm:max-w-md" {...field} />
                 </FormControl>
-                <FormDescription>For your workspace only; never shown to employees.</FormDescription>
+                <FormDescription>
+                  For your workspace only; never shown to employees.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -286,7 +288,9 @@ export function AdForm({
                   <SelectContent>
                     <SelectItem value="external_url">{DESTINATION_LABEL.external_url}</SelectItem>
                     <SelectItem value="offer">
-                      {workspace.kind === "admin" ? "One of the partner's offers" : DESTINATION_LABEL.offer}
+                      {workspace.kind === "admin"
+                        ? "One of the partner's offers"
+                        : DESTINATION_LABEL.offer}
                     </SelectItem>
                     <SelectItem value="ad_page">{DESTINATION_LABEL.ad_page}</SelectItem>
                   </SelectContent>
@@ -528,7 +532,9 @@ function AssetLibrary({
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Choose an uploaded image</DialogTitle>
-          <DialogDescription>Uploaded images never change; reuse one across revisions.</DialogDescription>
+          <DialogDescription>
+            Uploaded images never change; reuse one across revisions.
+          </DialogDescription>
         </DialogHeader>
         {assets.isPending ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -670,7 +676,9 @@ function AdPageFields({ workspace, disabled }: { workspace: Workspace; disabled:
               <SelectContent>
                 <SelectItem value="none">{PAGE_ACTION_LABEL.none}</SelectItem>
                 <SelectItem value="offer">
-                  {workspace.kind === "admin" ? "One of the partner's offers" : PAGE_ACTION_LABEL.offer}
+                  {workspace.kind === "admin"
+                    ? "One of the partner's offers"
+                    : PAGE_ACTION_LABEL.offer}
                 </SelectItem>
                 <SelectItem value="external_url">{PAGE_ACTION_LABEL.external_url}</SelectItem>
               </SelectContent>
@@ -732,7 +740,13 @@ function AdminOfferSelect({ partnerId, disabled }: { partnerId: string; disabled
   return <OfferSelect query={offers} disabled={disabled} />;
 }
 
-function OwnOfferSelect({ organizationId, disabled }: { organizationId: string; disabled: boolean }) {
+function OwnOfferSelect({
+  organizationId,
+  disabled,
+}: {
+  organizationId: string;
+  disabled: boolean;
+}) {
   const offers = useOwnOffers(organizationId, null, null, FIRST_PAGE);
   return <OfferSelect query={offers} disabled={disabled} />;
 }
@@ -760,7 +774,9 @@ function OfferSelect({
           >
             <FormControl>
               <SelectTrigger ref={field.ref} onBlur={field.onBlur} className="w-full">
-                <SelectValue placeholder={query.isPending ? "Loading offers…" : "Choose an offer"} />
+                <SelectValue
+                  placeholder={query.isPending ? "Loading offers…" : "Choose an offer"}
+                />
               </SelectTrigger>
             </FormControl>
             <SelectContent>

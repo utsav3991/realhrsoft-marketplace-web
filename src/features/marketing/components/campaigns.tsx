@@ -186,7 +186,11 @@ export function CampaignsDirectory({ workspace }: { workspace: Workspace }) {
       ) : null}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <SearchField placeholder="Search name" aria-label="Search campaigns" className="max-w-sm" />
+          <SearchField
+            placeholder="Search name"
+            aria-label="Search campaigns"
+            className="max-w-sm"
+          />
           <Select
             value={status ?? ALL}
             onValueChange={(value) => set({ status: value === ALL ? null : value })}
@@ -623,13 +627,7 @@ const FLIGHT_COLUMNS: DataTableColumns<Flight> = [
   },
 ];
 
-function CampaignDetails({
-  campaign,
-  editAction,
-}: {
-  campaign: Campaign;
-  editAction: ReactNode;
-}) {
+function CampaignDetails({ campaign, editAction }: { campaign: Campaign; editAction: ReactNode }) {
   return (
     <Card>
       <CardHeader className="flex-row items-start justify-between gap-4">
@@ -668,7 +666,6 @@ function CampaignDetails({
     </Card>
   );
 }
-
 
 // --- Administrator entry points ---------------------------------------------------------
 

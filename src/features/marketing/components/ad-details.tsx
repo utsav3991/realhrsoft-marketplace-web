@@ -81,8 +81,7 @@ export const isInReview = (ad: Advertisement) => workingState(ad) === "in_review
 export function isEditable(ad: Advertisement): boolean {
   return !isArchived(ad) && ad.campaign.status !== "archived" && !isInReview(ad);
 }
-export const isSubmittable = (ad: Advertisement) =>
-  workingState(ad) === "draft" && isEditable(ad);
+export const isSubmittable = (ad: Advertisement) => workingState(ad) === "draft" && isEditable(ad);
 export const isPausable = (ad: Advertisement) => ad.availability === "active";
 export const isResumable = (ad: Advertisement) => ad.availability === "paused";
 export const isArchivable = (ad: Advertisement) => !isArchived(ad);
@@ -238,7 +237,12 @@ function OwnOfferTitle({ organizationId, offerId }: { organizationId: string; of
 
 function ExternalLink({ url }: { url: string }) {
   return url ? (
-    <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary break-all hover:underline">
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-primary break-all hover:underline"
+    >
       {url}
     </a>
   ) : (
@@ -454,7 +458,9 @@ export function AdRevisions({
         <RevisionCard
           workspace={workspace}
           revision={working}
-          title={live ? `Pending changes · revision ${working.number}` : `Revision ${working.number}`}
+          title={
+            live ? `Pending changes · revision ${working.number}` : `Revision ${working.number}`
+          }
           description={
             working.state === "draft"
               ? live
@@ -612,8 +618,8 @@ export function AdStatusCallout({
       <CheckCircle2 aria-hidden />
       <AlertTitle>Approved</AlertTitle>
       <AlertDescription>
-        It may serve in its placements while the campaign and its flights run. Serving also
-        checks the destination for each viewer.
+        It may serve in its placements while the campaign and its flights run. Serving also checks
+        the destination for each viewer.
       </AlertDescription>
     </Alert>
   );

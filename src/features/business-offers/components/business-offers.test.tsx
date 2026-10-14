@@ -4,10 +4,17 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EMPTY_BENEFIT_VALUE } from "@/features/offers/schemas/benefit-value";
-import { ApiError, makeQueryClient, setActiveOrganizationId, type Schemas } from "@/shared/api";
+import {
+  ApiError,
+  makeQueryClient,
+  setActiveClientId,
+  setActiveOrganizationId,
+  type Schemas,
+} from "@/shared/api";
 import { SessionContext, type CurrentActor, type SessionValue } from "@/shared/auth";
 import {
   BusinessOfferPermission,
+  CLIENT_BUSINESS_CODES,
   OfferAdminPermission,
   type PermissionCode,
 } from "@/shared/authorization";
@@ -22,6 +29,7 @@ import {
 } from "../schemas/business-offer";
 import { AdminBusinessOffer } from "./admin-business-offers";
 import { BusinessCatalogueOffer } from "./business-catalogue";
+import { BusinessPage } from "./business-portal";
 import { Lead } from "./enquiries";
 import { OwnBusinessOffer } from "./own-business-offers";
 
@@ -34,7 +42,14 @@ vi.mock("next/navigation", () => ({
 const OFFER_ID = "1d2e3f4a-5b6c-4d7e-8f9a-0b1c2d3e4f5a";
 const VERSION_ID = "2e3f4a5b-6c7d-4e8f-9a0b-1c2d3e4f5a6b";
 const SELLER = "4a293c96-2952-43ac-bf39-bdfda7531c48";
+/** The client group that buys (Client portal, X-Client-ID). */
 const BUYER = "5e6f7a8b-9c0d-4e1f-8a2b-3c4d5e6f7a8b";
+const MERCHANT = {
+  id: "0b0b5e3c-3c3f-4bd6-9a55-8f3b7f0a8f2e",
+  kind: "merchant",
+  name: "Fitness Hub",
+} as const;
+const CLIENT = { id: BUYER, kind: "client", name: "Everest Group" } as const;
 const ENQUIRY_ID = "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d";
 const USER = "9d31c4aa-1f99-4c90-b748-e00893786136";
 const CATEGORY = { id: "2f6f4c1e-8a4b-4d51-9d4e-5f1c2b7a9e10", name: "Health", slug: "health" };
@@ -73,7 +88,7 @@ function version(
     business_policy: {
       category: { ...CATEGORY, is_active: true },
       audience_type: "all_businesses",
-      audience_organizations: [],
+      audience_businesses: [],
       show_to_employees: showToEmployees,
       enquiry_instructions: "Tell us your headcount.",
     },
@@ -90,23 +105,24 @@ function version(
 
 function offer(
   state: Schemas["OfferVersionStateEnum"],
-  { asPartner = true, showToEmployees = false } = {},
+  { asMerchant = true, showToEmployees = false } = {},
 ): Schemas["Offer"] {
   return {
     id: OFFER_ID,
     kind: "business_offer",
-    provider_organization: { id: SELLER, name: "Fitness Hub Pvt. Ltd." },
-    provider_client: null,
-    partner: asPartner
+    provider_organization: asMerchant ? { id: SELLER, name: "Fitness Hub Pvt. Ltd." } : null,
+    provider_client: asMerchant ? null : { id: CLIENT.id, name: CLIENT.name },
+    partner: asMerchant
       ? {
-          id: "0b0b5e3c-3c3f-4bd6-9a55-8f3b7f0a8f2e",
+          id: MERCHANT.id,
           organization_id: SELLER,
           business_name: "Fitness Hub",
           status: "verified",
           source: "partner_organization",
         }
       : null,
-    posted_via: asPartner ? "partner_portal" : "employer_portal",
+    business_provider: asMerchant ? MERCHANT : CLIENT,
+    posted_via: asMerchant ? "partner_portal" : "client_portal",
     availability: "enabled",
     is_featured: false,
     version: 3,
@@ -140,8 +156,7 @@ const card: Schemas["BusinessCatalogueOffer"] = {
   valid_from: "2026-10-01T00:00:00Z",
   valid_until: null,
   benefit: { schema_version: 1, type: "percentage", description: "", percent: "30" },
-  provider_organization: { id: SELLER, name: "Fitness Hub Pvt. Ltd." },
-  partner: { id: "0b0b5e3c-3c3f-4bd6-9a55-8f3b7f0a8f2e", business_name: "Fitness Hub" },
+  provider: MERCHANT,
   category: CATEGORY,
   enquiry_instructions: "Tell us your headcount.",
   shown_to_employees: false,
@@ -156,9 +171,9 @@ const enquiry: Schemas["BusinessEnquiry"] = {
     version_number: 1,
     title: card.title,
     headline: card.headline,
-    provider_organization: card.provider_organization,
+    provider: MERCHANT,
   },
-  organization: { id: BUYER, name: "Everest Bank Ltd." },
+  business: CLIENT,
   enquirer_id: USER,
   message: "120 memberships, please.",
   contact_name: "Sita Sharma",
@@ -181,14 +196,20 @@ function json(body: unknown, status = 200) {
   });
 }
 
-const page = (results: unknown[]) => ({ count: results.length, next: null, previous: null, results });
+const page = (results: unknown[]) => ({
+  count: results.length,
+  next: null,
+  previous: null,
+  results,
+});
 
 /** GETs answer with `record`; lists, categories and history with one-item pages. */
 function serve(record: unknown) {
   fetchMock.mockImplementation(async (request) => {
     const path = new URL(request.url).pathname;
     if (path.endsWith("/decisions") || path.endsWith("/versions")) return json(page([]));
-    if (path.includes("offer-categories")) return json([{ ...CATEGORY, description: "", sort_order: 0 }]);
+    if (path.includes("offer-categories"))
+      return json([{ ...CATEGORY, description: "", sort_order: 0 }]);
     if (request.method === "GET") return json(record);
     return json(record, path.endsWith("/enquire") ? 201 : 200);
   });
@@ -212,6 +233,22 @@ function actor(
         : [],
     client: null,
     clients: [],
+  };
+}
+
+/** A merchant's member in the Business portal, holding `permissions` in its organization. */
+function merchant(permissions: PermissionCode[]): CurrentActor {
+  setActiveOrganizationId(SELLER);
+  return actor(permissions, SELLER, { employer: false, partner: true });
+}
+
+/** A client group's member in the Client portal, holding the client twins of `permissions`. */
+function clientMember(permissions: (keyof typeof CLIENT_BUSINESS_CODES)[]): CurrentActor {
+  setActiveClientId(BUYER);
+  return {
+    ...actor([], null),
+    client: { id: BUYER, permissions: new Set(permissions.map((p) => CLIENT_BUSINESS_CODES[p])) },
+    clients: [{ clientId: BUYER, name: CLIENT.name }],
   };
 }
 
@@ -241,6 +278,7 @@ const wrote = () => fetchMock.mock.calls.some(([r]) => r.method !== "GET");
 beforeEach(() => vi.stubGlobal("fetch", fetchMock));
 afterEach(() => {
   setActiveOrganizationId(null);
+  setActiveClientId(null);
   fetchMock.mockReset();
   vi.unstubAllGlobals();
 });
@@ -257,8 +295,7 @@ describe("business offer schema", () => {
     promoCode: "not checked while off",
   };
   const paths = (values: BusinessOfferValues) =>
-    businessOfferSchema.safeParse(values).error?.issues.map((issue) => issue.path.join(".")) ??
-    [];
+    businessOfferSchema.safeParse(values).error?.issues.map((issue) => issue.path.join(".")) ?? [];
 
   it("is open-ended and ignores employee terms while the switch is off", () => {
     expect(paths(valid)).toEqual([]);
@@ -280,12 +317,14 @@ describe("business offer schema", () => {
     });
   });
 
-  it("needs organizations for a selected audience and sends only then", () => {
-    const selected = { ...valid, audienceType: "selected_organizations" as const };
+  it("needs businesses for a selected audience and sends only then", () => {
+    const selected = { ...valid, audienceType: "selected_businesses" as const };
     expect(paths(selected)).toEqual(["audienceOrganizations"]);
     const chosen = { ...selected, audienceOrganizations: [{ id: BUYER, name: "Everest" }] };
-    expect(businessOfferBody(chosen).audience_organization_ids).toEqual([BUYER]);
-    expect(businessOfferBody({ ...chosen, audienceType: "all_businesses" }).audience_organization_ids).toEqual([]);
+    expect(businessOfferBody(chosen).audience_business_ids).toEqual([BUYER]);
+    expect(
+      businessOfferBody({ ...chosen, audienceType: "all_businesses" }).audience_business_ids,
+    ).toEqual([]);
   });
 
   it("places nested employee term errors on their fields", () => {
@@ -305,15 +344,12 @@ describe("business offer schema", () => {
 describe("Business portal offer", () => {
   it("reads through /business with the organization and submits at the loaded version", async () => {
     serve(offer("draft"));
-    setActiveOrganizationId(SELLER);
     const user = userEvent.setup();
     renderAs(
-      actor(
-        [BusinessOfferPermission.OFFER_VIEW, BusinessOfferPermission.OFFER_SUBMIT],
-        SELLER,
-        { employer: false, partner: true },
-      ),
-      <OwnBusinessOffer offerId={OFFER_ID} />,
+      merchant([BusinessOfferPermission.OFFER_VIEW, BusinessOfferPermission.OFFER_SUBMIT]),
+      <BusinessPage portal="merchant">
+        <OwnBusinessOffer offerId={OFFER_ID} />
+      </BusinessPage>,
     );
     await user.click(await screen.findByRole("button", { name: "Submit for review" }));
     await user.click(screen.getByRole("button", { name: "Submit" }));
@@ -326,46 +362,14 @@ describe("Business portal offer", () => {
     expect(screen.getByText("Tell us your headcount.")).toBeVisible();
   });
 
-  it("keeps the employee switch off for an offer posted as an employer", async () => {
-    serve(offer("draft", { asPartner: false }));
-    setActiveOrganizationId(SELLER);
-    const user = userEvent.setup();
-    renderAs(
-      actor(
-        [BusinessOfferPermission.OFFER_VIEW, BusinessOfferPermission.OFFER_UPDATE],
-        SELLER,
-        { employer: true, partner: false },
-      ),
-      <OwnBusinessOffer offerId={OFFER_ID} />,
-    );
-    await user.click(await screen.findByRole("button", { name: "Edit" }));
-    const toggle = await screen.findByRole("switch", { name: "Show to employees" });
-    expect(toggle).toBeDisabled();
-    expect(screen.getByText(/Only an offer posted as a verified partner/)).toBeVisible();
-    await user.click(screen.getByRole("button", { name: "Save draft" }));
-
-    await waitFor(() => expect(wrote()).toBe(true));
-    const body = await posted().json();
-    expect(body).toMatchObject({
-      intent: "save",
-      expected_version: 3,
-      show_to_employees: false,
-      employee_terms: null,
-      valid_until: null,
-    });
-  });
-
-  it("sends employee terms when a partner offer is shown to employees", async () => {
+  it("sends employee terms when a merchant offer is shown to employees", async () => {
     serve(offer("draft", { showToEmployees: true }));
-    setActiveOrganizationId(SELLER);
     const user = userEvent.setup();
     renderAs(
-      actor(
-        [BusinessOfferPermission.OFFER_VIEW, BusinessOfferPermission.OFFER_UPDATE],
-        SELLER,
-        { employer: false, partner: true },
-      ),
-      <OwnBusinessOffer offerId={OFFER_ID} />,
+      merchant([BusinessOfferPermission.OFFER_VIEW, BusinessOfferPermission.OFFER_UPDATE]),
+      <BusinessPage portal="merchant">
+        <OwnBusinessOffer offerId={OFFER_ID} />
+      </BusinessPage>,
     );
     await user.click(await screen.findByRole("button", { name: "Edit" }));
     expect(await screen.findByRole("switch", { name: "Show to employees" })).toBeChecked();
@@ -382,20 +386,63 @@ describe("Business portal offer", () => {
   });
 });
 
-describe("Business catalogue", () => {
-  it("enquires about the version it showed", async () => {
-    serve(card);
-    setActiveOrganizationId(BUYER);
+describe("Client portal offer", () => {
+  it("edits through /client/business with the client, never shown to employees", async () => {
+    serve(offer("draft", { asMerchant: false }));
     const user = userEvent.setup();
     renderAs(
-      actor(
-        [BusinessOfferPermission.CATALOGUE_VIEW, BusinessOfferPermission.SENT_ENQUIRY_CREATE],
-        BUYER,
-        { employer: true, partner: false },
-      ),
-      <BusinessCatalogueOffer offerId={OFFER_ID} />,
+      clientMember([BusinessOfferPermission.OFFER_VIEW, BusinessOfferPermission.OFFER_UPDATE]),
+      <BusinessPage portal="client">
+        <OwnBusinessOffer offerId={OFFER_ID} />
+      </BusinessPage>,
     );
-    await user.click(await screen.findByRole("button", { name: "Enquire" }));
+    await user.click(await screen.findByRole("button", { name: "Edit" }));
+    expect(await screen.findByRole("switch", { name: "Show to employees" })).toBeDisabled();
+    expect(screen.getByText(/A client group's offer is enquiry-only/)).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Save draft" }));
+
+    await waitFor(() => expect(wrote()).toBe(true));
+    const request = posted();
+    expect(new URL(request.url).pathname).toBe(`/api/v1/client/business/own-offers/${OFFER_ID}`);
+    expect(request.headers.get("X-Client-ID")).toBe(BUYER);
+    expect(request.headers.get("X-Organization-ID")).toBeNull();
+    expect(await request.json()).toMatchObject({
+      intent: "save",
+      expected_version: 3,
+      show_to_employees: false,
+      employee_terms: null,
+    });
+  });
+
+  it("hides actions the client's role lacks", async () => {
+    serve(offer("draft", { asMerchant: false }));
+    renderAs(
+      clientMember([BusinessOfferPermission.OFFER_VIEW]),
+      <BusinessPage portal="client">
+        <OwnBusinessOffer offerId={OFFER_ID} />
+      </BusinessPage>,
+    );
+    expect(await screen.findByText("Tell us your headcount.")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Submit for review" })).not.toBeInTheDocument();
+  });
+});
+
+describe("Business catalogue", () => {
+  it("lets a client group enquire about the version it showed", async () => {
+    serve(card);
+    const user = userEvent.setup();
+    renderAs(
+      clientMember([
+        BusinessOfferPermission.CATALOGUE_VIEW,
+        BusinessOfferPermission.SENT_ENQUIRY_CREATE,
+      ]),
+      <BusinessPage portal="client">
+        <BusinessCatalogueOffer offerId={OFFER_ID} />
+      </BusinessPage>,
+    );
+    expect(await screen.findByText("Fitness Hub (Merchant)")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Enquire" }));
     await user.type(screen.getByLabelText("Message"), "120 memberships, please.");
     await user.type(screen.getByLabelText("Contact name"), "Sita Sharma");
     await user.type(screen.getByLabelText("Contact email"), "hr@everestbank.example");
@@ -403,8 +450,10 @@ describe("Business catalogue", () => {
 
     await waitFor(() => expect(wrote()).toBe(true));
     const request = posted();
-    expect(new URL(request.url).pathname).toBe(`/api/v1/business/offers/${OFFER_ID}/enquire`);
-    expect(request.headers.get("X-Organization-ID")).toBe(BUYER);
+    expect(new URL(request.url).pathname).toBe(
+      `/api/v1/client/business/offers/${OFFER_ID}/enquire`,
+    );
+    expect(request.headers.get("X-Client-ID")).toBe(BUYER);
     expect(await request.json()).toEqual({
       message: "120 memberships, please.",
       contact_name: "Sita Sharma",
@@ -414,24 +463,21 @@ describe("Business catalogue", () => {
     });
   });
 
-  it("links to the open enquiry instead of offering another", async () => {
+  it("links to the open enquiry in the portal instead of offering another", async () => {
     serve({ ...card, my_open_enquiry_id: ENQUIRY_ID });
-    setActiveOrganizationId(BUYER);
     renderAs(
-      actor(
-        [
-          BusinessOfferPermission.CATALOGUE_VIEW,
-          BusinessOfferPermission.SENT_ENQUIRY_CREATE,
-          BusinessOfferPermission.SENT_ENQUIRY_VIEW,
-        ],
-        BUYER,
-        { employer: true, partner: false },
-      ),
-      <BusinessCatalogueOffer offerId={OFFER_ID} />,
+      clientMember([
+        BusinessOfferPermission.CATALOGUE_VIEW,
+        BusinessOfferPermission.SENT_ENQUIRY_CREATE,
+        BusinessOfferPermission.SENT_ENQUIRY_VIEW,
+      ]),
+      <BusinessPage portal="client">
+        <BusinessCatalogueOffer offerId={OFFER_ID} />
+      </BusinessPage>,
     );
     expect(await screen.findByRole("link", { name: "View your open enquiry" })).toHaveAttribute(
       "href",
-      `/business/enquiries/${ENQUIRY_ID}`,
+      `/client/business/enquiries/${ENQUIRY_ID}`,
     );
     expect(screen.queryByRole("button", { name: "Enquire" })).not.toBeInTheDocument();
   });
@@ -440,32 +486,29 @@ describe("Business catalogue", () => {
 describe("Leads", () => {
   it("closes an open lead with a note for the enquirer, only with the manage code", async () => {
     serve(enquiry);
-    setActiveOrganizationId(SELLER);
     const user = userEvent.setup();
     const { unmount } = renderAs(
-      actor([BusinessOfferPermission.RECEIVED_ENQUIRY_VIEW], SELLER, {
-        employer: false,
-        partner: true,
-      }),
-      <Lead enquiryId={ENQUIRY_ID} />,
+      merchant([BusinessOfferPermission.RECEIVED_ENQUIRY_VIEW]),
+      <BusinessPage portal="merchant">
+        <Lead enquiryId={ENQUIRY_ID} />
+      </BusinessPage>,
     );
     expect(await screen.findByText("hr@everestbank.example")).toBeVisible();
+    expect(screen.getByText("Everest Group (Client group)")).toBeVisible();
     expect(screen.queryByRole("button", { name: "Close enquiry" })).not.toBeInTheDocument();
     unmount();
 
     renderAs(
-      actor(
-        [
-          BusinessOfferPermission.RECEIVED_ENQUIRY_VIEW,
-          BusinessOfferPermission.RECEIVED_ENQUIRY_MANAGE,
-        ],
-        SELLER,
-        { employer: false, partner: true },
-      ),
-      <Lead enquiryId={ENQUIRY_ID} />,
+      merchant([
+        BusinessOfferPermission.RECEIVED_ENQUIRY_VIEW,
+        BusinessOfferPermission.RECEIVED_ENQUIRY_MANAGE,
+      ]),
+      <BusinessPage portal="merchant">
+        <Lead enquiryId={ENQUIRY_ID} />
+      </BusinessPage>,
     );
     await user.click(await screen.findByRole("button", { name: "Close enquiry" }));
-    await user.type(screen.getByLabelText(/Note to Everest Bank/), "Quote sent.");
+    await user.type(screen.getByLabelText(/Note to Everest Group/), "Quote sent.");
     await user.click(screen.getAllByRole("button", { name: "Close enquiry" }).at(-1)!);
 
     await waitFor(() => expect(wrote()).toBe(true));
@@ -491,9 +534,7 @@ describe("<AdminBusinessOffer>", () => {
 
     await waitFor(() => expect(wrote()).toBe(true));
     const request = posted();
-    expect(new URL(request.url).pathname).toBe(
-      `/api/v1/admin/business-offers/${OFFER_ID}/approve`,
-    );
+    expect(new URL(request.url).pathname).toBe(`/api/v1/admin/business-offers/${OFFER_ID}/approve`);
     expect(request.headers.get("X-Organization-ID")).toBeNull();
     expect(await request.json()).toEqual({
       reason: "",

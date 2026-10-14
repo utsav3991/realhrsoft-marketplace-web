@@ -42,6 +42,7 @@ import {
   ClientAdministrationPermission,
   ClientAnalyticsPermission,
   ClientBenefitPermission,
+  ClientBusinessPermission,
   EmployerAnalyticsPermission,
   EmployerBenefitPermission,
   EmploymentAdminPermission,
@@ -64,13 +65,7 @@ import {
   type PermissionCode,
 } from "@/shared/authorization";
 
-export type PortalId =
-  | "marketplace"
-  | "partner"
-  | "employer"
-  | "business"
-  | "client"
-  | "admin";
+export type PortalId = "marketplace" | "partner" | "employer" | "business" | "client" | "admin";
 
 export interface NavItem {
   href: string;
@@ -110,10 +105,6 @@ export interface Portal {
 
 const hasCapacity = (actor: CurrentActor, capacity: Capacity) =>
   actor.memberships.some((membership) => membership[capacity]);
-
-/** Businesses post and browse business (B2B) offers: a partner or an employer organization. */
-const isBusiness = (actor: CurrentActor) =>
-  actor.memberships.some((membership) => membership.partner || membership.employer);
 
 /** Every portal, in landing-preference order: specialised workspaces before the marketplace. */
 export const PORTALS: readonly Portal[] = [
@@ -449,10 +440,11 @@ export const PORTALS: readonly Portal[] = [
     label: "Business Portal",
     icon: BriefcaseBusiness,
     basePath: "/business",
-    // Business (B2B) offers between organizations. The API accepts only a verified partner or
-    // an employer; a pending partner registration opens the portal and the API explains.
-    canAccess: isBusiness,
-    capacity: "business",
+    // Business (B2B) offers for a merchant acting through its home organization. Client groups
+    // use the same screens in the Client portal (/client/business). The API accepts only a
+    // verified merchant; a pending registration opens the portal and the API explains.
+    canAccess: (actor) => hasCapacity(actor, "partner"),
+    capacity: "partner",
     navigation: [
       {
         items: [{ href: "/business", label: "Overview", icon: LayoutDashboard }],
@@ -519,6 +511,51 @@ export const PORTALS: readonly Portal[] = [
         ],
       },
       {
+        label: "Business",
+        items: [
+          {
+            href: "/client/business",
+            label: "Overview",
+            icon: BriefcaseBusiness,
+            anyOf: [
+              ClientBusinessPermission.OFFER_VIEW,
+              ClientBusinessPermission.CATALOGUE_VIEW,
+              ClientBusinessPermission.SENT_ENQUIRY_VIEW,
+              ClientBusinessPermission.RECEIVED_ENQUIRY_VIEW,
+            ],
+            inClient: true,
+          },
+          {
+            href: "/client/business/offers",
+            label: "Business offers",
+            icon: Tag,
+            anyOf: [ClientBusinessPermission.OFFER_VIEW],
+            inClient: true,
+          },
+          {
+            href: "/client/business/leads",
+            label: "Leads",
+            icon: Inbox,
+            anyOf: [ClientBusinessPermission.RECEIVED_ENQUIRY_VIEW],
+            inClient: true,
+          },
+          {
+            href: "/client/business/catalogue",
+            label: "Browse offers",
+            icon: Store,
+            anyOf: [ClientBusinessPermission.CATALOGUE_VIEW],
+            inClient: true,
+          },
+          {
+            href: "/client/business/enquiries",
+            label: "Sent enquiries",
+            icon: Send,
+            anyOf: [ClientBusinessPermission.SENT_ENQUIRY_VIEW],
+            inClient: true,
+          },
+        ],
+      },
+      {
         label: "Insights",
         items: [
           {
@@ -533,6 +570,13 @@ export const PORTALS: readonly Portal[] = [
       {
         label: "Administration",
         items: [
+          {
+            href: "/client/companies",
+            label: "Companies",
+            icon: Building2,
+            anyOf: [ClientAdministrationPermission.COMPANY_USER_MANAGE],
+            inClient: true,
+          },
           {
             href: "/client/members",
             label: "Members and roles",

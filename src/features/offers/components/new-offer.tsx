@@ -70,15 +70,13 @@ export function NewOffer() {
           <CardHeader>
             <CardTitle>Which partner is this offer for?</CardTitle>
             <CardDescription>
-              Offers can be posted only for verified partners. Content you publish is recorded
-              as approved by you.
+              Offers can be posted only for verified partners. Content you publish is recorded as
+              approved by you.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <PartnerPicker
-              onChoose={({ id }) =>
-                router.replace(`${pathname}?partner=${encodeURIComponent(id)}`)
-              }
+              onChoose={({ id }) => router.replace(`${pathname}?partner=${encodeURIComponent(id)}`)}
             />
           </CardContent>
         </Card>

@@ -26,14 +26,13 @@ import {
   SelectValue,
 } from "@/design-system/primitives/select";
 import { Skeleton } from "@/design-system/primitives/skeleton";
+import { BUSINESS_KIND_LABEL } from "@/features/offers/schemas/offer";
 import { ApiError, isUuid } from "@/shared/api";
-import { useSelectedOrganizationId } from "@/shared/auth";
 import {
   BusinessOfferPermission,
   OfferAdminPermission,
-  OrganizationAdminPermission,
+  PartnerAdminPermission,
   useCan,
-  useCanInOrganization,
 } from "@/shared/authorization";
 import { Detail, DetailList } from "@/shared/components/details";
 import { QueryDataTable, type ResultsQuery } from "@/shared/components/query-data-table";
@@ -58,6 +57,7 @@ import {
   type EnquiryFilters,
   type EnquiryStatus,
 } from "../api/queries";
+import { useBusinessCan, useBusinessPortal, useOptionalBusinessPortal } from "./business-portal";
 import { CloseEnquiryDialog } from "./enquiry-dialogs";
 
 const ALL = "all";
@@ -66,14 +66,20 @@ const STATUSES: readonly { value: EnquiryStatus; label: string }[] = [
   { value: "closed", label: "Closed" },
 ];
 
-/** Who reads the enquiry: the organization that sent it, the provider, or Aayulogic. */
+/** Who reads the enquiry: the business that sent it, the provider, or Aayulogic. */
 type Reader = "sent" | "received" | "admin";
 
-const DETAIL_PATH: Record<Reader, string> = {
-  sent: "/business/enquiries",
-  received: "/business/leads",
-  admin: "/admin/business-enquiries",
-};
+/** Where a reader's enquiries live: the acting business's portal, or administration. */
+function useReaderPath(reader: Reader): string {
+  const base = useOptionalBusinessPortal()?.base ?? "/business";
+  if (reader === "admin") return "/admin/business-enquiries";
+  return reader === "sent" ? `${base}/enquiries` : `${base}/leads`;
+}
+
+/** "Acme Group (Client group)": a business with its kind. */
+function businessLabel(business: { name: string; kind: keyof typeof BUSINESS_KIND_LABEL }) {
+  return `${business.name} (${BUSINESS_KIND_LABEL[business.kind]})`;
+}
 
 /** Filters every enquiry list shares; they live in the URL. */
 type EnquirySort = DataTableSort<(typeof ENQUIRY_SORTS)[number]>;
@@ -107,7 +113,8 @@ function EnquiryTable({
   paging: PageState;
 }) {
   const { set } = useUrlParams();
-  const href = (enquiry: Enquiry) => `${DETAIL_PATH[reader]}/${enquiry.id}`;
+  const path = useReaderPath(reader);
+  const href = (enquiry: Enquiry) => `${path}/${enquiry.id}`;
   const columns: DataTableColumns<Enquiry> = [
     reader === "sent"
       ? {
@@ -119,22 +126,23 @@ function EnquiryTable({
                 {enquiry.offer.title}
               </Link>
               <p className="text-muted-foreground text-xs">
-                {enquiry.offer.provider_organization.name}
+                {businessLabel(enquiry.offer.provider)}
               </p>
             </>
           ),
         }
       : {
-          id: "organization",
-          header: "Organization",
+          id: "business",
+          header: "Business",
           cell: (enquiry) => (
             <>
               <Link href={href(enquiry)} className="font-medium hover:underline">
-                {enquiry.organization.name}
+                {enquiry.business.name}
               </Link>
               <p className="text-muted-foreground text-xs">
+                {BUSINESS_KIND_LABEL[enquiry.business.kind]} ·{" "}
                 {reader === "admin"
-                  ? `${enquiry.offer.title} · ${enquiry.offer.provider_organization.name}`
+                  ? `${enquiry.offer.title} · ${businessLabel(enquiry.offer.provider)}`
                   : enquiry.offer.title}
               </p>
             </>
@@ -178,8 +186,8 @@ function EnquiryTable({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         <SearchField
-          placeholder="Search offer, organization or contact"
-          aria-label="Search enquiries by offer title, organization or contact name"
+          placeholder="Search offer, business or contact"
+          aria-label="Search enquiries by offer title, business or contact name"
           className="max-w-sm"
         />
         <Select
@@ -229,7 +237,7 @@ function EnquiryTable({
                 : reader === "sent"
                   ? "Enquiries you send about other businesses' offers appear here."
                   : reader === "received"
-                    ? "When another organization enquires about one of your business offers, it appears here."
+                    ? "When another business enquires about one of your business offers, it appears here."
                     : undefined
             }
           />
@@ -239,32 +247,34 @@ function EnquiryTable({
   );
 }
 
-/** The selected organization's enquiries about other businesses' offers. */
+/** The acting business's enquiries about other businesses' offers. */
 export function SentEnquiries() {
-  const organizationId = useSelectedOrganizationId();
+  const { owner } = useBusinessPortal();
   const { filters, sort } = useEnquiryFilters();
   const paging = usePageParam();
-  const query = useSentEnquiries(organizationId, filters, paging);
+  const query = useSentEnquiries(owner, filters, paging);
   return <EnquiryTable reader="sent" query={query} filters={filters} sort={sort} paging={paging} />;
 }
 
-/** Enquiries about the selected organization's business offers: its leads. */
+/** Enquiries about the acting business's offers: its leads. */
 export function Leads() {
-  const organizationId = useSelectedOrganizationId();
+  const { owner } = useBusinessPortal();
   const { filters, sort } = useEnquiryFilters();
   const paging = usePageParam();
-  const query = useReceivedEnquiries(organizationId, filters, paging);
+  const query = useReceivedEnquiries(owner, filters, paging);
   return (
     <EnquiryTable reader="received" query={query} filters={filters} sort={sort} paging={paging} />
   );
 }
 
-/** Every organization's enquiries, for Aayulogic oversight. */
+/** Every business's enquiries, for Aayulogic oversight. */
 export function AdminEnquiries() {
   const { filters, sort } = useEnquiryFilters();
   const paging = usePageParam();
   const query = useAdminEnquiries(filters, paging);
-  return <EnquiryTable reader="admin" query={query} filters={filters} sort={sort} paging={paging} />;
+  return (
+    <EnquiryTable reader="admin" query={query} filters={filters} sort={sort} paging={paging} />
+  );
 }
 
 // --- One enquiry -----------------------------------------------------------------------
@@ -276,9 +286,10 @@ const BACK: Record<Reader, string> = {
 };
 
 function BackTo({ reader }: { reader: Reader }) {
+  const path = useReaderPath(reader);
   return (
     <Button asChild variant="ghost" size="sm" className="-ml-3">
-      <Link href={DETAIL_PATH[reader]}>
+      <Link href={path}>
         <ArrowLeft aria-hidden />
         {BACK[reader]}
       </Link>
@@ -338,8 +349,8 @@ function EnquiryCard({ enquiry, offerLink }: { enquiry: Enquiry; offerLink: Reac
       <CardContent>
         <DetailList>
           <Detail label="Offer">{offerLink}</Detail>
-          <Detail label="Provider">{enquiry.offer.provider_organization.name}</Detail>
-          <Detail label="From">{enquiry.organization.name}</Detail>
+          <Detail label="Provider">{businessLabel(enquiry.offer.provider)}</Detail>
+          <Detail label="From">{businessLabel(enquiry.business)}</Detail>
           <Detail label="Message" className="sm:col-span-2 lg:col-span-3">
             <span className="whitespace-pre-line">{enquiry.message}</span>
           </Detail>
@@ -377,7 +388,7 @@ function ClosedCallout({ enquiry, reader }: { enquiry: Enquiry; reader: Reader }
         <AlertTitle>Open</AlertTitle>
         <AlertDescription>
           {reader === "sent"
-            ? `${enquiry.offer.provider_organization.name} follows up with your contact and closes the enquiry when done.`
+            ? `${enquiry.offer.provider.name} follows up with your contact and closes the enquiry when done.`
             : reader === "received"
               ? "Follow up with the contact, then close the enquiry with a note on the outcome."
               : "The provider follows up and closes it."}
@@ -391,16 +402,16 @@ function ClosedCallout({ enquiry, reader }: { enquiry: Enquiry; reader: Reader }
       <AlertTitle>Closed {enquiry.closed_at ? formatDateTime(enquiry.closed_at) : ""}</AlertTitle>
       <AlertDescription className="space-y-2">
         <p className="whitespace-pre-line">{enquiry.closing_note || "No note was left."}</p>
-        {reader === "sent" ? <p>Your organization may enquire about the offer again.</p> : null}
+        {reader === "sent" ? <p>You may enquire about the offer again.</p> : null}
       </AlertDescription>
     </Alert>
   );
 }
 
 export function SentEnquiry({ enquiryId }: { enquiryId: string }) {
-  const organizationId = useSelectedOrganizationId();
-  const query = useSentEnquiry(organizationId, enquiryId);
-  const canBrowse = useCanInOrganization(BusinessOfferPermission.CATALOGUE_VIEW);
+  const { owner, base } = useBusinessPortal();
+  const query = useSentEnquiry(owner, enquiryId);
+  const canBrowse = useBusinessCan(BusinessOfferPermission.CATALOGUE_VIEW);
   return (
     <EnquiryLoader reader="sent" query={query}>
       {(enquiry) => (
@@ -408,16 +419,16 @@ export function SentEnquiry({ enquiryId }: { enquiryId: string }) {
           <BackTo reader="sent" />
           <PageHeader
             title={enquiry.offer.title}
-            description={`Enquiry to ${enquiry.offer.provider_organization.name}`}
+            description={`Enquiry to ${enquiry.offer.provider.name}`}
             actions={<StatusBadge domain="enquiry" status={enquiry.status} />}
           />
           <ClosedCallout enquiry={enquiry} reader="sent" />
           <EnquiryCard
             enquiry={enquiry}
             offerLink={
-              // The offer opens only while it is still live and available to the organization.
+              // The offer opens only while it is still live and available to the business.
               canBrowse ? (
-                <Link href={`/business/catalogue/${enquiry.offer.id}`} className="hover:underline">
+                <Link href={`${base}/catalogue/${enquiry.offer.id}`} className="hover:underline">
                   {enquiry.offer.title}
                 </Link>
               ) : (
@@ -432,11 +443,11 @@ export function SentEnquiry({ enquiryId }: { enquiryId: string }) {
 }
 
 export function Lead({ enquiryId }: { enquiryId: string }) {
-  const organizationId = useSelectedOrganizationId();
-  const query = useReceivedEnquiry(organizationId, enquiryId);
-  const canClose = useCanInOrganization(BusinessOfferPermission.RECEIVED_ENQUIRY_MANAGE);
-  const canViewOffers = useCanInOrganization(BusinessOfferPermission.OFFER_VIEW);
-  const close = useCloseEnquiry(organizationId, enquiryId);
+  const { owner, base } = useBusinessPortal();
+  const query = useReceivedEnquiry(owner, enquiryId);
+  const canClose = useBusinessCan(BusinessOfferPermission.RECEIVED_ENQUIRY_MANAGE);
+  const canViewOffers = useBusinessCan(BusinessOfferPermission.OFFER_VIEW);
+  const close = useCloseEnquiry(owner, enquiryId);
   const [closing, setClosing] = useState(false);
   return (
     <EnquiryLoader reader="received" query={query}>
@@ -444,7 +455,7 @@ export function Lead({ enquiryId }: { enquiryId: string }) {
         <div className="space-y-6">
           <BackTo reader="received" />
           <PageHeader
-            title={enquiry.organization.name}
+            title={enquiry.business.name}
             description={`Enquiry about ${enquiry.offer.title}`}
             actions={
               <div className="flex flex-wrap items-center gap-2">
@@ -463,7 +474,7 @@ export function Lead({ enquiryId }: { enquiryId: string }) {
             enquiry={enquiry}
             offerLink={
               canViewOffers ? (
-                <Link href={`/business/offers/${enquiry.offer.id}`} className="hover:underline">
+                <Link href={`${base}/offers/${enquiry.offer.id}`} className="hover:underline">
                   {enquiry.offer.title}
                 </Link>
               ) : (
@@ -474,7 +485,7 @@ export function Lead({ enquiryId }: { enquiryId: string }) {
           <CloseEnquiryDialog
             open={closing}
             onOpenChange={setClosing}
-            organizationName={enquiry.organization.name}
+            businessName={enquiry.business.name}
             onSubmit={async ({ closingNote }) => {
               await close.mutateAsync({ closing_note: closingNote });
               toast.success("Enquiry closed");
@@ -489,7 +500,7 @@ export function Lead({ enquiryId }: { enquiryId: string }) {
 export function AdminEnquiry({ enquiryId }: { enquiryId: string }) {
   const query = useAdminEnquiry(enquiryId);
   const canViewOffers = useCan(OfferAdminPermission.OFFER_VIEW);
-  const canViewOrganizations = useCan(OrganizationAdminPermission.ORGANIZATION_VIEW);
+  const canViewPartners = useCan(PartnerAdminPermission.PARTNER_VIEW);
   return (
     <EnquiryLoader reader="admin" query={query}>
       {(enquiry) => (
@@ -498,24 +509,21 @@ export function AdminEnquiry({ enquiryId }: { enquiryId: string }) {
           <PageHeader
             title={enquiry.offer.title}
             description={
-              canViewOrganizations ? (
+              canViewPartners ? (
                 <span className="flex flex-wrap items-center gap-x-2">
-                  <Link
-                    href={`/admin/organizations/${enquiry.organization.id}`}
-                    className="hover:underline"
-                  >
-                    {enquiry.organization.name}
+                  <Link href={`/admin/partners/${enquiry.business.id}`} className="hover:underline">
+                    {businessLabel(enquiry.business)}
                   </Link>
                   <span aria-hidden>→</span>
                   <Link
-                    href={`/admin/organizations/${enquiry.offer.provider_organization.id}`}
+                    href={`/admin/partners/${enquiry.offer.provider.id}`}
                     className="hover:underline"
                   >
-                    {enquiry.offer.provider_organization.name}
+                    {businessLabel(enquiry.offer.provider)}
                   </Link>
                 </span>
               ) : (
-                `${enquiry.organization.name} → ${enquiry.offer.provider_organization.name}`
+                `${businessLabel(enquiry.business)} → ${businessLabel(enquiry.offer.provider)}`
               )
             }
             actions={<StatusBadge domain="enquiry" status={enquiry.status} />}

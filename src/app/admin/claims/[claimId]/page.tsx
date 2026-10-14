@@ -8,11 +8,7 @@ import { RequirePermission } from "@/shared/navigation/portal-gate";
 
 export const metadata: Metadata = { title: "Claim" };
 
-export default async function AdminClaimPage({
-  params,
-}: {
-  params: Promise<{ claimId: string }>;
-}) {
+export default async function AdminClaimPage({ params }: { params: Promise<{ claimId: string }> }) {
   const { claimId } = await params;
   if (!isUuid(claimId)) notFound();
   return (

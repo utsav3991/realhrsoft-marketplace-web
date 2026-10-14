@@ -4,7 +4,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { makeQueryClient, type Schemas } from "@/shared/api";
 
-import { adBody, adSchema, EMPTY_AD, destinationView, type AdValues } from "../schemas/advertisement";
+import {
+  adBody,
+  adSchema,
+  EMPTY_AD,
+  destinationView,
+  type AdValues,
+} from "../schemas/advertisement";
 import { ServedAdPage } from "./ad-page";
 
 const AD_ID = "6a1c9d2e-4b7f-4e3a-8c5d-1f2e3a4b5c6d";
@@ -66,9 +72,7 @@ describe("advertisement page", () => {
   it("shows the served revision as a labelled, plain-text page", async () => {
     serve(() => json(page));
     renderPage();
-    expect(
-      await screen.findByRole("heading", { level: 1, name: page.title }),
-    ).toBeVisible();
+    expect(await screen.findByRole("heading", { level: 1, name: page.title })).toBeVisible();
     expect(screen.getByText("Sponsored")).toBeVisible();
     expect(screen.getByText("Himalayan Java")).toBeVisible();
     // Line breaks are kept; the body is text, never markup.
@@ -100,7 +104,11 @@ describe("advertisement page", () => {
     unmount();
 
     serve(() =>
-      json({ ...page, has_image: false, action: { label: "Go", target: "internal", url: "//evil.example" } }),
+      json({
+        ...page,
+        has_image: false,
+        action: { label: "Go", target: "internal", url: "//evil.example" },
+      }),
     );
     renderPage();
     await screen.findByRole("heading", { level: 1 });
@@ -140,11 +148,18 @@ describe("advertisement page form values", () => {
   });
 
   it("sends only the page's own fields and reads them back", () => {
-    expect(adBody({ ...values, url: "https://stale.example", actionLabel: "Stale" }).destination).toEqual({
+    expect(
+      adBody({ ...values, url: "https://stale.example", actionLabel: "Stale" }).destination,
+    ).toEqual({
       title: "Coffee week",
       body: "20% off.",
     });
-    const withOffer = adBody({ ...values, pageAction: "offer", offerId: OFFER_ID, actionLabel: "Get it" });
+    const withOffer = adBody({
+      ...values,
+      pageAction: "offer",
+      offerId: OFFER_ID,
+      actionLabel: "Get it",
+    });
     expect(withOffer.destination).toEqual({
       title: "Coffee week",
       body: "20% off.",

@@ -143,19 +143,16 @@ describe("sponsored placements", () => {
     expect(calls("/rendered")).toHaveLength(1);
   });
 
-  it.each(["pending", "fail"] as const)(
-    "does not count a %s image as rendered",
-    async (image) => {
-      serve({ image });
-      renderBanner();
-      await screen.findByText("Sponsored");
-      await waitFor(() => expect(calls("/image")).toHaveLength(1));
-      scrollTo(0.6);
-      await new Promise((resolve) => setTimeout(resolve, 20));
-      expect(screen.queryByAltText("Iced latte on a table")).toBeNull();
-      expect(calls("/rendered")).toHaveLength(0);
-    },
-  );
+  it.each(["pending", "fail"] as const)("does not count a %s image as rendered", async (image) => {
+    serve({ image });
+    renderBanner();
+    await screen.findByText("Sponsored");
+    await waitFor(() => expect(calls("/image")).toHaveLength(1));
+    scrollTo(0.6);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(screen.queryByAltText("Iced latte on a table")).toBeNull();
+    expect(calls("/rendered")).toHaveLength(0);
+  });
 
   it("follows only the link the API returns", async () => {
     serve();

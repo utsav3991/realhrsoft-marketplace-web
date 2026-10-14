@@ -39,7 +39,11 @@ export const benefitSchema = z
       ),
     // A company's benefit is always own_organization; a client's is every company of the
     // client (including later ones) or the selected companies.
-    audienceType: z.enum(["own_organization", "all_client_organizations", "selected_organizations"]),
+    audienceType: z.enum([
+      "own_organization",
+      "all_client_organizations",
+      "selected_organizations",
+    ]),
     audienceOrganizations: z
       .array(z.object({ id: z.string(), name: z.string() }))
       .max(200, "Choose at most 200 companies"),
@@ -49,7 +53,10 @@ export const benefitSchema = z
     if (values.validFrom && values.validUntil && values.validUntil <= values.validFrom) {
       ctx.addIssue({ code: "custom", path: ["validUntil"], message: "End after the start" });
     }
-    if (values.audienceType === "selected_organizations" && values.audienceOrganizations.length === 0) {
+    if (
+      values.audienceType === "selected_organizations" &&
+      values.audienceOrganizations.length === 0
+    ) {
       ctx.addIssue({
         code: "custom",
         path: ["audienceOrganizations"],

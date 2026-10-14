@@ -20,8 +20,8 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             Offers and benefits for every employee
           </h2>
           <p className="text-primary-foreground/80 text-lg leading-relaxed font-medium">
-            Partners publish offers, employers run company benefits, and employees claim them in
-            one place.
+            Partners publish offers, employers run company benefits, and employees claim them in one
+            place.
           </p>
           <div className="bg-primary-foreground h-1.5 w-16 rounded-full" aria-hidden />
         </div>

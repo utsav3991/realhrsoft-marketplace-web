@@ -35,6 +35,10 @@ export interface CurrentActor {
   /** The selected client and the client grants held there; kept apart like organizations. */
   client: { id: string; permissions: ReadonlySet<string> } | null;
   clients: readonly ClientAccess[];
+  /** An active superuser: may sign in as a partner user. Absent counts as false. */
+  superuser?: boolean;
+  /** Set while a superuser is signed in as this actor (an impersonation session). */
+  impersonator?: { id: string; email: string } | null;
 }
 
 export function toCurrentActor(response: Schemas["CurrentActor"]): CurrentActor {
@@ -64,6 +68,10 @@ export function toCurrentActor(response: Schemas["CurrentActor"]): CurrentActor 
       clientId: client.client_id,
       name: client.name,
     })),
+    superuser: response.superuser,
+    impersonator: response.impersonator
+      ? { id: response.impersonator.actor_id, email: response.impersonator.email }
+      : null,
   };
 }
 

@@ -44,7 +44,8 @@ export const benefitKeys = {
   own: (owner: BenefitOwner) => [...benefitKeys.all, "own", ownerKey(owner)] as const,
   ownList: (owner: BenefitOwner, filters: BenefitFilters, page: Page) =>
     [...benefitKeys.own(owner), "list", filters, page] as const,
-  ownDetail: (owner: BenefitOwner, id: string) => [...benefitKeys.own(owner), "detail", id] as const,
+  ownDetail: (owner: BenefitOwner, id: string) =>
+    [...benefitKeys.own(owner), "detail", id] as const,
   ownVersions: (owner: BenefitOwner, id: string, page: Page) =>
     [...benefitKeys.own(owner), "versions", id, page] as const,
   // Client benefits aimed at the selected company (Employer portal, read-only).
@@ -57,7 +58,8 @@ export const benefitKeys = {
   adminDetail: (id: string) => [...benefitKeys.admin(), "detail", id] as const,
   adminDecisions: (id: string, page: Page) =>
     [...benefitKeys.admin(), "decisions", id, page] as const,
-  adminVersions: (id: string, page: Page) => [...benefitKeys.admin(), "versions", id, page] as const,
+  adminVersions: (id: string, page: Page) =>
+    [...benefitKeys.admin(), "versions", id, page] as const,
   // The signed-in employee's employer's benefits and their own uses.
   mine: () => [...benefitKeys.all, "mine"] as const,
   mineList: () => [...benefitKeys.mine(), "list"] as const,

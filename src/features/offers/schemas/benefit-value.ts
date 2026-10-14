@@ -43,7 +43,11 @@ export const benefitValueSchema = z
         if (!values.description) issue("description", "Describe the benefit");
         break;
       case "percentage":
-        if (!DECIMAL.test(values.percent) || Number(values.percent) <= 0 || Number(values.percent) > 100)
+        if (
+          !DECIMAL.test(values.percent) ||
+          Number(values.percent) <= 0 ||
+          Number(values.percent) > 100
+        )
           issue("percent", "Use a number above 0 and at most 100, with up to 2 decimals");
         if (values.maxDiscountAmount) money("maxDiscountAmount", "Use a positive amount");
         break;

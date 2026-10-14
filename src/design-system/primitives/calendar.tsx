@@ -117,8 +117,8 @@ function CalendarDayButton({
       data-day={day.date.toLocaleDateString()}
       data-selected={modifiers.selected || undefined}
       className={cn(
-        "size-auto aspect-square w-full min-w-(--cell-size) font-normal",
-        "data-[selected]:bg-primary data-[selected]:text-primary-foreground data-[selected]:font-semibold hover:scale-100 active:scale-100",
+        "aspect-square size-auto w-full min-w-(--cell-size) font-normal",
+        "data-[selected]:bg-primary data-[selected]:text-primary-foreground hover:scale-100 active:scale-100 data-[selected]:font-semibold",
         "group-data-[focused=true]/day:ring-ring/50 group-data-[focused=true]/day:ring-[3px]",
         className,
       )}

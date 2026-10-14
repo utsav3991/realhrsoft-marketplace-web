@@ -105,12 +105,12 @@ describe("apiFetch", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("never refresh-and-retries the session endpoints themselves", async () => {
+  it.each(["/auth/refresh", "/auth/impersonation", "/auth/impersonation/end"])("never refresh-and-retries %s", async (path) => {
     const renew = vi.fn(async () => true);
     setAccessTokenRenewer(renew);
     fetchMock.mockResolvedValue(new Response(null, { status: 401 }));
 
-    await apiFetch(new Request("http://localhost:3000/api/v1/auth/refresh", { method: "POST" }));
+    await apiFetch(new Request(`http://localhost:3000/api/v1${path}`, { method: "POST" }));
 
     expect(renew).not.toHaveBeenCalled();
     expect(fetchMock).toHaveBeenCalledTimes(1);

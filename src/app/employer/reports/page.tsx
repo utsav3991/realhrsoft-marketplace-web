@@ -17,10 +17,7 @@ export default function EmployerReportsPage() {
         description="How often your employees use your company benefits, as counts without employee identity."
       />
       <RequireOrganization capacity="employer">
-        <RequirePermission
-          anyOf={[EmployerAnalyticsPermission.BENEFIT_REPORT_VIEW]}
-          inOrganization
-        >
+        <RequirePermission anyOf={[EmployerAnalyticsPermission.BENEFIT_REPORT_VIEW]} inOrganization>
           <Suspense>
             <BenefitUsage />
           </Suspense>

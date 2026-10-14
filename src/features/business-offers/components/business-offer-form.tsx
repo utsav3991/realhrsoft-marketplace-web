@@ -58,15 +58,15 @@ interface BusinessOfferFormProps {
   categories: readonly CategoryOption[];
   /** Submit buttons, one per intent the actor may use here. */
   intents: readonly IntentButton[];
-  /** Adds audience organizations: the business directory, or the admin organization search. */
+  /** Adds audience businesses (merchants and client groups) from the business directory. */
   organizationPicker: (props: {
     selected: readonly AudienceOrganization[];
     onAdd: (organization: AudienceOrganization) => void;
   }) => ReactNode;
   /**
-   * Why the employee switch cannot be turned on (the offer is posted as an employer, not a
-   * verified partner: vouchers are partner-bound), or null when it can. A switch already on
-   * can still be turned off.
+   * Why the employee switch cannot be turned on (a client group's offer is enquiry-only:
+   * vouchers are merchant-bound), or null when it can. A switch already on can still be
+   * turned off.
    */
   employeeSwitchBlocked: string | null;
   reasonHint: string;
@@ -120,7 +120,8 @@ export function BusinessOfferForm({
       try {
         await onSubmit(values, intent);
       } catch (error) {
-        if (!applyApiFieldErrors(error, form, BUSINESS_OFFER_FIELDS)) setFailure(errorMessage(error));
+        if (!applyApiFieldErrors(error, form, BUSINESS_OFFER_FIELDS))
+          setFailure(errorMessage(error));
       } finally {
         setPendingIntent(null);
       }
@@ -143,7 +144,7 @@ export function BusinessOfferForm({
 
         <FormSection
           title="Offer"
-          description="What other organizations see in their business catalogue."
+          description="What other businesses see in their business catalogue."
           disabled={isSubmitting}
         >
           <FormField
@@ -192,7 +193,7 @@ export function BusinessOfferForm({
                 <FormControl>
                   <Input placeholder="30% off annual memberships for your staff" {...field} />
                 </FormControl>
-                <FormDescription>The line organizations see first on the offer card.</FormDescription>
+                <FormDescription>The line businesses see first on the offer card.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -266,8 +267,8 @@ export function BusinessOfferForm({
         </FormSection>
 
         <FormSection
-          title="Organizations"
-          description="Which businesses (verified partners and employers) see it and may enquire. Your own organization never does."
+          title="Businesses"
+          description="Which businesses (verified merchants and client groups) see it and may enquire. You never see your own offer."
           columns={1}
           disabled={isSubmitting}
         >
@@ -284,7 +285,7 @@ export function BusinessOfferForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {(["all_businesses", "selected_organizations"] as const).map((value) => (
+                    {(["all_businesses", "selected_businesses"] as const).map((value) => (
                       <SelectItem key={value} value={value}>
                         {BUSINESS_AUDIENCE_LABEL[value]}
                       </SelectItem>
@@ -295,7 +296,7 @@ export function BusinessOfferForm({
               </FormItem>
             )}
           />
-          {audienceType === "selected_organizations" ? (
+          {audienceType === "selected_businesses" ? (
             <AudienceOrganizations
               picker={organizationPicker}
               fixedNote="Only businesses you choose see it."
@@ -315,7 +316,7 @@ export function BusinessOfferForm({
                   />
                 </FormControl>
                 <FormDescription>
-                  Shown next to the enquiry form: what an organization should include.
+                  Shown next to the enquiry form: what an enquiring business should include.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -325,7 +326,7 @@ export function BusinessOfferForm({
 
         <FormSection
           title="Employees"
-          description="Optionally list it in the employee marketplace too, for the audience's employees to claim a voucher."
+          description="Merchants only: optionally list it in the employee marketplace too, where employees claim a voucher you confirm."
           columns={1}
           disabled={isSubmitting}
         >
@@ -349,8 +350,8 @@ export function BusinessOfferForm({
                     <FormDescription>
                       {employeeSwitchBlocked ??
                         (audienceType === "all_businesses"
-                          ? "Every eligible employee sees it and can claim it; you confirm their vouchers."
-                          : "The selected organizations' employees see it and can claim it; you confirm their vouchers.")}
+                          ? "Every RealHRSoft employee sees it and can claim it; you confirm their vouchers."
+                          : "The employees of the selected client groups' companies see it and can claim it; selected merchants add no employees. You confirm their vouchers.")}
                     </FormDescription>
                   </div>
                 </div>

@@ -1,13 +1,15 @@
 import { z } from "zod";
 
 // Mirrors the backend LoginRequest bounds; the server re-validates regardless.
+const emailField = z
+  .string()
+  .trim()
+  .min(1, "Enter your email address")
+  .max(320)
+  .pipe(z.email("Enter a valid email address"));
+
 export const loginSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1, "Enter your email address")
-    .max(320)
-    .pipe(z.email("Enter a valid email address")),
+  email: emailField,
   password: z.string().min(1, "Enter your password").max(1024),
 });
 
@@ -25,3 +27,10 @@ export const setPasswordSchema = z
   });
 
 export type SetPasswordValues = z.infer<typeof setPasswordSchema>;
+
+// Mirrors PasswordSetupResendRequest (EmailField, max 254).
+export const requestSetupLinkSchema = z.object({
+  email: emailField.pipe(z.string().max(254, "Enter at most 254 characters")),
+});
+
+export type RequestSetupLinkValues = z.infer<typeof requestSetupLinkSchema>;

@@ -27,6 +27,8 @@ const user: Schemas["UserDetail"] = {
   contact: null,
   actor_type: "marketplace_staff",
   status: "active",
+  password_setup_pending: false,
+  impersonable: false,
   grants: [
     {
       assignment_id: "a1",

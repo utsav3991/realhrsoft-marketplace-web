@@ -83,7 +83,11 @@ function PageActionButton({ action }: { action: NonNullable<AdPage["action"]> })
       <ArrowUpRight aria-hidden />
     </>
   );
-  if (action.target === "internal" && action.url.startsWith("/marketplace/") && !action.url.startsWith("//")) {
+  if (
+    action.target === "internal" &&
+    action.url.startsWith("/marketplace/") &&
+    !action.url.startsWith("//")
+  ) {
     return (
       <Button asChild variant="ink" size="lg">
         <Link href={action.url}>{content(DEFAULT_ACTION_LABEL.offer)}</Link>

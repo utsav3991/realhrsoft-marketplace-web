@@ -158,9 +158,9 @@ export function AdminBenefits() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <SearchField 
-          placeholder="Search titles" 
-          aria-label="Search benefits by title" 
+        <SearchField
+          placeholder="Search titles"
+          aria-label="Search benefits by title"
           className="max-w-sm"
         />
         <Select

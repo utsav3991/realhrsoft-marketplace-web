@@ -18,7 +18,8 @@ export const buttonVariants = cva(
         /** Outlined, paired with a primary or on its own for secondary actions. */
         outline:
           "border-input bg-card text-foreground shadow-ring hover:bg-accent hover:text-accent-foreground border",
-        secondary: "bg-muted text-foreground shadow-ring hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-muted text-foreground shadow-ring hover:bg-accent hover:text-accent-foreground",
         ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/70",
         link: "text-primary-deep hover:scale-100 active:scale-100 underline-offset-4 hover:underline",
       },

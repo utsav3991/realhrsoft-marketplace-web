@@ -1,6 +1,14 @@
 "use client";
 
-import { ArrowRight, BriefcaseBusiness, Inbox, Send, ShieldAlert, Store, type LucideIcon } from "lucide-react";
+import {
+  ArrowRight,
+  BriefcaseBusiness,
+  Inbox,
+  Send,
+  ShieldAlert,
+  Store,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 
 import { Alert, AlertDescription, AlertTitle } from "@/design-system/primitives/alert";
@@ -14,8 +22,7 @@ import {
 } from "@/design-system/primitives/card";
 import { Skeleton } from "@/design-system/primitives/skeleton";
 import { ApiError, type Page } from "@/shared/api";
-import { useSelectedOrganizationId } from "@/shared/auth";
-import { BusinessOfferPermission, useCanInOrganization } from "@/shared/authorization";
+import { BusinessOfferPermission } from "@/shared/authorization";
 
 import {
   useOwnBusinessOffers,
@@ -24,6 +31,7 @@ import {
   type BusinessOfferFilters,
   type EnquiryFilters,
 } from "../api/queries";
+import { useBusinessCan, useBusinessPortal } from "./business-portal";
 
 // Counts only: one row is enough, the API returns the total.
 const COUNT: Page = { offset: 0, limit: 1 };
@@ -32,8 +40,8 @@ const ANY_OFFER: BusinessOfferFilters = {
   status: null,
   inReview: null,
   showToEmployees: null,
-  partnerId: null,
-  organizationId: null,
+  providerKind: null,
+  providerId: null,
   ordering: null,
 };
 const OPEN: EnquiryFilters = { search: "", status: "open", offerId: null, ordering: null };
@@ -47,53 +55,53 @@ interface Tile {
   count?: { value: number | undefined; label: string; error: unknown };
 }
 
-/** What the selected organization does here: sell to other businesses, and buy from them. */
+/** What the acting business does here: sell to other businesses, and buy from them. */
 export function BusinessOverview() {
-  const organizationId = useSelectedOrganizationId();
-  const canSell = useCanInOrganization(BusinessOfferPermission.OFFER_VIEW);
-  const canViewLeads = useCanInOrganization(BusinessOfferPermission.RECEIVED_ENQUIRY_VIEW);
-  const canBrowse = useCanInOrganization(BusinessOfferPermission.CATALOGUE_VIEW);
-  const canViewSent = useCanInOrganization(BusinessOfferPermission.SENT_ENQUIRY_VIEW);
+  const { owner, base, kind } = useBusinessPortal();
+  const canSell = useBusinessCan(BusinessOfferPermission.OFFER_VIEW);
+  const canViewLeads = useBusinessCan(BusinessOfferPermission.RECEIVED_ENQUIRY_VIEW);
+  const canBrowse = useBusinessCan(BusinessOfferPermission.CATALOGUE_VIEW);
+  const canViewSent = useBusinessCan(BusinessOfferPermission.SENT_ENQUIRY_VIEW);
   // Only tiles the member may open load their counts.
-  const offers = useOwnBusinessOffers(organizationId, ANY_OFFER, COUNT, { enabled: canSell });
-  const leads = useReceivedEnquiries(organizationId, OPEN, COUNT, { enabled: canViewLeads });
-  const sent = useSentEnquiries(organizationId, OPEN, COUNT, { enabled: canViewSent });
+  const offers = useOwnBusinessOffers(owner, ANY_OFFER, COUNT, { enabled: canSell });
+  const leads = useReceivedEnquiries(owner, OPEN, COUNT, { enabled: canViewLeads });
+  const sent = useSentEnquiries(owner, OPEN, COUNT, { enabled: canViewSent });
 
   const tiles: (Tile | false)[] = [
     canSell && {
       title: "Your business offers",
-      description: "Offer products or services to other organizations. Aayulogic reviews each one.",
-      href: "/business/offers",
+      description: "Offer products or services to other businesses. Aayulogic reviews each one.",
+      href: `${base}/offers`,
       action: "Manage offers",
       icon: BriefcaseBusiness,
       count: { value: offers.data?.count, label: "offers", error: offers.error },
     },
     canViewLeads && {
       title: "Leads",
-      description: "Organizations that enquired about your offers. Follow up, then close them.",
-      href: "/business/leads?status=open",
+      description: "Businesses that enquired about your offers. Follow up, then close them.",
+      href: `${base}/leads?status=open`,
       action: "Open leads",
       icon: Inbox,
       count: { value: leads.data?.count, label: "open", error: leads.error },
     },
     canBrowse && {
       title: "Browse offers",
-      description: "Offers other businesses make to your organization. Enquire to get a quote.",
-      href: "/business/catalogue",
+      description: "Offers other businesses make to you. Enquire to get a quote.",
+      href: `${base}/catalogue`,
       action: "Browse",
       icon: Store,
     },
     canViewSent && {
       title: "Sent enquiries",
-      description: "Your organization's enquiries and the providers' replies once closed.",
-      href: "/business/enquiries",
+      description: "Your enquiries and the providers' replies once closed.",
+      href: `${base}/enquiries`,
       action: "View enquiries",
       icon: Send,
       count: { value: sent.data?.count, label: "open", error: sent.error },
     },
   ];
   const visible = tiles.filter((tile): tile is Tile => Boolean(tile));
-  // The API refuses organizations that are not businesses yet (a pending partner registration).
+  // The API refuses a merchant that is not verified yet, and a deactivated client group.
   const refused = [offers.error, leads.error, sent.error].some(
     (error) => error instanceof ApiError && error.isForbidden,
   );
@@ -105,8 +113,9 @@ export function BusinessOverview() {
           <ShieldAlert aria-hidden />
           <AlertTitle>Not a business yet</AlertTitle>
           <AlertDescription>
-            Business offers are open to verified partners and to organizations whose Employer
-            capacity Aayulogic turned on. A pending partner registration must be verified first.
+            {kind === "merchant"
+              ? "Business offers are open to verified merchants. Your registration must be verified first."
+              : "Business offers are open to active client groups. Ask Aayulogic if your group was deactivated."}
           </AlertDescription>
         </Alert>
       ) : null}

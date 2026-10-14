@@ -30,7 +30,14 @@ function PartnerCombobox({ value, onChange }: PartnerFilterProps) {
   const [search, setSearch] = useState("");
   const debounced = useDebouncedValue(search);
   const partners = usePartners(
-    { search: debounced, status: null, intakePath: null, source: null, ordering: "business_name" },
+    {
+      search: debounced,
+      kind: null,
+      status: null,
+      intakePath: null,
+      source: null,
+      ordering: "business_name",
+    },
     FIRST_PAGE,
   );
   const selected = usePartner(value ?? "", { enabled: value !== null });
@@ -44,7 +51,7 @@ function PartnerCombobox({ value, onChange }: PartnerFilterProps) {
       options={(partners.data?.results ?? []).map((partner) => ({
         value: partner.id,
         label: partner.business_name,
-        description: `${partner.organization_name} · ${SOURCE_LABEL[partner.source]}`,
+        description: `${partner.organization_name ?? "Client group"} · ${SOURCE_LABEL[partner.source]}`,
       }))}
       onSearch={setSearch}
       onChange={onChange}

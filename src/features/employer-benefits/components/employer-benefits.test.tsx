@@ -126,7 +126,12 @@ function use(title = employeeBenefit.title): Schemas["OwnClaimListItem"] {
     requested_at: "2026-10-05T04:30:00Z",
     decision_deadline: null,
     accepted_at: "2026-10-05T04:30:00Z",
-    decision: { outcome: "accepted", source: "policy", reason: "", decided_at: "2026-10-05T04:30:00Z" },
+    decision: {
+      outcome: "accepted",
+      source: "policy",
+      reason: "",
+      decided_at: "2026-10-05T04:30:00Z",
+    },
     voucher: null,
     benefit_usage: { id: "u1", used_at: "2026-10-05T04:30:00Z", use_number: 1 },
   };

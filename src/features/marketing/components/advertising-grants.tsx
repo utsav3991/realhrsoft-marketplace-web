@@ -58,12 +58,7 @@ import { useUrlParams } from "@/shared/hooks/use-url-params";
 import { formatDateTime } from "@/shared/lib/format";
 
 import { useCreateGrant, useRevokeGrant } from "../api/mutations";
-import {
-  GRANT_SORTS,
-  useGrants,
-  useOwnGrants,
-  type AdvertisingGrant,
-} from "../api/queries";
+import { GRANT_SORTS, useGrants, useOwnGrants, type AdvertisingGrant } from "../api/queries";
 import {
   BASIS_LABEL,
   GRANT_BASES,
@@ -83,7 +78,11 @@ const ALL = "all";
  */
 export function AdvertisingEligibility({ organizationId }: { organizationId: string }) {
   const canView = useCanInOrganization(PartnerMarketingPermission.CAMPAIGN_VIEW);
-  const grants = useOwnGrants(organizationId, { offset: 0, limit: TABLE_PAGE_SIZE }, { enabled: canView });
+  const grants = useOwnGrants(
+    organizationId,
+    { offset: 0, limit: TABLE_PAGE_SIZE },
+    { enabled: canView },
+  );
   if (!canView || !grants.isSuccess) return null;
   const active = grants.data.results.find((grant) => grant.active);
   if (active) {
@@ -298,8 +297,8 @@ function GrantDialog({ onClose }: { onClose: () => void }) {
             <DialogHeader>
               <DialogTitle>Grant advertising</DialogTitle>
               <DialogDescription>
-                Lets the organization submit advertisements for review during the window. It
-                is recorded with you as the granting administrator.
+                Lets the organization submit advertisements for review during the window. It is
+                recorded with you as the granting administrator.
               </DialogDescription>
             </DialogHeader>
             {failure ? <FormAlert>{failure}</FormAlert> : null}

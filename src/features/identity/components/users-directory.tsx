@@ -75,10 +75,10 @@ export function UsersDirectory() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <SearchField 
+        <SearchField
           paramName="q"
-          placeholder="Search by email" 
-          aria-label="Search users by email" 
+          placeholder="Search by email"
+          aria-label="Search users by email"
           className="max-w-sm"
         />
         <div role="group" aria-label="Filter by status" className="flex gap-1">

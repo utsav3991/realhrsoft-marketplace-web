@@ -21,8 +21,9 @@ export const integrationKeys = {
 };
 
 /** Every known flag; a flag never switched reads as off. */
-export function useFeatureFlags() {
+export function useFeatureFlags({ enabled = true } = {}) {
   return useQuery({
+    enabled,
     queryKey: integrationKeys.flags,
     queryFn: ({ signal }) => unwrap(api.GET("/admin/feature-flags", { signal })),
   });

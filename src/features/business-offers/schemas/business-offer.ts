@@ -34,10 +34,11 @@ export const businessOfferSchema = z
     validFrom: z.string().min(1, "Choose when the offer starts"),
     /** Optional (open-ended) unless employees see it: their vouchers expire then. */
     validUntil: z.string(),
-    audienceType: z.enum(["all_businesses", "selected_organizations"]),
+    audienceType: z.enum(["all_businesses", "selected_businesses"]),
+    /** The selected businesses (merchants or client groups); the shared audience field. */
     audienceOrganizations: z
       .array(z.object({ id: z.string(), name: z.string() }))
-      .max(200, "Choose at most 200 organizations"),
+      .max(200, "Choose at most 200 businesses"),
     enquiryInstructions: optionalText(2000),
     /** The employee switch; the employee terms below apply only while it is on. */
     showToEmployees: z.boolean(),
@@ -49,10 +50,11 @@ export const businessOfferSchema = z
       ctx.addIssue({ code: "custom", path: [path], message });
     if (values.validFrom && values.validUntil && values.validUntil <= values.validFrom)
       issue("validUntil", "End after the start");
-    if (values.audienceType === "selected_organizations" && values.audienceOrganizations.length === 0)
-      issue("audienceOrganizations", "Choose at least one organization");
+    if (values.audienceType === "selected_businesses" && values.audienceOrganizations.length === 0)
+      issue("audienceOrganizations", "Choose at least one business");
     if (values.showToEmployees) {
-      if (!values.validUntil) issue("validUntil", "Choose an end date: employees' vouchers expire then");
+      if (!values.validUntil)
+        issue("validUntil", "Choose an end date: employees' vouchers expire then");
       checkEmployeeTerms(values, issue);
     }
   });
@@ -78,7 +80,10 @@ export const EMPTY_BUSINESS_OFFER: BusinessOfferValues = {
 /** The employee terms arrive nested under employee_terms in 422 errors. */
 const NESTED_EMPLOYEE_FIELDS = Object.fromEntries(
   Object.entries(EMPLOYEE_TERMS_FIELDS).map(([api, form]) => [`employee_terms.${api}`, form]),
-) as Record<`employee_terms.${keyof typeof EMPLOYEE_TERMS_FIELDS}`, keyof typeof EMPTY_EMPLOYEE_TERMS>;
+) as Record<
+  `employee_terms.${keyof typeof EMPLOYEE_TERMS_FIELDS}`,
+  keyof typeof EMPTY_EMPLOYEE_TERMS
+>;
 
 /** Request body field → form field, for placing 422 errors. */
 export const BUSINESS_OFFER_FIELDS = {
@@ -91,7 +96,7 @@ export const BUSINESS_OFFER_FIELDS = {
   valid_from: "validFrom",
   valid_until: "validUntil",
   audience_type: "audienceType",
-  audience_organization_ids: "audienceOrganizations",
+  audience_business_ids: "audienceOrganizations",
   enquiry_instructions: "enquiryInstructions",
   show_to_employees: "showToEmployees",
   ...NESTED_EMPLOYEE_FIELDS,
@@ -103,7 +108,7 @@ export type BusinessOfferContentBody = Omit<Schemas["BusinessOfferInput"], "inte
 
 /** PUT semantics: every field is sent; employee terms only while the switch is on. */
 export function businessOfferBody(values: BusinessOfferValues): BusinessOfferContentBody {
-  const selected = values.audienceType === "selected_organizations";
+  const selected = values.audienceType === "selected_businesses";
   return {
     category_id: values.categoryId,
     title: values.title,
@@ -114,7 +119,7 @@ export function businessOfferBody(values: BusinessOfferValues): BusinessOfferCon
     valid_from: fromDateTimeLocal(values.validFrom) ?? "",
     valid_until: fromDateTimeLocal(values.validUntil),
     audience_type: values.audienceType,
-    audience_organization_ids: selected ? values.audienceOrganizations.map((o) => o.id) : [],
+    audience_business_ids: selected ? values.audienceOrganizations.map((o) => o.id) : [],
     enquiry_instructions: values.enquiryInstructions,
     show_to_employees: values.showToEmployees,
     employee_terms: values.showToEmployees ? employeeTermsBody(values) : null,
@@ -138,7 +143,7 @@ export function businessOfferValues(offer: Offer): BusinessOfferValues {
     validFrom: toDateTimeLocal(version.valid_from),
     validUntil: toDateTimeLocal(version.valid_until),
     audienceType: business.audience_type,
-    audienceOrganizations: business.audience_organizations.map(({ id, name }) => ({ id, name })),
+    audienceOrganizations: business.audience_businesses.map(({ id, name }) => ({ id, name })),
     enquiryInstructions: business.enquiry_instructions,
     showToEmployees: business.show_to_employees,
     ...(employees ? employeeTermsValues(employees) : EMPTY_EMPLOYEE_TERMS),
@@ -149,7 +154,7 @@ export function businessOfferValues(offer: Offer): BusinessOfferValues {
 // --- Enquiries -------------------------------------------------------------------------
 
 export const enquirySchema = z.object({
-  message: requiredText(2000, "Tell the provider what your organization needs"),
+  message: requiredText(2000, "Tell the provider what your business needs"),
   contactName: requiredText(150, "Enter who they should contact"),
   contactEmail: z.string().trim().max(254).pipe(z.email("Enter a valid email")),
   contactPhone: optionalText(16).refine(

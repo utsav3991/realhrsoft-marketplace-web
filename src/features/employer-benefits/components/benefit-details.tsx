@@ -111,13 +111,7 @@ export function AvailabilityBadge({ benefit }: { benefit: Pick<Benefit, "visible
   );
 }
 
-export function BenefitContentCard({
-  benefit,
-  action,
-}: {
-  benefit: Benefit;
-  action?: ReactNode;
-}) {
+export function BenefitContentCard({ benefit, action }: { benefit: Benefit; action?: ReactNode }) {
   const version = benefitVersion(benefit);
   const policy = version?.benefit_policy;
   return (
@@ -227,7 +221,9 @@ export function BenefitStatusCallout({
         <AlertDescription>
           <p>Employees cannot see or use it. Reason: {benefit.suspension_reason || "—"}</p>
           {audience === "employer" ? (
-            <p>Editing, resuming or publishing does not lift it; only Aayulogic can reinstate it.</p>
+            <p>
+              Editing, resuming or publishing does not lift it; only Aayulogic can reinstate it.
+            </p>
           ) : null}
         </AlertDescription>
       </Alert>
@@ -277,8 +273,7 @@ export function BenefitStatusCallout({
           <CalendarClock aria-hidden />
           <AlertTitle>Expired</AlertTitle>
           <AlertDescription>
-            Its end date passed, so employees no longer see it. Edit the end date to offer it
-            again.
+            Its end date passed, so employees no longer see it. Edit the end date to offer it again.
           </AlertDescription>
         </Alert>
       );

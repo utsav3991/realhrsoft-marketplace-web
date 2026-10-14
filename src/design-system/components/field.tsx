@@ -41,7 +41,10 @@ export function Field({ id, label, hint, error, className, children }: FieldProp
         </p>
       ) : null}
       {error ? (
-        <p id={`${id}-error`} className="text-destructive flex items-start gap-1.5 text-sm font-semibold">
+        <p
+          id={`${id}-error`}
+          className="text-destructive flex items-start gap-1.5 text-sm font-semibold"
+        >
           <AlertCircle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
           <span>{error}</span>
         </p>

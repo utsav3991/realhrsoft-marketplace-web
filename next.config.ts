@@ -29,6 +29,8 @@ const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   reactStrictMode: true,
+  // Preserve Django endpoint slashes when proxying POSTs (including password setup).
+  skipTrailingSlashRedirect: true,
   // Pin the workspace root: a stray lockfile in a parent directory must not be picked up.
   turbopack: { root: fileURLToPath(new URL(".", import.meta.url)) },
   async headers() {
@@ -36,7 +38,12 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     if (!apiProxyTarget) return [];
-    return [{ source: "/api/:path*", destination: `${apiProxyTarget}/api/:path*` }];
+    return [
+      // Wildcard parameters exclude the final slash; preserve it explicitly before
+      // matching slashless endpoints (Django's API uses both URL forms).
+      { source: "/api/:path*/", destination: `${apiProxyTarget}/api/:path*/` },
+      { source: "/api/:path*", destination: `${apiProxyTarget}/api/:path*` },
+    ];
   },
 };
 

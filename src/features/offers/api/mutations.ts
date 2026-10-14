@@ -65,8 +65,7 @@ export function useReactivateCategory(categoryId: string) {
 export function useCreateOffer() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: Schemas["AdminOfferCreate"]) =>
-      unwrap(api.POST("/admin/offers", { body })),
+    mutationFn: (body: Schemas["AdminOfferCreate"]) => unwrap(api.POST("/admin/offers", { body })),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: offerKeys.lists() }),
   });
 }

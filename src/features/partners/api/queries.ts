@@ -8,6 +8,8 @@ export type PartnerDecision = Schemas["PartnerDecision"];
 export type PartnerStatus = Partner["status"];
 export type IntakePath = Partner["intake_path"];
 export type PartnerSource = Partner["source"];
+/** client: a RealHRSoft client group; merchant: a business registered here. Fixed for life. */
+export type PartnerKind = Partner["kind"];
 
 /** Partner columns the API sorts by (`ordering`). */
 export const PARTNER_SORTS = ["business_name", "organization_name", "submitted_at"] as const;
@@ -15,6 +17,7 @@ export type PartnerOrdering = SortOrdering<(typeof PARTNER_SORTS)[number]>;
 
 export interface PartnerFilters {
   search: string;
+  kind: PartnerKind | null;
   status: PartnerStatus | null;
   intakePath: IntakePath | null;
   source: PartnerSource | null;
@@ -44,6 +47,7 @@ export function usePartners(filters: PartnerFilters, page: Page) {
           params: {
             query: {
               search: filters.search || undefined,
+              kind: filters.kind ?? undefined,
               status: filters.status ?? undefined,
               intake_path: filters.intakePath ?? undefined,
               source: filters.source ?? undefined,

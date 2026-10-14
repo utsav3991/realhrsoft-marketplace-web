@@ -1,4 +1,9 @@
-import { keepPreviousData, useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import type { SortOrdering } from "@/design-system/components/data-table";
 import {
@@ -136,7 +141,8 @@ export const EMPTY_CAMPAIGN_FILTERS: CampaignFilters = {
 export const marketingKeys = {
   all: ["marketing"] as const,
   workspace: (workspace: Workspace) => [...marketingKeys.all, scopeKey(workspace)] as const,
-  campaigns: (workspace: Workspace) => [...marketingKeys.workspace(workspace), "campaigns"] as const,
+  campaigns: (workspace: Workspace) =>
+    [...marketingKeys.workspace(workspace), "campaigns"] as const,
   campaignList: (workspace: Workspace, filters: CampaignFilters, page: Page) =>
     [...marketingKeys.campaigns(workspace), "list", filters, page] as const,
   campaignOptions: (workspace: Workspace, partnerId: string | null, search: string) =>
@@ -146,7 +152,8 @@ export const marketingKeys = {
   ads: (workspace: Workspace) => [...marketingKeys.workspace(workspace), "ads"] as const,
   adList: (workspace: Workspace, filters: AdFilters, page: Page) =>
     [...marketingKeys.ads(workspace), "list", filters, page] as const,
-  ad: (workspace: Workspace, id: string) => [...marketingKeys.ads(workspace), "detail", id] as const,
+  ad: (workspace: Workspace, id: string) =>
+    [...marketingKeys.ads(workspace), "detail", id] as const,
   adRevisions: (workspace: Workspace, id: string, page: Page) =>
     [...marketingKeys.ads(workspace), "revisions", id, page] as const,
   adDecisions: (workspace: Workspace, id: string, page: Page) =>

@@ -14,6 +14,9 @@ const TARGET_ROUTES: ReadonlyMap<string, (id: string) => string> = new Map([
   ["employer_benefit", (id: string) => `/employer/benefits/${id}`],
   ["received_enquiry", (id: string) => `/business/leads/${id}`],
   ["sent_enquiry", (id: string) => `/business/enquiries/${id}`],
+  // A client group's enquiries live in the Client portal.
+  ["client_received_enquiry", (id: string) => `/client/business/leads/${id}`],
+  ["client_sent_enquiry", (id: string) => `/client/business/enquiries/${id}`],
   ["admin_claim", (id: string) => `/admin/claims/${id}`],
   ["admin_redemption", (id: string) => `/admin/redemptions/${id}`],
 ]);

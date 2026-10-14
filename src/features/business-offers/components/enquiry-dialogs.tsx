@@ -116,7 +116,7 @@ function FormDialog<T extends FieldValues>({
 }
 
 /**
- * Enquires on the selected organization's behalf. The provider follows up outside the platform
+ * Enquires on the acting business's behalf. The provider follows up outside the platform
  * with the contact given here.
  */
 export function EnquireDialog({
@@ -150,7 +150,7 @@ export function EnquireDialog({
       form={form}
       fields={ENQUIRY_FIELDS}
       title={`Enquire about ${offerTitle}`}
-      description={`${providerName} receives your message and contact details and follows up directly. Your organization can have one open enquiry per offer.`}
+      description={`${providerName} receives your message and contact details and follows up directly. You can have one open enquiry per offer.`}
       confirmLabel="Send enquiry"
       onSubmit={onSubmit}
     >
@@ -164,7 +164,7 @@ export function EnquireDialog({
               <Textarea rows={4} {...field} />
             </FormControl>
             <FormDescription className="whitespace-pre-line">
-              {instructions || "What your organization needs, e.g. quantities, locations and timing."}
+              {instructions || "What you need, e.g. quantities, locations and timing."}
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -215,16 +215,16 @@ export function EnquireDialog({
   );
 }
 
-/** Closes a lead once followed up. The note is shown to the organization that enquired. */
+/** Closes a lead once followed up. The note is shown to the business that enquired. */
 export function CloseEnquiryDialog({
   open,
   onOpenChange,
-  organizationName,
+  businessName,
   onSubmit,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  organizationName: string;
+  businessName: string;
   onSubmit: (values: CloseEnquiryValues) => Promise<unknown>;
 }) {
   const form = useForm<CloseEnquiryValues>({
@@ -238,7 +238,7 @@ export function CloseEnquiryDialog({
       form={form}
       fields={{ closing_note: "closingNote" }}
       title="Close this enquiry?"
-      description={`Closing is final. ${organizationName} is notified and may enquire again later.`}
+      description={`Closing is final. ${businessName} is notified and may enquire again later.`}
       confirmLabel="Close enquiry"
       onSubmit={async (values) => {
         await onSubmit(values);
@@ -249,11 +249,11 @@ export function CloseEnquiryDialog({
         name="closingNote"
         render={({ field }) => (
           <FormItem>
-            <FormLabel optional>Note to {organizationName}</FormLabel>
+            <FormLabel optional>Note to {businessName}</FormLabel>
             <FormControl>
               <Textarea rows={3} placeholder="Quote sent on 3 October." {...field} />
             </FormControl>
-            <FormDescription>The outcome, shown to the organization that enquired.</FormDescription>
+            <FormDescription>The outcome, shown to the business that enquired.</FormDescription>
             <FormMessage />
           </FormItem>
         )}

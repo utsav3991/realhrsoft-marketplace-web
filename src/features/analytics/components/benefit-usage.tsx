@@ -217,7 +217,12 @@ function CompanyUsage({
             />
           }
           columns={[
-            { id: "company", header: "Company", cellClassName: "font-medium", cell: (row) => row.name },
+            {
+              id: "company",
+              header: "Company",
+              cellClassName: "font-medium",
+              cell: (row) => row.name,
+            },
             ...metricColumns(BENEFIT_METRICS),
           ]}
         />

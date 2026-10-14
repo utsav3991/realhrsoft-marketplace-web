@@ -35,6 +35,8 @@ const decision: Schemas["PartnerDecision"] = {
 
 const pending: Schemas["Partner"] = {
   id: PARTNER_ID,
+  kind: "merchant",
+  contact_is_member: null,
   organization_id: ORG,
   organization_name: "Himalayan Coffee Pvt. Ltd.",
   external_uuid: null,

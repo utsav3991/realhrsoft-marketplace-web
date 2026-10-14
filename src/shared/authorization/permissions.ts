@@ -27,9 +27,7 @@ export function can(
   const { organizationId, clientId } = scope;
   if (clientId !== undefined) {
     return (
-      clientId !== null &&
-      actor.client?.id === clientId &&
-      actor.client.permissions.has(permission)
+      clientId !== null && actor.client?.id === clientId && actor.client.permissions.has(permission)
     );
   }
   if (organizationId === undefined) return actor.globalPermissions.has(permission);

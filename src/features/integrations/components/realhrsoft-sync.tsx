@@ -1,7 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangle, Building2, CheckCircle2, Loader2, RefreshCw, RotateCcw } from "lucide-react";
+import {
+  AlertTriangle,
+  Building2,
+  CheckCircle2,
+  Loader2,
+  RefreshCw,
+  RotateCcw,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -106,8 +113,8 @@ export function RealHRSoftSync() {
           <AlertTriangle aria-hidden />
           <AlertTitle>Synchronization needs attention</AlertTitle>
           <AlertDescription>
-            An event has waited more than 60 seconds, or an event is quarantined or dead. Check
-            the problems below; requeue stuck events once their cause is fixed.
+            An event has waited more than 60 seconds, or an event is quarantined or dead. Check the
+            problems below; requeue stuck events once their cause is fixed.
           </AlertDescription>
         </Alert>
       ) : (
@@ -192,8 +199,8 @@ function ProblemsCard({ problems }: { problems: readonly SyncReceipt[] }) {
         <div className="space-y-1.5">
           <CardTitle>Problems</CardTitle>
           <CardDescription>
-            Up to 20 newest waiting, quarantined or dead events. Waiting events retry on their
-            own; quarantined and dead ones need requeueing after the cause is fixed.
+            Up to 20 newest waiting, quarantined or dead events. Waiting events retry on their own;
+            quarantined and dead ones need requeueing after the cause is fixed.
           </CardDescription>
         </div>
         {canRedrive && stuck.length > 1 ? (
@@ -217,8 +224,8 @@ function ProblemsCard({ problems }: { problems: readonly SyncReceipt[] }) {
                 <>
                   <p className="font-mono text-xs">{row.event_type}</p>
                   <p className="text-muted-foreground text-xs">
-                    {row.aggregate_type} <span className="font-mono">{row.aggregate_uuid}</span>{" "}
-                    · revision {row.aggregate_revision}
+                    {row.aggregate_type} <span className="font-mono">{row.aggregate_uuid}</span> ·
+                    revision {row.aggregate_revision}
                   </p>
                 </>
               ),
@@ -269,7 +276,11 @@ function ProblemsCard({ problems }: { problems: readonly SyncReceipt[] }) {
       <ReasonDialog
         open={requeue !== null}
         onOpenChange={(open) => !open && setRequeue(null)}
-        title={requeue && requeue.length > 1 ? `Requeue ${requeue.length} events?` : "Requeue this event?"}
+        title={
+          requeue && requeue.length > 1
+            ? `Requeue ${requeue.length} events?`
+            : "Requeue this event?"
+        }
         description="They return to the queue with their attempts reset and are applied again in revision order. Requeue only after fixing what quarantined them, or they fail again."
         confirmLabel="Requeue"
         onConfirm={async (reason) => {
@@ -454,7 +465,12 @@ function ReconcileDialog({ onOpenChange }: { onOpenChange: (open: boolean) => vo
                   <FormItem>
                     <FormLabel>{spec.target}</FormLabel>
                     <FormControl>
-                      <Input className="font-mono" autoComplete="off" spellCheck={false} {...field} />
+                      <Input
+                        className="font-mono"
+                        autoComplete="off"
+                        spellCheck={false}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -534,7 +550,9 @@ function CompanyLookup() {
           <Skeleton className="h-24 w-full" />
         ) : company.isError ? (
           company.error instanceof ApiError && company.error.isNotFound ? (
-            <p className="text-muted-foreground text-sm">No company with this UUID was synchronized.</p>
+            <p className="text-muted-foreground text-sm">
+              No company with this UUID was synchronized.
+            </p>
           ) : (
             <ErrorState error={company.error} onRetry={() => void company.refetch()} />
           )
@@ -551,7 +569,10 @@ function CompanyLookup() {
             </Detail>
             <Detail label="Client">
               {canViewPartners ? (
-                <Link href={`/admin/partners/${company.data.client_id}`} className="hover:underline">
+                <Link
+                  href={`/admin/partners/${company.data.client_id}`}
+                  className="hover:underline"
+                >
                   View client
                 </Link>
               ) : (

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, KeyRound, Plus, UserCheck, UserX } from "lucide-react";
+import { ArrowLeft, KeyRound, MailPlus, Plus, UserCheck, UserX } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -24,8 +24,14 @@ import { StatusBadge } from "@/shared/components/status-badge";
 import { ErrorState } from "@/shared/feedback/states";
 import { formatDateTime, formatPersonName } from "@/shared/lib/format";
 
-import { useDisableUser, useReactivateUser, useRevokeRole } from "../api/mutations";
+import {
+  useDisableUser,
+  useReactivateUser,
+  useResendPasswordSetup,
+  useRevokeRole,
+} from "../api/mutations";
 import { useUser } from "../api/queries";
+import { ImpersonateAction } from "./impersonation";
 import { AssignRoleDialog } from "./assign-role-dialog";
 import { ReasonDialog } from "@/shared/components/reason-dialog";
 import { useSortParam } from "@/shared/hooks/use-sort-param";
@@ -92,7 +98,15 @@ function LoadedUser({ user, extra }: { user: User; extra?: ReactNode }) {
         description={
           isSelf ? "This is your account. Another administrator must change it." : undefined
         }
-        actions={isSelf ? null : <StatusActions user={user} />}
+        actions={
+          isSelf ? null : (
+            <div className="flex flex-wrap gap-2">
+              <ImpersonateAction user={user} />
+              <SetupLinkAction user={user} />
+              <StatusActions user={user} />
+            </div>
+          )
+        }
       />
 
       <Card>
@@ -107,6 +121,9 @@ function LoadedUser({ user, extra }: { user: User; extra?: ReactNode }) {
             <Detail label="Actor type">{user.actor_type}</Detail>
             <Detail label="Name">{formatPersonName(user.first_name, user.last_name)}</Detail>
             <Detail label="Contact">{user.contact ?? "—"}</Detail>
+            <Detail label="Password">
+              {user.password_setup_pending ? "Not set yet (setup link pending)" : "Set"}
+            </Detail>
             <Detail label="User ID" className="sm:col-span-2 lg:col-span-4">
               <span className="font-mono text-xs break-all">{user.id}</span>
             </Detail>
@@ -136,6 +153,32 @@ function Detail({
       </dt>
       <dd>{children}</dd>
     </div>
+  );
+}
+
+/** Only while the account has no password: it cannot sign in to get a link itself. */
+function SetupLinkAction({ user }: { user: User }) {
+  const [open, setOpen] = useState(false);
+  const resend = useResendPasswordSetup(user.id);
+  if (user.status !== "active" || !user.password_setup_pending) return null;
+  return (
+    <Can permission={IdentityPermission.USER_PASSWORD_SETUP_RESEND}>
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        <MailPlus aria-hidden />
+        Resend setup link
+      </Button>
+      <ReasonDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Resend the setup link?"
+        description={`${user.email} gets a new set-password link valid for 24 hours. Earlier links stop working.`}
+        confirmLabel="Resend link"
+        onConfirm={async (reason) => {
+          await resend.mutateAsync({ reason });
+          toast.success(`Sent a new setup link to ${user.email}`);
+        }}
+      />
+    </Can>
   );
 }
 
@@ -203,8 +246,7 @@ function GrantsCard({ user, isSelf }: { user: User; isSelf: boolean }) {
     (canAssign || canManageOrganizationRoles) &&
     canListRoles;
   const mayRevoke = (grant: Grant) =>
-    !isSelf &&
-    (grant.organization_id || grant.client_id ? canManageOrganizationRoles : canRevoke);
+    !isSelf && (grant.organization_id || grant.client_id ? canManageOrganizationRoles : canRevoke);
   const showRevoke = user.grants.some(mayRevoke);
   const sort = useSortParam(["role", "scope", "granted"] as const, "grants_ordering");
 

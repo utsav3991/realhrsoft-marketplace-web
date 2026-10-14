@@ -13,7 +13,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/design-system/primitives/select";
-import { PartnerAdminPermission, useCan } from "@/shared/authorization";
+import { Badge } from "@/design-system/primitives/badge";
+import { BUSINESS_KIND_LABEL } from "@/features/offers/schemas/offer";
+import {
+  IdentityPermission,
+  OrganizationAdminPermission,
+  PartnerAdminPermission,
+  useCan,
+} from "@/shared/authorization";
 import { QueryDataTable, type RowOf } from "@/shared/components/query-data-table";
 import { SearchField } from "@/shared/components/search-field";
 import { useSortParam } from "@/shared/hooks/use-sort-param";
@@ -26,6 +33,7 @@ import {
   PARTNER_SORTS,
   usePartners,
   type IntakePath,
+  type PartnerKind,
   type PartnerSource,
   type PartnerStatus,
 } from "../api/queries";
@@ -38,6 +46,7 @@ const STATUSES: readonly { value: PartnerStatus; label: string }[] = [
   { value: "rejected", label: "Rejected" },
 ];
 const INTAKE_PATHS = Object.keys(INTAKE_LABEL) as IntakePath[];
+const KINDS = Object.keys(BUSINESS_KIND_LABEL) as PartnerKind[];
 const SOURCES = Object.keys(SOURCE_LABEL) as PartnerSource[];
 
 function oneOf<T extends string>(value: string | null, allowed: readonly T[]): T | null {
@@ -52,15 +61,20 @@ export function PartnersDirectory() {
     searchParams.get("status"),
     STATUSES.map((s) => s.value),
   );
+  const kind = oneOf(searchParams.get("kind"), KINDS);
   const intakePath = oneOf(searchParams.get("intake_path"), INTAKE_PATHS);
   const source = oneOf(searchParams.get("source"), SOURCES);
   const sort = useSortParam(PARTNER_SORTS);
   const paging = usePageParam();
   const partners = usePartners(
-    { search, status, intakePath, source, ordering: sort.value },
+    { search, kind, status, intakePath, source, ordering: sort.value },
     paging,
   );
   const canCreate = useCan(PartnerAdminPermission.PARTNER_CREATE);
+  // Onboarding also creates the administrator's seat: admission plus a role grant.
+  const canAdmit = useCan(OrganizationAdminPermission.MEMBERSHIP_MANAGE);
+  const canGrant = useCan(IdentityPermission.ORGANIZATION_ROLE_MANAGE);
+  const canOnboard = canCreate && canAdmit && canGrant;
 
   function setParam(name: string, value: string | null) {
     set({ [name]: value });
@@ -72,9 +86,14 @@ export function PartnersDirectory() {
       sortKey: "business_name",
       header: "Business",
       cell: (partner) => (
-        <Link href={`/admin/partners/${partner.id}`} className="font-medium hover:underline">
-          {partner.business_name}
-        </Link>
+        <span className="flex flex-wrap items-center gap-2">
+          <Link href={`/admin/partners/${partner.id}`} className="font-medium hover:underline">
+            {partner.business_name}
+          </Link>
+          <Badge intent={partner.kind === "client" ? "neutral" : "outline"}>
+            {BUSINESS_KIND_LABEL[partner.kind]}
+          </Badge>
+        </span>
       ),
     },
     {
@@ -111,17 +130,33 @@ export function PartnersDirectory() {
       cell: (partner) => formatDateTime(partner.submitted_at),
     },
   ];
-  const filtered = Boolean(search || status || intakePath || source);
+  const filtered = Boolean(search || kind || status || intakePath || source);
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <SearchField 
-            placeholder="Search business or organization" 
-            aria-label="Search partners by business or organization name" 
+          <SearchField
+            placeholder="Search business or organization"
+            aria-label="Search partners by business or organization name"
             className="max-w-sm"
           />
+          <Select
+            value={kind ?? ALL}
+            onValueChange={(value) => setParam("kind", value === ALL ? null : value)}
+          >
+            <SelectTrigger className="w-40" aria-label="Filter by kind">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Clients and merchants</SelectItem>
+              {KINDS.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {BUSINESS_KIND_LABEL[option]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select
             value={status ?? ALL}
             onValueChange={(value) => setParam("status", value === ALL ? null : value)}
@@ -171,14 +206,24 @@ export function PartnersDirectory() {
             </SelectContent>
           </Select>
         </div>
-        {canCreate ? (
-          <Button asChild>
-            <Link href="/admin/partners/new">
-              <Plus aria-hidden />
-              Register partner
-            </Link>
-          </Button>
-        ) : null}
+        <div className="flex flex-wrap gap-2">
+          {canCreate ? (
+            <Button asChild variant={canOnboard ? "outline" : "default"}>
+              <Link href="/admin/partners/new">
+                <Plus aria-hidden />
+                Register partner
+              </Link>
+            </Button>
+          ) : null}
+          {canOnboard ? (
+            <Button asChild>
+              <Link href="/admin/merchants/new">
+                <Plus aria-hidden />
+                Onboard merchant
+              </Link>
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <QueryDataTable

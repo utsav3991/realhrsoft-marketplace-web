@@ -153,7 +153,10 @@ export function BenefitValueFields({ disabled }: { disabled: boolean }) {
               {descriptive ? "Benefit" : "Benefit wording"}
             </FormLabel>
             <FormControl>
-              <Input placeholder={descriptive ? "Free annual health check-up" : undefined} {...field} />
+              <Input
+                placeholder={descriptive ? "Free annual health check-up" : undefined}
+                {...field}
+              />
             </FormControl>
             <FormDescription>
               {descriptive

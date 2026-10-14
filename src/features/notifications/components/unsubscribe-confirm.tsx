@@ -35,8 +35,8 @@ export function UnsubscribeConfirm({ token }: { token: string }) {
           <CheckCircle2 aria-hidden />
           <AlertTitle>You are unsubscribed</AlertTitle>
           <AlertDescription>
-            You will no longer get notification emails. Your notifications still appear in the
-            app, and you can turn emails back on from its Notifications page.
+            You will no longer get notification emails. Your notifications still appear in the app,
+            and you can turn emails back on from its Notifications page.
           </AlertDescription>
         </Alert>
         <SignInLink />
@@ -61,8 +61,8 @@ export function UnsubscribeConfirm({ token }: { token: string }) {
   return (
     <div className="space-y-4">
       <p className="text-muted-foreground">
-        Stop notification emails such as new company benefits? Notifications will still appear
-        in the app. Sign-in and password emails are not affected.
+        Stop notification emails such as new company benefits? Notifications will still appear in
+        the app. Sign-in and password emails are not affected.
       </p>
       {unsubscribe.isError ? (
         <p role="alert" className="text-destructive text-sm">

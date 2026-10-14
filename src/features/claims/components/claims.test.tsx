@@ -95,7 +95,12 @@ const accepted: Schemas["OwnClaim"] = {
   status: "accepted",
   decision_deadline: null,
   accepted_at: "2026-09-25T10:00:00Z",
-  decision: { outcome: "accepted", source: "policy", reason: "", decided_at: "2026-09-25T10:00:00Z" },
+  decision: {
+    outcome: "accepted",
+    source: "policy",
+    reason: "",
+    decided_at: "2026-09-25T10:00:00Z",
+  },
   voucher,
 };
 
@@ -156,7 +161,9 @@ function member(permissions: PermissionCode[]): CurrentActor {
   return actor({
     actorType: "marketplace_staff",
     organization: { id: ORG, permissions: new Set(permissions) },
-    memberships: [{ organizationId: ORG, name: "Himalayan Coffee", employer: false, partner: true }],
+    memberships: [
+      { organizationId: ORG, name: "Himalayan Coffee", employer: false, partner: true },
+    ],
   });
 }
 
@@ -312,9 +319,7 @@ describe("My claims", () => {
 
   it("cancels a pending request with an Idempotency-Key", async () => {
     fetchMock.mockImplementation(async (request) =>
-      request.method === "POST"
-        ? json({ ...requested, status: "cancelled" })
-        : json(requested),
+      request.method === "POST" ? json({ ...requested, status: "cancelled" }) : json(requested),
     );
     const user = userEvent.setup();
     renderAs(actor(), <MyClaim claimId={CLAIM_ID} />);

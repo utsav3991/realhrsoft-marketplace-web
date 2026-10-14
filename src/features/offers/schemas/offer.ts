@@ -15,7 +15,8 @@ import {
 // Mirrors the Django offer serializers and offers/terms.py; the server re-validates.
 export const requiredText = (max: number, message: string) =>
   z.string().trim().min(1, message).max(max, `At most ${max} characters`);
-export const optionalText = (max: number) => z.string().trim().max(max, `At most ${max} characters`);
+export const optionalText = (max: number) =>
+  z.string().trim().max(max, `At most ${max} characters`);
 
 export const PRESENTATION_METHODS: readonly { value: PresentationMethod; label: string }[] = [
   { value: "promo_code", label: "Promo code" },
@@ -34,7 +35,8 @@ export function presentationLabel(method: PresentationMethod, customName?: strin
   return method === "custom" && customName ? customName : PRESENTATION_LABEL[method];
 }
 
-type PresentationField = "promoCode" | "redemptionUrl" | "redemptionInstructions" | "customMethodName";
+type PresentationField =
+  "promoCode" | "redemptionUrl" | "redemptionInstructions" | "customMethodName";
 
 /** Which optional presentation fields each method uses; the API stores the others empty. */
 export const METHOD_FIELDS: Record<PresentationMethod, readonly PresentationField[]> = {
@@ -94,7 +96,13 @@ export const AUDIENCE_LABEL: Record<Schemas["OfferAudienceTypeEnum"], string> = 
 
 export const BUSINESS_AUDIENCE_LABEL: Record<Schemas["BusinessAudienceTypeEnum"], string> = {
   all_businesses: "All businesses",
-  selected_organizations: "Selected organizations",
+  selected_businesses: "Selected businesses",
+};
+
+/** A business in B2B: a merchant or a RealHRSoft client group. */
+export const BUSINESS_KIND_LABEL: Record<Schemas["PartnerKindEnum"], string> = {
+  merchant: "Merchant",
+  client: "Client group",
 };
 
 export interface AudienceOrganization {
@@ -107,7 +115,13 @@ export interface AudienceOrganization {
  * terms, and a business offer's employee terms when it is shown to employees.
  */
 export const employeeTermsShape = {
-  presentationMethod: z.enum(["promo_code", "booking_link", "show_employee_id", "in_store", "custom"]),
+  presentationMethod: z.enum([
+    "promo_code",
+    "booking_link",
+    "show_employee_id",
+    "in_store",
+    "custom",
+  ]),
   promoCode: optionalText(64),
   redemptionUrl: optionalText(500),
   redemptionInstructions: optionalText(2000),
@@ -234,7 +248,10 @@ export const offerSchema = z
       issue("validUntil", "End after the start");
     }
     checkEmployeeTerms(values, issue);
-    if (values.audienceType === "selected_organizations" && values.audienceOrganizations.length === 0)
+    if (
+      values.audienceType === "selected_organizations" &&
+      values.audienceOrganizations.length === 0
+    )
       issue("audienceOrganizations", "Choose at least one organization");
   });
 export type OfferValues = z.infer<typeof offerSchema>;

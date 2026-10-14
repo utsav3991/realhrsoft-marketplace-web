@@ -89,8 +89,7 @@ export function useDecidePartnerClaim(organizationId: string) {
           : api.POST("/partner/offer-claims/{claim_id}/reject", { params, body: { reason } }),
       );
     },
-    onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: claimKeys.partner(organizationId) }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: claimKeys.partner(organizationId) }),
   });
 }
 

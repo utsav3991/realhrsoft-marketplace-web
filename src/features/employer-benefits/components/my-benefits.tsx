@@ -374,7 +374,9 @@ function ClaimHistory({ title, benefitId = null }: { title: string; benefitId?: 
             header: "Used",
             sortKey: "accepted_at",
             cell: (claim) =>
-              formatDateTime(claim.benefit_usage?.used_at ?? claim.accepted_at ?? claim.requested_at),
+              formatDateTime(
+                claim.benefit_usage?.used_at ?? claim.accepted_at ?? claim.requested_at,
+              ),
           },
           {
             id: "benefit",

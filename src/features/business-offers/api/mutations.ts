@@ -1,21 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import type {
-  OfferAction,
-  OfferActionBody,
-  OwnOfferAction,
-} from "@/features/offers/api/mutations";
+import type { OfferAction, OfferActionBody, OwnOfferAction } from "@/features/offers/api/mutations";
+import { clientHeader, organizationHeader } from "@/features/offers/api/queries";
 import { api, pathId, unwrap, type Schemas } from "@/shared/api";
 
-import { businessKeys } from "./queries";
-
-function organizationHeader(organizationId: string) {
-  return { "X-Organization-ID": organizationId };
-}
+import { businessKeys, type BusinessOwner } from "./queries";
 
 // --- Aayulogic administration ---------------------------------------------------------
 
-/** Posts for a verified partner or an employer: save as draft, submit, or publish directly. */
+/** Posts for a verified merchant or a client group: save as draft, submit, or publish. */
 export function useCreateAdminBusinessOffer() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -114,43 +107,76 @@ export function useAdminBusinessOfferAction(offerId: string) {
   });
 }
 
-// --- Business portal: own offers ------------------------------------------------------
+// --- The acting business: own offers -------------------------------------------------
+// Literal paths keep every call visible to the contract-coverage test.
 
-function useInvalidateOwn(organizationId: string) {
+function useInvalidateOwn(owner: BusinessOwner) {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: businessKeys.own(organizationId) });
+  return () => queryClient.invalidateQueries({ queryKey: businessKeys.own(owner) });
 }
 
-export function useCreateOwnBusinessOffer(organizationId: string) {
+export function useCreateOwnBusinessOffer(owner: BusinessOwner) {
   return useMutation({
     mutationFn: (body: Schemas["BusinessOfferInput"]) =>
       unwrap(
-        api.POST("/business/own-offers", {
-          params: { header: organizationHeader(organizationId) },
-          body,
-        }),
+        owner.kind === "client"
+          ? api.POST("/client/business/own-offers", {
+              params: { header: clientHeader(owner.id) },
+              body,
+            })
+          : api.POST("/business/own-offers", {
+              params: { header: organizationHeader(owner.id) },
+              body,
+            }),
       ),
-    onSuccess: useInvalidateOwn(organizationId),
+    onSuccess: useInvalidateOwn(owner),
   });
 }
 
-export function useUpdateOwnBusinessOffer(organizationId: string, offerId: string) {
+export function useUpdateOwnBusinessOffer(owner: BusinessOwner, offerId: string) {
   return useMutation({
-    mutationFn: (body: Schemas["BusinessOfferUpdate"]) =>
-      unwrap(
-        api.PUT("/business/own-offers/{offer_id}", {
-          params: {
-            header: organizationHeader(organizationId),
-            path: { offer_id: pathId(offerId) },
-          },
-          body,
-        }),
-      ),
-    onSettled: useInvalidateOwn(organizationId),
+    mutationFn: (body: Schemas["BusinessOfferUpdate"]) => {
+      const path = { offer_id: pathId(offerId) };
+      return unwrap(
+        owner.kind === "client"
+          ? api.PUT("/client/business/own-offers/{offer_id}", {
+              params: { header: clientHeader(owner.id), path },
+              body,
+            })
+          : api.PUT("/business/own-offers/{offer_id}", {
+              params: { header: organizationHeader(owner.id), path },
+              body,
+            }),
+      );
+    },
+    onSettled: useInvalidateOwn(owner),
   });
 }
 
-function postOwnAction(
+function postClientAction(
+  action: OwnOfferAction,
+  clientId: string,
+  offerId: string,
+  body: Schemas["ExpectedVersion"],
+) {
+  const params = { header: clientHeader(clientId), path: { offer_id: pathId(offerId) } };
+  switch (action) {
+    case "submit":
+      return api.POST("/client/business/own-offers/{offer_id}/submit", { params, body });
+    case "retract":
+      return api.POST("/client/business/own-offers/{offer_id}/retract", { params, body });
+    case "unpublish":
+      return api.POST("/client/business/own-offers/{offer_id}/unpublish", { params, body });
+    case "pause":
+      return api.POST("/client/business/own-offers/{offer_id}/pause", { params, body });
+    case "resume":
+      return api.POST("/client/business/own-offers/{offer_id}/resume", { params, body });
+    case "retire":
+      return api.POST("/client/business/own-offers/{offer_id}/retire", { params, body });
+  }
+}
+
+function postMerchantAction(
   action: OwnOfferAction,
   organizationId: string,
   offerId: string,
@@ -176,58 +202,69 @@ function postOwnAction(
   }
 }
 
-/** Every owner state change on one of the selected organization's business offers. */
-export function useOwnBusinessOfferAction(organizationId: string, offerId: string) {
+/** Every owner state change on one of the acting business's offers. */
+export function useOwnBusinessOfferAction(owner: BusinessOwner, offerId: string) {
   return useMutation({
     mutationFn: ({ action, ...body }: Schemas["ExpectedVersion"] & { action: OwnOfferAction }) =>
-      unwrap(postOwnAction(action, organizationId, offerId, body)),
-    onSettled: useInvalidateOwn(organizationId),
+      unwrap(
+        owner.kind === "client"
+          ? postClientAction(action, owner.id, offerId, body)
+          : postMerchantAction(action, owner.id, offerId, body),
+      ),
+    onSettled: useInvalidateOwn(owner),
   });
 }
 
-// --- Business portal: enquiries ---------------------------------------------------------
+// --- The acting business: enquiries -----------------------------------------------------
 
 /**
- * Enquires about another organization's offer on the selected organization's behalf, naming
- * the live version read. The catalogue refetches either way: it shows the open enquiry, and a
- * 409 means the offer changed or an enquiry is already open.
+ * Enquires about another business's offer on the acting business's behalf, naming the live
+ * version read. The catalogue refetches either way: it shows the open enquiry, and a 409 means
+ * the offer changed or an enquiry is already open.
  */
-export function useEnquire(organizationId: string, offerId: string) {
+export function useEnquire(owner: BusinessOwner, offerId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: Schemas["EnquiryInput"]) =>
-      unwrap(
-        api.POST("/business/offers/{offer_id}/enquire", {
-          params: {
-            header: organizationHeader(organizationId),
-            path: { offer_id: pathId(offerId) },
-          },
-          body,
-        }),
-      ),
+    mutationFn: (body: Schemas["EnquiryInput"]) => {
+      const path = { offer_id: pathId(offerId) };
+      return unwrap(
+        owner.kind === "client"
+          ? api.POST("/client/business/offers/{offer_id}/enquire", {
+              params: { header: clientHeader(owner.id), path },
+              body,
+            })
+          : api.POST("/business/offers/{offer_id}/enquire", {
+              params: { header: organizationHeader(owner.id), path },
+              body,
+            }),
+      );
+    },
     onSettled: () =>
       Promise.all([
-        queryClient.invalidateQueries({ queryKey: businessKeys.catalogue(organizationId) }),
-        queryClient.invalidateQueries({ queryKey: businessKeys.sent(organizationId) }),
+        queryClient.invalidateQueries({ queryKey: businessKeys.catalogue(owner) }),
+        queryClient.invalidateQueries({ queryKey: businessKeys.sent(owner) }),
       ]),
   });
 }
 
-/** Closes a lead once followed up; the enquirer is notified and sees the note. */
-export function useCloseEnquiry(organizationId: string, enquiryId: string) {
+/** Closes a lead once followed up; the enquiring business is notified and sees the note. */
+export function useCloseEnquiry(owner: BusinessOwner, enquiryId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: Schemas["CloseEnquiryInput"]) =>
-      unwrap(
-        api.POST("/business/received-enquiries/{enquiry_id}/close", {
-          params: {
-            header: organizationHeader(organizationId),
-            path: { enquiry_id: pathId(enquiryId) },
-          },
-          body,
-        }),
-      ),
-    onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: businessKeys.received(organizationId) }),
+    mutationFn: (body: Schemas["CloseEnquiryInput"]) => {
+      const path = { enquiry_id: pathId(enquiryId) };
+      return unwrap(
+        owner.kind === "client"
+          ? api.POST("/client/business/received-enquiries/{enquiry_id}/close", {
+              params: { header: clientHeader(owner.id), path },
+              body,
+            })
+          : api.POST("/business/received-enquiries/{enquiry_id}/close", {
+              params: { header: organizationHeader(owner.id), path },
+              body,
+            }),
+      );
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: businessKeys.received(owner) }),
   });
 }

@@ -2,11 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { BusinessPage } from "@/features/business-offers/components/business-portal";
 import { OwnBusinessOffer } from "@/features/business-offers/components/own-business-offers";
 import { isUuid } from "@/shared/api";
 import { BusinessOfferPermission } from "@/shared/authorization/permission-codes";
-import { RequireOrganization } from "@/shared/navigation/organization-scope";
-import { RequirePermission } from "@/shared/navigation/portal-gate";
 
 export const metadata: Metadata = { title: "Business offer" };
 
@@ -14,12 +13,10 @@ export default async function Page({ params }: { params: Promise<{ offerId: stri
   const { offerId } = await params;
   if (!isUuid(offerId)) notFound();
   return (
-    <RequireOrganization capacity="business">
-      <RequirePermission anyOf={[BusinessOfferPermission.OFFER_VIEW]} inOrganization>
-        <Suspense>
-          <OwnBusinessOffer offerId={offerId} />
-        </Suspense>
-      </RequirePermission>
-    </RequireOrganization>
+    <BusinessPage portal="merchant" permission={BusinessOfferPermission.OFFER_VIEW}>
+      <Suspense>
+        <OwnBusinessOffer offerId={offerId} />
+      </Suspense>
+    </BusinessPage>
   );
 }

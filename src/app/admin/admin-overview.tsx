@@ -99,7 +99,8 @@ const SECTIONS: readonly Section[] = [
   {
     href: "/admin/claims",
     title: "Claims",
-    description: "Every offer and benefit claim; accept or reject a pending one on a partner's behalf.",
+    description:
+      "Every offer and benefit claim; accept or reject a pending one on a partner's behalf.",
     icon: Ticket,
     permission: ClaimAdminPermission.CLAIM_VIEW,
   },
@@ -120,7 +121,8 @@ const SECTIONS: readonly Section[] = [
   {
     href: "/admin/employments",
     title: "Employments",
-    description: "Record which organization employs each employee, opening the marketplace to them.",
+    description:
+      "Record which organization employs each employee, opening the marketplace to them.",
     icon: BriefcaseBusiness,
     permission: EmploymentAdminPermission.EMPLOYMENT_VIEW,
   },

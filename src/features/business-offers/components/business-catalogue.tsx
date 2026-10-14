@@ -20,9 +20,9 @@ import {
 } from "@/design-system/primitives/card";
 import { Skeleton } from "@/design-system/primitives/skeleton";
 import { benefitSummary } from "@/features/offers/schemas/benefit-value";
+import { BUSINESS_KIND_LABEL } from "@/features/offers/schemas/offer";
 import { ApiError, isUuid } from "@/shared/api";
-import { useSelectedOrganizationId } from "@/shared/auth";
-import { BusinessOfferPermission, useCanInOrganization } from "@/shared/authorization";
+import { BusinessOfferPermission } from "@/shared/authorization";
 import { Detail, DetailList } from "@/shared/components/details";
 import { SearchField } from "@/shared/components/search-field";
 import { ErrorState } from "@/shared/feedback/states";
@@ -38,22 +38,23 @@ import {
   type CatalogueOffer,
 } from "../api/queries";
 import { enquiryBody } from "../schemas/business-offer";
+import { useBusinessCan, useBusinessPortal } from "./business-portal";
 import { EnquireDialog } from "./enquiry-dialogs";
 
-/** The provider as organizations know it: the partner business, else the organization. */
-function providerName(offer: Pick<CatalogueOffer, "partner" | "provider_organization">) {
-  return offer.partner?.business_name ?? offer.provider_organization.name;
+/** The business making the offer: a merchant or a client group. */
+function providerName(offer: Pick<CatalogueOffer, "provider">) {
+  return offer.provider.name;
 }
 
-/** Other organizations' business offers available to the selected one; filters in the URL. */
+/** Other businesses' offers available to the acting one; filters in the URL. */
 export function BusinessCatalogue() {
   const { searchParams, set } = useUrlParams();
-  const organizationId = useSelectedOrganizationId();
+  const { owner } = useBusinessPortal();
   const search = searchParams.get("search") ?? "";
   const categoryParam = searchParams.get("category");
   const categoryId = categoryParam && isUuid(categoryParam) ? categoryParam : null;
-  const offers = useBusinessCatalogue(organizationId, { search, categoryId });
-  const categories = useBusinessCatalogueCategories(organizationId);
+  const offers = useBusinessCatalogue(owner, { search, categoryId });
+  const categories = useBusinessCatalogueCategories(owner);
   const rows = offers.data?.pages.flatMap((page) => page.results) ?? [];
   const filtered = Boolean(search || categoryId);
 
@@ -99,7 +100,7 @@ export function BusinessCatalogue() {
           description={
             filtered
               ? "Try a different search or category."
-              : "Offers other businesses make available to your organization appear here."
+              : "Offers other businesses make available to you appear here."
           }
         />
       ) : (
@@ -126,6 +127,7 @@ export function BusinessCatalogue() {
 }
 
 function OfferCard({ offer }: { offer: CatalogueOffer }) {
+  const { base } = useBusinessPortal();
   return (
     <Card className="flex flex-col">
       <CardHeader className="gap-2">
@@ -133,7 +135,9 @@ function OfferCard({ offer }: { offer: CatalogueOffer }) {
           <Badge intent="neutral">{offer.category.name}</Badge>
           {offer.my_open_enquiry_id ? <Badge intent="warning">Enquiry open</Badge> : null}
         </div>
-        <p className="text-muted-foreground text-sm">{providerName(offer)}</p>
+        <p className="text-muted-foreground text-sm">
+          {providerName(offer)} · {BUSINESS_KIND_LABEL[offer.provider.kind]}
+        </p>
         <CardTitle className="text-lg">{offer.title}</CardTitle>
         <CardDescription>{offer.headline}</CardDescription>
       </CardHeader>
@@ -149,12 +153,12 @@ function OfferCard({ offer }: { offer: CatalogueOffer }) {
           {offer.shown_to_employees ? (
             <span className="inline-flex items-center gap-1">
               <Users className="size-3.5" aria-hidden />
-              Also for your employees
+              Also for employees
             </span>
           ) : null}
         </span>
         <Button asChild variant="ghost" size="sm" className="-ml-3 self-start">
-          <Link href={`/business/catalogue/${offer.id}`} aria-label={`View ${offer.title}`}>
+          <Link href={`${base}/catalogue/${offer.id}`} aria-label={`View ${offer.title}`}>
             Details
             <ArrowRight aria-hidden />
           </Link>
@@ -165,9 +169,10 @@ function OfferCard({ offer }: { offer: CatalogueOffer }) {
 }
 
 function BackToCatalogue() {
+  const { base } = useBusinessPortal();
   return (
     <Button asChild variant="ghost" size="sm" className="-ml-3">
-      <Link href="/business/catalogue">
+      <Link href={`${base}/catalogue`}>
         <ArrowLeft aria-hidden />
         Browse offers
       </Link>
@@ -175,10 +180,10 @@ function BackToCatalogue() {
   );
 }
 
-/** One business offer as the selected organization sees it, with its enquiry action. */
+/** One business offer as the acting business sees it, with its enquiry action. */
 export function BusinessCatalogueOffer({ offerId }: { offerId: string }) {
-  const organizationId = useSelectedOrganizationId();
-  const offer = useBusinessCatalogueOffer(organizationId, offerId);
+  const { owner } = useBusinessPortal();
+  const offer = useBusinessCatalogueOffer(owner, offerId);
 
   if (offer.isPending) {
     return (
@@ -197,7 +202,7 @@ export function BusinessCatalogueOffer({ offerId }: { offerId: string }) {
           <EmptyState
             icon={Store}
             title="Offer not available"
-            description="It may have ended, or it is not offered to your organization."
+            description="It may have ended, or it is not offered to you."
           />
         ) : (
           <ErrorState error={offer.error} onRetry={() => void offer.refetch()} />
@@ -205,10 +210,10 @@ export function BusinessCatalogueOffer({ offerId }: { offerId: string }) {
       </div>
     );
   }
-  return <LoadedOffer offer={offer.data} organizationId={organizationId} />;
+  return <LoadedOffer offer={offer.data} />;
 }
 
-function LoadedOffer({ offer, organizationId }: { offer: CatalogueOffer; organizationId: string }) {
+function LoadedOffer({ offer }: { offer: CatalogueOffer }) {
   return (
     <div className="space-y-6">
       <BackToCatalogue />
@@ -221,7 +226,7 @@ function LoadedOffer({ offer, organizationId }: { offer: CatalogueOffer; organiz
             {offer.category.name}
           </span>
         }
-        actions={<EnquiryAction offer={offer} organizationId={organizationId} />}
+        actions={<EnquiryAction offer={offer} />}
       />
       <Card>
         <CardHeader>
@@ -241,10 +246,12 @@ function LoadedOffer({ offer, organizationId }: { offer: CatalogueOffer; organiz
                 </span>
               ) : null}
             </Detail>
-            <Detail label="Provider">{providerName(offer)}</Detail>
-            <Detail label="Your employees">
+            <Detail label="Provider">
+              {providerName(offer)} ({BUSINESS_KIND_LABEL[offer.provider.kind]})
+            </Detail>
+            <Detail label="Employees">
               {offer.shown_to_employees
-                ? "Can also see and claim it in their marketplace"
+                ? "RealHRSoft employees in its audience can also claim it in their marketplace"
                 : "Not listed for employees"}
             </Detail>
             {offer.enquiry_instructions ? (
@@ -266,21 +273,22 @@ function LoadedOffer({ offer, organizationId }: { offer: CatalogueOffer; organiz
 }
 
 /**
- * One open enquiry per organization and offer: an open one links to it instead of offering a
+ * One open enquiry per business and offer: an open one links to it instead of offering a
  * send the API would refuse. The enquiry names the version read; if other terms went live
  * meanwhile the API refuses (OFFER_VERSION_CHANGED) and the refreshed offer is shown to read.
  */
-function EnquiryAction({ offer, organizationId }: { offer: CatalogueOffer; organizationId: string }) {
-  const canEnquire = useCanInOrganization(BusinessOfferPermission.SENT_ENQUIRY_CREATE);
-  const canViewSent = useCanInOrganization(BusinessOfferPermission.SENT_ENQUIRY_VIEW);
-  const enquire = useEnquire(organizationId, offer.id);
+function EnquiryAction({ offer }: { offer: CatalogueOffer }) {
+  const { owner, base } = useBusinessPortal();
+  const canEnquire = useBusinessCan(BusinessOfferPermission.SENT_ENQUIRY_CREATE);
+  const canViewSent = useBusinessCan(BusinessOfferPermission.SENT_ENQUIRY_VIEW);
+  const enquire = useEnquire(owner, offer.id);
   const [open, setOpen] = useState(false);
   const openId = offer.my_open_enquiry_id;
 
   if (openId) {
     return canViewSent ? (
       <Button asChild variant="outline">
-        <Link href={`/business/enquiries/${openId}`}>
+        <Link href={`${base}/enquiries/${openId}`}>
           <Inbox aria-hidden />
           View your open enquiry
         </Link>
@@ -314,7 +322,7 @@ function EnquiryAction({ offer, organizationId }: { offer: CatalogueOffer; organ
               return false;
             }
             if (error.code === "ENQUIRY_ALREADY_OPEN") {
-              toast.info("Your organization already has an open enquiry about this offer.");
+              toast.info("You already have an open enquiry about this offer.");
               setOpen(false);
               return false;
             }

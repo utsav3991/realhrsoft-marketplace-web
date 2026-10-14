@@ -608,7 +608,11 @@ function OwnBenefitWorkspace({ benefit, workspace }: { benefit: Benefit; workspa
         destructive={spec.destructive}
         onConfirm={async () => {
           if (!acting) return;
-          await action.mutateAsync({ action: acting, expected_version: benefit.version, reason: "" });
+          await action.mutateAsync({
+            action: acting,
+            expected_version: benefit.version,
+            reason: "",
+          });
           toast.success(spec.done);
         }}
       />
