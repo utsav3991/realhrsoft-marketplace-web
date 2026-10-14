@@ -25,6 +25,8 @@ function actor(memberships: Membership[], organizationId: string | null = null):
     globalPermissions: new Set(),
     organization: organizationId ? { id: organizationId, permissions: new Set() } : null,
     memberships,
+    client: null,
+    clients: [],
   };
 }
 
@@ -102,24 +104,24 @@ describe("portals", () => {
   it("opens the Partner portal to members who may apply, not to outsiders", () => {
     const outsider = actor([]);
     expect(getPortal("partner").canAccess(outsider)).toBe(false);
-    expect(accessiblePortals(outsider).map((p) => p.id)).toEqual(["marketplace"]);
+    // Employees use the marketplace inside RealHRSoft; nobody signing in here is offered it.
+    expect(accessiblePortals(outsider).map((p) => p.id)).toEqual([]);
+    expect(getPortal("marketplace").canAccess(outsider)).toBe(false);
     const partner = actor([membership(ACME, "Acme", true)]);
-    expect(accessiblePortals(partner).map((p) => p.id)).toEqual([
-      "partner",
-      "business",
-      "marketplace",
-    ]);
+    expect(accessiblePortals(partner).map((p) => p.id)).toEqual(["partner", "business"]);
     // An organization with no capacity yet can register itself as a partner.
     const applicant = actor([{ organizationId: ACME, name: "Acme", employer: false, partner: false }]);
-    expect(accessiblePortals(applicant).map((p) => p.id)).toEqual(["partner", "marketplace"]);
+    expect(accessiblePortals(applicant).map((p) => p.id)).toEqual(["partner"]);
     // Employer-only members can still open it, but it is not offered to them.
     const employer = actor([membership(GLOBEX, "Globex", false)]);
     expect(getPortal("partner").canAccess(employer)).toBe(true);
-    expect(accessiblePortals(employer).map((p) => p.id)).toEqual([
-      "employer",
-      "business",
-      "marketplace",
-    ]);
+    expect(accessiblePortals(employer).map((p) => p.id)).toEqual(["employer", "business"]);
+  });
+
+  it("opens the Client portal only to holders of a client role", () => {
+    const groupHr = { ...actor([]), clients: [{ clientId: GLOBEX, name: "Globex Group" }] };
+    expect(accessiblePortals(groupHr).map((p) => p.id)).toEqual(["client"]);
+    expect(getPortal("client").canAccess(actor([]))).toBe(false);
   });
 
   it("opens the Business portal for partners and employers, selecting either", () => {

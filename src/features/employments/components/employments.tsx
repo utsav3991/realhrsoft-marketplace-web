@@ -1,9 +1,7 @@
 "use client";
 
-import { ArrowLeft, BriefcaseBusiness, Plus, Ticket, X } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, Ticket, X } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import { toast } from "sonner";
 
 import type { DataTableColumn, DataTableColumns } from "@/design-system/components/data-table";
 import { EmptyState } from "@/design-system/components/empty-state";
@@ -28,14 +26,12 @@ import { Skeleton } from "@/design-system/primitives/skeleton";
 import { ApiError, isUuid } from "@/shared/api";
 import {
   ClaimAdminPermission,
-  EmploymentAdminPermission,
-  IdentityPermission,
   OrganizationAdminPermission,
+  PartnerAdminPermission,
   useCan,
 } from "@/shared/authorization";
 import { Detail, DetailList } from "@/shared/components/details";
-import { ReasonDialog } from "@/shared/components/reason-dialog";
-import { QueryDataTable, resultRows } from "@/shared/components/query-data-table";
+import { QueryDataTable } from "@/shared/components/query-data-table";
 import { SearchField } from "@/shared/components/search-field";
 import { StatusBadge } from "@/shared/components/status-badge";
 import { ErrorState } from "@/shared/feedback/states";
@@ -45,9 +41,7 @@ import { useUrlParams } from "@/shared/hooks/use-url-params";
 import { formatDate, formatDateTime } from "@/shared/lib/format";
 import { OrganizationFilter } from "@/features/organizations/components/organization-filter";
 
-import { useEndEmployment } from "../api/mutations";
 import { EMPLOYMENT_SORTS, useEmployment, useEmployments, type Employment } from "../api/queries";
-import { StartEmploymentDialog } from "./start-employment-dialog";
 
 const ALL = "all";
 const CURRENT_FILTERS = [
@@ -57,50 +51,21 @@ const CURRENT_FILTERS = [
 
 const employmentStatus = (employment: Employment) => (employment.is_current ? "current" : "ended");
 
-/** Starts an employment; hidden without employee_access.employment.create. */
-export function StartEmploymentAction({
-  employee,
-  size,
-}: {
-  employee?: { id: string; label: string };
-  size?: "sm";
-}) {
-  const [open, setOpen] = useState(false);
-  if (!useCan(EmploymentAdminPermission.EMPLOYMENT_CREATE)) return null;
+/** The employee as synchronized from RealHRSoft: name, with the email beneath when sent. */
+function EmployeeName({ employment, link }: { employment: Employment; link?: boolean }) {
+  const name = employment.employee_name || employment.employee_email || "Unnamed employee";
   return (
     <>
-      <Button size={size} variant={size ? "outline" : "default"} onClick={() => setOpen(true)}>
-        <Plus aria-hidden />
-        Start employment
-      </Button>
-      <StartEmploymentDialog open={open} onOpenChange={setOpen} employee={employee} />
-    </>
-  );
-}
-
-/** Ends a current employment; hidden without employee_access.employment.end. */
-function EndEmploymentAction({ employment, size }: { employment: Employment; size?: "sm" }) {
-  const [open, setOpen] = useState(false);
-  const end = useEndEmployment(employment.id);
-  const canEnd = useCan(EmploymentAdminPermission.EMPLOYMENT_END);
-  if (!canEnd || !employment.is_current) return null;
-  return (
-    <>
-      <Button size={size} variant={size ? "ghost" : "destructive"} onClick={() => setOpen(true)}>
-        End employment
-      </Button>
-      <ReasonDialog
-        open={open}
-        onOpenChange={setOpen}
-        title="End this employment?"
-        description={`${employment.user_email} immediately loses marketplace browsing and claiming through ${employment.organization_name}. Their claims are kept, and partners can still confirm active ones until they expire.`}
-        confirmLabel="End employment"
-        destructive
-        onConfirm={async (reason) => {
-          await end.mutateAsync({ expected_version: employment.version, reason });
-          toast.success(`Employment of ${employment.user_email} ended`);
-        }}
-      />
+      {link ? (
+        <Link href={`/admin/employments/${employment.id}`} className="font-medium hover:underline">
+          {name}
+        </Link>
+      ) : (
+        <span className="font-medium">{name}</span>
+      )}
+      {employment.employee_email && employment.employee_name ? (
+        <span className="text-muted-foreground block text-xs">{employment.employee_email}</span>
+      ) : null}
     </>
   );
 }
@@ -128,68 +93,39 @@ const ENDED_COLUMN: DataTableColumn<Employment> = {
   cell: (employment) => (employment.ended_at ? formatDate(employment.ended_at) : "—"),
 };
 
-const EMPLOYER_HISTORY_COLUMNS: DataTableColumns<Employment> = [
-  {
-    id: "employer",
-    header: "Employer",
-    sortKey: "organization_name",
-    cell: (employment) => (
-      <Link href={`/admin/employments/${employment.id}`} className="font-medium hover:underline">
-        {employment.organization_name}
-      </Link>
-    ),
-  },
-  STATUS_COLUMN,
-  STARTED_COLUMN,
-  ENDED_COLUMN,
-];
-
 export function EmploymentsDirectory() {
   const { searchParams, set } = useUrlParams();
   const search = searchParams.get("search") ?? "";
   const current = CURRENT_FILTERS.find((f) => f.value === searchParams.get("status")) ?? null;
-  const userParam = searchParams.get("user_id");
+  const employeeParam = searchParams.get("employee_id");
   const organizationParam = searchParams.get("organization_id");
-  const userId = userParam && isUuid(userParam) ? userParam : null;
+  const employeeId = employeeParam && isUuid(employeeParam) ? employeeParam : null;
   const organizationId = organizationParam && isUuid(organizationParam) ? organizationParam : null;
   const sort = useSortParam(EMPLOYMENT_SORTS);
   const paging = usePageParam();
   const employments = useEmployments(
-    { search, isCurrent: current?.isCurrent ?? null, userId, organizationId, ordering: sort.value },
+    {
+      search,
+      isCurrent: current?.isCurrent ?? null,
+      employeeId,
+      organizationId,
+      ordering: sort.value,
+    },
     paging,
   );
-  const canViewUsers = useCan(IdentityPermission.USER_VIEW);
   const canViewOrganizations = useCan(OrganizationAdminPermission.ORGANIZATION_VIEW);
-  const canEnd = useCan(EmploymentAdminPermission.EMPLOYMENT_END);
 
   function setParam(name: string, value: string | null) {
     set({ [name]: value });
   }
 
-  const filtered = Boolean(search || current || userId || organizationId);
+  const filtered = Boolean(search || current || employeeId || organizationId);
   const columns: DataTableColumns<Employment> = [
     {
       id: "employee",
       header: "Employee",
-      sortKey: "user_email",
-      cell: (employment) => (
-        <>
-          <Link
-            href={`/admin/employments/${employment.id}`}
-            className="font-medium hover:underline"
-          >
-            {employment.user_email}
-          </Link>
-          {canViewUsers ? (
-            <Link
-              href={`/admin/users/${employment.user_id}`}
-              className="text-muted-foreground block text-xs hover:underline"
-            >
-              User account
-            </Link>
-          ) : null}
-        </>
-      ),
+      sortKey: "employee_name",
+      cell: (employment) => <EmployeeName employment={employment} link />,
     },
     {
       id: "employer",
@@ -210,23 +146,19 @@ export function EmploymentsDirectory() {
     STATUS_COLUMN,
     STARTED_COLUMN,
     ENDED_COLUMN,
-    canEnd && {
-      id: "actions",
-      header: <span className="sr-only">Actions</span>,
-      className: "text-right",
-      cell: (employment) => <EndEmploymentAction employment={employment} size="sm" />,
-    },
   ];
-  // The employer has its own picker; an employee is linked to from user pages.
-  const idFilters = [{ param: "user_id", label: "Employee", value: userId }].filter((f) => f.value);
+  // The employer has its own picker; an employee is linked to from employment records.
+  const idFilters = [{ param: "employee_id", label: "Employee", value: employeeId }].filter(
+    (f) => f.value,
+  );
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <SearchField 
-            placeholder="Search employee email" 
-            aria-label="Search employments by employee email" 
+          <SearchField
+            placeholder="Search employee name or email"
+            aria-label="Search employments by employee name or email"
             className="max-w-sm"
           />
           <Select
@@ -265,7 +197,6 @@ export function EmploymentsDirectory() {
             </Badge>
           ))}
         </div>
-        <StartEmploymentAction />
       </div>
 
       <QueryDataTable
@@ -282,7 +213,7 @@ export function EmploymentsDirectory() {
             description={
               filtered
                 ? "Try different filters."
-                : "Start an employment to let an employee account use the marketplace."
+                : "Employments arrive from RealHRSoft synchronization."
             }
           />
         }
@@ -330,14 +261,13 @@ export function EmploymentRecord({ employmentId }: { employmentId: string }) {
 }
 
 function LoadedEmployment({ employment }: { employment: Employment }) {
-  const canViewUsers = useCan(IdentityPermission.USER_VIEW);
   const canViewOrganizations = useCan(OrganizationAdminPermission.ORGANIZATION_VIEW);
   const canViewClaims = useCan(ClaimAdminPermission.CLAIM_VIEW);
   return (
     <div className="space-y-6">
       <BackToEmployments />
       <PageHeader
-        title={employment.user_email}
+        title={employment.employee_name || employment.employee_email || "Unnamed employee"}
         description={`Employed by ${employment.organization_name}`}
         actions={
           <div className="flex flex-wrap items-center gap-2">
@@ -350,48 +280,45 @@ function LoadedEmployment({ employment }: { employment: Employment }) {
                 </Link>
               </Button>
             ) : null}
-            <EndEmploymentAction employment={employment} />
+            <Button asChild variant="outline">
+              <Link href={`/admin/employments?employee_id=${employment.employee_id}`}>
+                <BriefcaseBusiness aria-hidden />
+                All employments
+              </Link>
+            </Button>
           </div>
         }
       />
-      <EmploymentDetails
-        employment={employment}
-        canViewUsers={canViewUsers}
-        canViewOrganizations={canViewOrganizations}
-      />
+      <EmploymentDetails employment={employment} canViewOrganizations={canViewOrganizations} />
     </div>
   );
 }
 
 function EmploymentDetails({
   employment,
-  canViewUsers,
   canViewOrganizations,
 }: {
   employment: Employment;
-  canViewUsers: boolean;
   canViewOrganizations: boolean;
 }) {
+  const canViewPartners = useCan(PartnerAdminPermission.PARTNER_VIEW);
   return (
     <Card>
       <CardHeader>
         <CardTitle>Employment</CardTitle>
         <CardDescription>
           {employment.is_current
-            ? "The employee may browse and claim offers targeted at this employer."
-            : "Ended. The employee keeps their claim history but can no longer browse or claim."}
+            ? "Synchronized from RealHRSoft. The employee may use offers and benefits for this company."
+            : "Ended by RealHRSoft. The employee keeps their claim history but can no longer claim for this company."}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <DetailList>
           <Detail label="Employee">
-            {canViewUsers ? (
-              <Link href={`/admin/users/${employment.user_id}`} className="hover:underline">
-                {employment.user_email}
-              </Link>
-            ) : (
-              employment.user_email
-            )}
+            <EmployeeName employment={employment} />
+          </Detail>
+          <Detail label="RealHRSoft employee">
+            <span className="font-mono text-xs">{employment.employee_external_id}</span>
           </Detail>
           <Detail label="Employer">
             {canViewOrganizations ? (
@@ -405,9 +332,16 @@ function EmploymentDetails({
               employment.organization_name
             )}
           </Detail>
-          <Detail label="Source">
-            {employment.source === "manual" ? "Recorded by an administrator" : employment.source}
+          <Detail label="Client">
+            {canViewPartners ? (
+              <Link href={`/admin/partners/${employment.partner_id}`} className="hover:underline">
+                View client
+              </Link>
+            ) : (
+              <span className="font-mono text-xs">{employment.partner_id}</span>
+            )}
           </Detail>
+          <Detail label="Source">RealHRSoft synchronization</Detail>
           <Detail label="Started">{formatDateTime(employment.started_at)}</Detail>
           <Detail label="Started by">
             <span className="font-mono text-xs">{employment.started_by}</span>
@@ -427,61 +361,6 @@ function EmploymentDetails({
           ) : null}
           <Detail label="Version">{employment.version}</Detail>
         </DetailList>
-      </CardContent>
-    </Card>
-  );
-}
-
-/**
- * An employee account's employments, on its user page. Only employee accounts can be
- * employed, so the card is offered for them alone; the API still decides every action.
- */
-export function UserEmploymentsCard({ userId, email }: { userId: string; email: string }) {
-  const canView = useCan(EmploymentAdminPermission.EMPLOYMENT_VIEW);
-  const sort = useSortParam(EMPLOYMENT_SORTS, "employments_ordering");
-  const paging = usePageParam("employments_");
-  const employments = useEmployments(
-    { search: "", isCurrent: null, userId, organizationId: null, ordering: sort.value },
-    paging,
-    { enabled: canView },
-  );
-  if (!canView) return null;
-
-  const hasCurrent = resultRows(employments).some((employment) => employment.is_current);
-  return (
-    <Card>
-      <CardHeader className="flex-row items-start justify-between gap-4">
-        <div className="space-y-1.5">
-          <CardTitle>Employment</CardTitle>
-          <CardDescription>
-            A current employment lets this employee use the marketplace.
-          </CardDescription>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {employments.isSuccess && !hasCurrent ? (
-            <StartEmploymentAction employee={{ id: userId, label: email }} size="sm" />
-          ) : null}
-        </div>
-      </CardHeader>
-      <CardContent>
-        <QueryDataTable
-          aria-label="Employment history"
-          query={employments}
-          columns={EMPLOYER_HISTORY_COLUMNS}
-          sort={sort}
-          paging={paging}
-          rowKey={(employment) => employment.id}
-          skeletonRows={2}
-          className="rounded-lg"
-          empty={
-            <EmptyState
-              icon={BriefcaseBusiness}
-              title="No employment recorded"
-              description="Start one to let this employee browse and claim offers."
-              className="py-8"
-            />
-          }
-        />
       </CardContent>
     </Card>
   );

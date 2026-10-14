@@ -24,9 +24,17 @@ export function useCanInOrganization(permission: PermissionCode): boolean {
   return can(actor, permission, { organizationId: actor?.organization?.id ?? null });
 }
 
+/** Client portal check: the permission, granted in the client the actor currently selects. */
+export function useCanInClient(permission: PermissionCode): boolean {
+  const { actor } = useSession();
+  return can(actor, permission, { clientId: actor?.client?.id ?? null });
+}
+
 type CanProps = PermissionScope & {
   /** Check within the currently selected organization (portal actions). */
   inOrganization?: boolean;
+  /** Check within the currently selected client (Client portal actions). */
+  inClient?: boolean;
   children: ReactNode;
   /** Rendered when the permission is absent. Defaults to nothing. */
   fallback?: ReactNode;
@@ -40,14 +48,18 @@ export function Can({
   permission,
   anyOf,
   organizationId,
+  clientId,
   inOrganization = false,
+  inClient = false,
   fallback = null,
   children,
 }: CanProps) {
   const { actor } = useSession();
-  const scope = inOrganization
-    ? { organizationId: actor?.organization?.id ?? null }
-    : { organizationId };
+  const scope = inClient
+    ? { clientId: actor?.client?.id ?? null }
+    : inOrganization
+      ? { organizationId: actor?.organization?.id ?? null }
+      : { organizationId, clientId };
   const allowed = anyOf ? canAny(actor, anyOf, scope) : can(actor, permission, scope);
   return <>{allowed ? children : fallback}</>;
 }

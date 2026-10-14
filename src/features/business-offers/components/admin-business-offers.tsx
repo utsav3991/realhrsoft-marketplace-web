@@ -131,7 +131,7 @@ const EMPLOYER_ONLY =
 function ProviderCell({ offer }: { offer: Offer }) {
   return (
     <>
-      <p>{offer.partner?.business_name ?? offer.provider_organization.name}</p>
+      <p>{offer.partner?.business_name ?? offer.provider_organization?.name}</p>
       <p className="text-muted-foreground text-xs">{offer.partner ? "Partner" : "Employer"}</p>
     </>
   );
@@ -670,8 +670,10 @@ function BusinessOfferWorkspace({ offer }: { offer: Offer }) {
   const partner = offer.partner;
   const providerHref = partner
     ? canViewPartner && `/admin/partners/${partner.id}`
-    : canViewOrganization && `/admin/organizations/${offer.provider_organization.id}`;
-  const providerName = partner?.business_name ?? offer.provider_organization.name;
+    : canViewOrganization &&
+      offer.provider_organization &&
+      `/admin/organizations/${offer.provider_organization.id}`;
+  const providerName = partner?.business_name ?? offer.provider_organization?.name ?? "—";
 
   // Two buttons at most; the rest go in the menu. Only a non-destructive first is cobalt.
   const [primary, secondary, ...menu] = actions;

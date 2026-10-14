@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setAccessToken } from "@/shared/auth/token-store";
 
 import { apiFetch, setAccessTokenRenewer } from "./client";
+import { setActiveClientId } from "./client-context";
 import { setActiveOrganizationId } from "./organization-context";
 
 const fetchMock = vi.fn<(request: Request) => Promise<Response>>();
@@ -17,6 +18,7 @@ beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
   setAccessToken(null);
   setActiveOrganizationId(null);
+  setActiveClientId(null);
 });
 
 afterEach(() => {
@@ -55,6 +57,22 @@ describe("apiFetch", () => {
     await apiFetch(new Request(`http://localhost:3000/api/v1${path}`));
 
     expect(sent(0).headers.get("X-Organization-ID")).toBe(scoped ? "org-1" : null);
+  });
+
+  it.each([
+    ["/auth/me", true],
+    ["/client/benefits", true],
+    ["/client/members", true],
+    ["/employer/benefits", false],
+    ["/admin/partners", false],
+  ])("sends X-Client-ID to %s only when client-scoped (%s)", async (path, scoped) => {
+    setAccessToken("token-1");
+    setActiveClientId("client-1");
+    fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
+
+    await apiFetch(new Request(`http://localhost:3000/api/v1${path}`));
+
+    expect(sent(0).headers.get("X-Client-ID")).toBe(scoped ? "client-1" : null);
   });
 
   it("renews once on 401 and replays with the new token", async () => {

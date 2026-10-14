@@ -32,6 +32,7 @@ const user: Schemas["UserDetail"] = {
       assignment_id: "a1",
       role_id: "r1",
       role_code: "support_agent",
+      client_id: null,
       role_display_name: "Support agent",
       organization_id: null,
       granted_at: "2026-09-02T10:00:00Z",
@@ -58,6 +59,8 @@ function actor(id: string, permissions: PermissionCode[]): CurrentActor {
     globalPermissions: new Set(permissions),
     organization: null,
     memberships: [],
+    client: null,
+    clients: [],
   };
 }
 

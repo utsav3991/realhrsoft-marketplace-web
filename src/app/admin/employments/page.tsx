@@ -13,7 +13,7 @@ export default function AdminEmploymentsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Employments"
-        description="Which organization employs each employee. A current employment opens the marketplace to them until RealHRsoft sign-in supplies it."
+        description="Which companies employ each RealHRSoft employee, as synchronized from RealHRSoft. Read-only: RealHRSoft owns employment."
       />
       <RequirePermission anyOf={[EmploymentAdminPermission.EMPLOYMENT_VIEW]}>
         <Suspense>

@@ -34,6 +34,7 @@ import {
 import { Switch } from "@/design-system/primitives/switch";
 import { useSession } from "@/shared/auth";
 
+import { ClientSwitcher } from "./client-scope";
 import { OrganizationSwitcher } from "./organization-scope";
 import { PortalGate } from "./portal-gate";
 import {
@@ -45,9 +46,18 @@ import {
   type PortalId,
 } from "./portals";
 
-function isActive(pathname: string, item: NavItem, portal: Portal): boolean {
+function matches(pathname: string, item: NavItem, portal: Portal): boolean {
   if (item.href === portal.basePath) return pathname === item.href;
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
+}
+
+/** The deepest matching item is the active one, so a nested item does not light its parent. */
+function activeHref(pathname: string, items: readonly NavItem[], portal: Portal): string | null {
+  return (
+    items
+      .filter((item) => matches(pathname, item, portal))
+      .sort((a, b) => b.href.length - a.href.length)[0]?.href ?? null
+  );
 }
 
 /** Logo block and product name; the workspace switcher when the actor has several portals. */
@@ -127,6 +137,11 @@ function PortalNavigation({ portal }: { portal: Portal }) {
   const groups = portal.navigation
     .map((group) => ({ ...group, items: group.items.filter((item) => showsNavItem(actor, item)) }))
     .filter((group) => group.items.length > 0);
+  const current = activeHref(
+    pathname,
+    groups.flatMap((group) => group.items),
+    portal,
+  );
 
   return (
     <nav aria-label={`${portal.label} navigation`} className="flex flex-col gap-2">
@@ -135,7 +150,7 @@ function PortalNavigation({ portal }: { portal: Portal }) {
           {group.label ? <SidebarGroupLabel>{group.label}</SidebarGroupLabel> : null}
           <SidebarMenu>
             {group.items.map((item) => {
-              const active = isActive(pathname, item, portal);
+              const active = item.href === current;
               return (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
@@ -252,6 +267,7 @@ function TopBar({ portal, actions }: { portal: Portal; actions?: ReactNode }) {
     <header className="bg-background/80 sticky top-0 z-10 flex min-h-14 items-center gap-2 border-b px-3 py-2 backdrop-blur sm:px-4">
       <SidebarTrigger />
       {portal.capacity ? <OrganizationSwitcher capacity={portal.capacity} /> : null}
+      {portal.clientScoped ? <ClientSwitcher /> : null}
       <div className="ml-auto flex items-center gap-2">
         {actions}
         <ThemeToggle />

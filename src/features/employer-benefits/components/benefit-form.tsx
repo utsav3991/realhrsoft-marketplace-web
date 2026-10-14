@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Users } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFormContext } from "react-hook-form";
 
 import { DateTimePicker } from "@/design-system/components/date-picker";
 import { RichTextEditor } from "@/design-system/components/rich-text-editor";
@@ -21,8 +21,16 @@ import {
   FormSection,
 } from "@/design-system/primitives/form";
 import { Input } from "@/design-system/primitives/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/design-system/primitives/select";
 import { Textarea } from "@/design-system/primitives/textarea";
 import { BenefitValueFields } from "@/features/offers/components/benefit-value-fields";
+import { AudienceOrganizations } from "@/features/offers/components/offer-form";
 import { errorMessage, type Schemas } from "@/shared/api";
 import { applyApiFieldErrors } from "@/shared/forms/api-field-errors";
 
@@ -42,10 +50,24 @@ export interface BenefitIntentButton {
   primary?: boolean;
 }
 
+/** A company the client may target, and whether its employees can receive benefits now. */
+export interface AudienceCompany {
+  id: string;
+  name: string;
+  employer: boolean;
+}
+
+/**
+ * Who the benefit reaches. A company's benefit always goes to its own employees; a client's
+ * to every company of the client (including ones added later) or the selected companies.
+ */
+export type BenefitFormAudience =
+  | { kind: "organization"; organizationName: string }
+  | { kind: "client"; clientName: string; companies: readonly AudienceCompany[] };
+
 interface BenefitFormProps {
   defaultValues: BenefitValues;
-  /** The employer whose employees are the fixed audience. */
-  organizationName: string;
+  audience: BenefitFormAudience;
   /** Submit buttons, one per intent the member may use here. */
   intents: readonly BenefitIntentButton[];
   /** Resolves on success or throws an ApiError, shown in the form. */
@@ -54,12 +76,12 @@ interface BenefitFormProps {
 }
 
 /**
- * Benefit content, value, validity and usage limit. The API replaces every field on save. There
- * is no audience field: a Company Benefit always goes to the organization's own employees.
+ * Benefit content, value, validity, usage limit and, for a client, the audience. The API
+ * replaces every field on save.
  */
 export function BenefitForm({
   defaultValues,
-  organizationName,
+  audience,
   intents,
   onSubmit,
   onCancel,
@@ -266,17 +288,23 @@ export function BenefitForm({
           />
         </FormSection>
 
-        <FormSection title="Audience" columns={1}>
-          <div className="bg-muted/50 flex items-start gap-3 rounded-lg border p-4">
-            <Users className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Own employees of {organizationName}</p>
-              <p className="text-muted-foreground text-xs">
-                Company benefits always go to your own employees only. Other organizations never see
-                them.
-              </p>
+        <FormSection title="Audience" columns={1} disabled={isSubmitting}>
+          {audience.kind === "organization" ? (
+            <div className="bg-muted/50 flex items-start gap-3 rounded-lg border p-4">
+              <Users className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
+              <div className="space-y-1">
+                <p className="text-sm font-medium">
+                  Own employees of {audience.organizationName}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  Company benefits always go to your own employees only. Other organizations never
+                  see them.
+                </p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <ClientAudienceFields clientName={audience.clientName} companies={audience.companies} />
+          )}
         </FormSection>
 
         <FormField
@@ -317,5 +345,94 @@ export function BenefitForm({
         </FormActions>
       </form>
     </Form>
+  );
+}
+
+/** A client benefit's audience: every company of the client, or the selected ones. */
+function ClientAudienceFields({
+  clientName,
+  companies,
+}: {
+  clientName: string;
+  companies: readonly AudienceCompany[];
+}) {
+  const { control, watch } = useFormContext<BenefitValues>();
+  const audienceType = watch("audienceType");
+  return (
+    <>
+      <FormField
+        control={control}
+        name="audienceType"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Companies</FormLabel>
+            <Select value={field.value} onValueChange={field.onChange}>
+              <FormControl>
+                <SelectTrigger ref={field.ref} onBlur={field.onBlur} className="w-full sm:w-96">
+                  <SelectValue />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="all_client_organizations">
+                  Every {clientName} company, including ones added later
+                </SelectItem>
+                <SelectItem value="selected_organizations">Selected companies</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormDescription>
+              Only employees of companies with Employer capacity receive it, while the company
+              is active in RealHRSoft. Each employee&apos;s uses count across all their companies.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      {audienceType === "selected_organizations" ? (
+        <AudienceOrganizations
+          picker={(props) => <CompanyPicker companies={companies} {...props} />}
+          fixedNote=""
+        />
+      ) : null}
+    </>
+  );
+}
+
+/** Adds one of the client's companies to the selection. */
+function CompanyPicker({
+  companies,
+  selected,
+  onAdd,
+}: {
+  companies: readonly AudienceCompany[];
+  selected: readonly { id: string }[];
+  onAdd: (company: { id: string; name: string }) => void;
+}) {
+  const remaining = companies.filter((c) => !selected.some((s) => s.id === c.id));
+  if (companies.length === 0) {
+    return <p className="text-muted-foreground text-sm">This client has no active companies.</p>;
+  }
+  if (remaining.length === 0) {
+    return <p className="text-muted-foreground text-sm">Every company is selected.</p>;
+  }
+  return (
+    <Select
+      value=""
+      onValueChange={(id) => {
+        const company = remaining.find((c) => c.id === id);
+        if (company) onAdd({ id: company.id, name: company.name });
+      }}
+    >
+      <SelectTrigger className="w-full sm:w-96" aria-label="Add a company">
+        <SelectValue placeholder="Add a company" />
+      </SelectTrigger>
+      <SelectContent>
+        {remaining.map((company) => (
+          <SelectItem key={company.id} value={company.id}>
+            {company.name}
+            {company.employer ? "" : " (no Employer capacity)"}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

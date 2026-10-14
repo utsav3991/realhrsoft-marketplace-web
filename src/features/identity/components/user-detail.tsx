@@ -203,7 +203,8 @@ function GrantsCard({ user, isSelf }: { user: User; isSelf: boolean }) {
     (canAssign || canManageOrganizationRoles) &&
     canListRoles;
   const mayRevoke = (grant: Grant) =>
-    !isSelf && (grant.organization_id ? canManageOrganizationRoles : canRevoke);
+    !isSelf &&
+    (grant.organization_id || grant.client_id ? canManageOrganizationRoles : canRevoke);
   const showRevoke = user.grants.some(mayRevoke);
   const sort = useSortParam(["role", "scope", "granted"] as const, "grants_ordering");
 
@@ -259,13 +260,18 @@ function GrantsCard({ user, isSelf }: { user: User; isSelf: boolean }) {
               id: "scope",
               header: "Scope",
               sortKey: "scope",
-              sortValue: (grant) => (grant.organization_id ? 1 : 0),
+              sortValue: (grant) => (grant.organization_id ? 1 : grant.client_id ? 2 : 0),
               cellClassName: "text-muted-foreground",
               cell: (grant) =>
                 grant.organization_id ? (
                   <span className="flex flex-col">
                     Organization
                     <span className="font-mono text-xs">{grant.organization_id}</span>
+                  </span>
+                ) : grant.client_id ? (
+                  <span className="flex flex-col">
+                    Client
+                    <span className="font-mono text-xs">{grant.client_id}</span>
                   </span>
                 ) : (
                   "Platform-wide"

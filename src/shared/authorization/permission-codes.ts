@@ -5,7 +5,9 @@
  *
  * Every code has one scope (ADR-014). Global codes come only from platform-wide grants;
  * organization codes come only from a grant in the organization selected with
- * X-Organization-ID. Neither kind ever satisfies a check of the other kind.
+ * X-Organization-ID (directly, or through a client role of its client); client codes only
+ * from a client role in the client selected with X-Client-ID. No kind ever satisfies a check
+ * of another kind.
  */
 export const IdentityPermission = {
   USER_VIEW: "identity.user.view",
@@ -124,13 +126,29 @@ export const BusinessOfferPermission = {
 } as const;
 
 /**
- * Global: interim employee eligibility (/admin/employments). An employee may use the
- * marketplace only while an administrator-recorded employment is current.
+ * Global: employments synchronized from RealHRSoft (/admin/employments), read-only. Employees
+ * are RealHRSoft identities, not Marketplace users; RealHRSoft owns their employment.
  */
 export const EmploymentAdminPermission = {
   EMPLOYMENT_VIEW: "employee_access.employment.view",
-  EMPLOYMENT_CREATE: "employee_access.employment.create",
-  EMPLOYMENT_END: "employee_access.employment.end",
+} as const;
+
+/**
+ * Global: the RealHRSoft integration. Sync status, reconciliation and redrive of stuck events
+ * (/integrations/realhrsoft/*), and emergency blocks on employee access
+ * (/admin/employee-access/denials).
+ */
+export const IntegrationAdminPermission = {
+  SYNC_VIEW: "identity.realhrsoft_sync.view",
+  SYNC_RECONCILE: "identity.realhrsoft_sync.reconcile",
+  SYNC_REDRIVE: "identity.realhrsoft_sync.redrive",
+  EMPLOYEE_ACCESS_DENY: "identity.employee_access.deny",
+} as const;
+
+/** Global: rollout switches (/admin/feature-flags). */
+export const FeatureFlagAdminPermission = {
+  FLAG_VIEW: "core.feature_flag.view",
+  FLAG_MANAGE: "core.feature_flag.manage",
 } as const;
 
 /**
@@ -251,6 +269,32 @@ export const PartnerMarketingPermission = {
   AD_SUBMIT: "marketing.own_ad.submit",
 } as const;
 
+/**
+ * Client: held through a client role in the client selected with X-Client-ID (the Client
+ * portal). A client is a RealHRSoft group: a Partner and every one of its companies.
+ */
+export const ClientBenefitPermission = {
+  BENEFIT_VIEW: "offers.client_benefit.view",
+  BENEFIT_CREATE: "offers.client_benefit.create",
+  BENEFIT_UPDATE: "offers.client_benefit.update",
+  /** Publishes a draft and unpublishes the live version. */
+  BENEFIT_PUBLISH: "offers.client_benefit.publish",
+  /** Pauses and resumes. */
+  BENEFIT_PAUSE: "offers.client_benefit.pause",
+  BENEFIT_RETIRE: "offers.client_benefit.retire",
+} as const;
+
+/** Client: usage of the client's benefits, in total and per company, as counts. */
+export const ClientAnalyticsPermission = {
+  BENEFIT_REPORT_VIEW: "analytics.client_benefit_report.view",
+} as const;
+
+/** Client: the client's own members and client roles (/client/members, /client/roles). */
+export const ClientAdministrationPermission = {
+  MEMBER_MANAGE: "partners.client_member.manage",
+  ROLE_MANAGE: "partners.client_role.manage",
+} as const;
+
 type ValueOf<T> = T[keyof T];
 
 export type IdentityPermissionCode = ValueOf<typeof IdentityPermission>;
@@ -265,7 +309,9 @@ export type GlobalPermissionCode =
   | ValueOf<typeof AnalyticsAdminPermission>
   | ValueOf<typeof BenefitAdminPermission>
   | ValueOf<typeof RedemptionAdminPermission>
-  | ValueOf<typeof MarketingAdminPermission>;
+  | ValueOf<typeof MarketingAdminPermission>
+  | ValueOf<typeof IntegrationAdminPermission>
+  | ValueOf<typeof FeatureFlagAdminPermission>;
 export type OrganizationPermissionCode =
   | ValueOf<typeof PartnerPermission>
   | ValueOf<typeof PartnerOfferPermission>
@@ -276,7 +322,14 @@ export type OrganizationPermissionCode =
   | ValueOf<typeof EmployerAnalyticsPermission>
   | ValueOf<typeof PartnerRedemptionPermission>
   | ValueOf<typeof PartnerMarketingPermission>;
-export type PermissionCode = GlobalPermissionCode | OrganizationPermissionCode;
+export type ClientPermissionCode =
+  | ValueOf<typeof ClientBenefitPermission>
+  | ValueOf<typeof ClientAnalyticsPermission>
+  | ValueOf<typeof ClientAdministrationPermission>;
+export type PermissionCode =
+  | GlobalPermissionCode
+  | OrganizationPermissionCode
+  | ClientPermissionCode;
 
 /** Every administrative global code: holding any of them opens the admin console. */
 export const GLOBAL_PERMISSIONS: readonly GlobalPermissionCode[] = [
@@ -291,4 +344,13 @@ export const GLOBAL_PERMISSIONS: readonly GlobalPermissionCode[] = [
   ...Object.values(BenefitAdminPermission),
   ...Object.values(RedemptionAdminPermission),
   ...Object.values(MarketingAdminPermission),
+  ...Object.values(IntegrationAdminPermission),
+  ...Object.values(FeatureFlagAdminPermission),
+];
+
+/** Every client code: holding any of them in some client opens the Client portal. */
+export const CLIENT_PERMISSIONS: readonly ClientPermissionCode[] = [
+  ...Object.values(ClientBenefitPermission),
+  ...Object.values(ClientAnalyticsPermission),
+  ...Object.values(ClientAdministrationPermission),
 ];

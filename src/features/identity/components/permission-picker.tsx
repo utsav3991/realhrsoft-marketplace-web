@@ -15,8 +15,11 @@ interface PermissionPickerProps {
   disabled?: boolean;
   /** Prefix for element ids, so two pickers can share a page. */
   idPrefix?: string;
-  /** Only permissions of this scope can be added (a role holds codes of one scope only). */
-  scope?: "global" | "organization";
+  /**
+   * Only permissions this scope's roles may hold: global or organization codes, or for a client
+   * role client codes plus organization codes (which apply in every company of the client).
+   */
+  scope?: "global" | "organization" | "client";
 }
 
 interface Option {
@@ -34,12 +37,14 @@ interface Option {
 function optionsFor(
   catalogue: readonly Permission[],
   value: readonly PermissionGrantValue[],
-  scope: "global" | "organization",
+  scope: "global" | "organization" | "client",
 ) {
+  const allowed = scope === "client" ? ["client", "organization"] : [scope];
   const options = new Map<string, Option>();
   for (const permission of catalogue) {
     const selected = value.some((grant) => grant.code === permission.code);
-    if ((permission.status !== "active" || permission.scope !== scope) && !selected) continue;
+    if ((permission.status !== "active" || !allowed.includes(permission.scope)) && !selected)
+      continue;
     options.set(permission.code, {
       code: permission.code,
       displayName: permission.display_name,
@@ -73,7 +78,8 @@ export function PermissionPicker({
   idPrefix = "permission",
   scope = "global",
 }: PermissionPickerProps) {
-  // Organization permissions are never held globally, so they cannot be delegated (ADR-014).
+  // Organization and client permissions are never held globally, so they cannot be delegated
+  // (ADR-014).
   const delegation = scope === "global";
   const selected = new Map(value.map((grant) => [grant.code, grant]));
 

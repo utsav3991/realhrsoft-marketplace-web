@@ -30,3 +30,15 @@ export function pathToken(value: string): string {
 export function isPathToken(value: string): boolean {
   return TOKEN.test(value);
 }
+
+const DOTTED_KEY = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/;
+
+/**
+ * Guards a dotted catalogue key used as a path segment, such as a feature flag
+ * (`realhrsoft.sync`). Every dot-separated part starts with a letter, so "." and ".." never
+ * pass.
+ */
+export function pathKey(value: string): string {
+  if (!DOTTED_KEY.test(value)) throw new TypeError("Invalid key");
+  return value;
+}

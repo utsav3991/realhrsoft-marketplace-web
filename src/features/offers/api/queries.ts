@@ -15,7 +15,7 @@ export type AcceptanceMode = Schemas["AcceptanceModeEnum"];
 export type PresentationMethod = Schemas["PresentationMethodEnum"];
 export type PostedVia = Offer["posted_via"];
 /** Marketplace offers are never posted through the employer portal. */
-export type OfferPostedVia = Exclude<PostedVia, "employer_portal">;
+export type OfferPostedVia = Exclude<PostedVia, "employer_portal" | "client_portal">;
 export type PartnerSource = Schemas["SourceEnum"];
 
 /** Offer columns the API sorts by (`ordering`). */
@@ -218,6 +218,10 @@ export function useCategory(categoryId: string, { enabled = true } = {}) {
 // organization, which is the selected one inside <RequireOrganization>.
 export function organizationHeader(organizationId: string) {
   return { "X-Organization-ID": organizationId };
+}
+
+export function clientHeader(clientId: string) {
+  return { "X-Client-ID": clientId };
 }
 
 export function useOwnOffers(

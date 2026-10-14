@@ -1,4 +1,4 @@
-export type { Capacity, CurrentActor, Membership } from "./current-actor";
+export type { Capacity, ClientAccess, CurrentActor, Membership } from "./current-actor";
 export {
   SessionContext,
   SessionProvider,
@@ -7,3 +7,4 @@ export {
   type SessionValue,
 } from "./session-provider";
 export { useActiveOrganization, useSelectedOrganizationId } from "./use-active-organization";
+export { useActiveClient, useSelectedClientId } from "./use-active-client";

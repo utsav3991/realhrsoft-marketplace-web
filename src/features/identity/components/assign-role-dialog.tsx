@@ -70,6 +70,7 @@ export function AssignRoleDialog({
     defaultValues: {
       scope: canAssignGlobal ? "global" : "organization",
       organizationId: "",
+      clientId: "",
       roleId: "",
       reason: "",
     },
@@ -83,7 +84,7 @@ export function AssignRoleDialog({
     (role) =>
       role.status === "active" &&
       role.scope === scope &&
-      (scope === "organization" || !heldRoleIds.includes(role.id)),
+      (scope !== "global" || !heldRoleIds.includes(role.id)),
   );
 
   function handleOpenChange(next: boolean) {
@@ -101,6 +102,7 @@ export function AssignRoleDialog({
       await assign.mutateAsync({
         roleId: values.roleId,
         organizationId: values.scope === "organization" ? values.organizationId : null,
+        clientId: values.scope === "client" ? values.clientId : null,
         reason: values.reason,
       });
       const role = grantable.find((candidate) => candidate.id === values.roleId);
@@ -110,6 +112,7 @@ export function AssignRoleDialog({
       const placed = applyApiFieldErrors(error, form, {
         role_id: "roleId",
         organization_id: "organizationId",
+        client_id: "clientId",
         reason: "reason",
       });
       if (!placed) setFailure(errorMessage(error));
@@ -126,7 +129,9 @@ export function AssignRoleDialog({
               <DialogDescription>
                 {scope === "global"
                   ? `${email} receives every permission in the role, platform-wide. You can grant only roles whose permissions you may delegate.`
-                  : `${email} receives the role's portal permissions in one organization, where they must already be a verified member.`}
+                  : scope === "client"
+                    ? `${email} receives the role's client permissions in one client, and its organization permissions in every company of that client. They must already be a member of the client.`
+                    : `${email} receives the role's portal permissions in one organization, where they must already be a verified member.`}
               </DialogDescription>
             </DialogHeader>
 
@@ -134,7 +139,7 @@ export function AssignRoleDialog({
 
             {canAssignGlobal && canAssignOrganization ? (
               <div role="radiogroup" aria-label="Where the role applies" className="flex gap-1">
-                {(["global", "organization"] as const).map((option) => (
+                {(["global", "organization", "client"] as const).map((option) => (
                   <Button
                     key={option}
                     type="button"
@@ -147,10 +152,38 @@ export function AssignRoleDialog({
                       form.setValue("roleId", "");
                     }}
                   >
-                    {option === "global" ? "Platform-wide" : "In an organization"}
+                    {option === "global"
+                      ? "Platform-wide"
+                      : option === "organization"
+                        ? "In an organization"
+                        : "In a client"}
                   </Button>
                 ))}
               </div>
+            ) : null}
+
+            {scope === "client" ? (
+              <FormField
+                control={form.control}
+                name="clientId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Client ID</FormLabel>
+                    <FormControl>
+                      <Input
+                        className="font-mono"
+                        autoComplete="off"
+                        spellCheck={false}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      The client&apos;s partner ID, from its page under Partners.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             ) : null}
 
             {scope === "organization" ? (
@@ -189,7 +222,9 @@ export function AssignRoleDialog({
                     <p className="text-muted-foreground rounded-lg border border-dashed px-3 py-2.5 text-sm">
                       {scope === "global"
                         ? "There are no other active platform-wide roles to grant."
-                        : "There are no active organization roles."}
+                        : scope === "client"
+                          ? "There are no active client roles."
+                          : "There are no active organization roles."}
                     </p>
                   ) : (
                     <Select value={field.value} onValueChange={field.onChange}>

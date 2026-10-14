@@ -1,7 +1,11 @@
 import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 import type { SortOrdering } from "@/design-system/components/data-table";
-import { organizationHeader, type DisplayStatus } from "@/features/offers/api/queries";
+import {
+  clientHeader,
+  organizationHeader,
+  type DisplayStatus,
+} from "@/features/offers/api/queries";
 import { api, nextOffset, PAGE_SIZE, pathId, unwrap, type Page, type Schemas } from "@/shared/api";
 
 // A company benefit is an offer of kind employer_benefit: versioned terms, direct publication
@@ -9,6 +13,14 @@ import { api, nextOffset, PAGE_SIZE, pathId, unwrap, type Page, type Schemas } f
 export type Benefit = Schemas["CompanyBenefit"];
 export type EmployeeBenefit = Schemas["CompanyBenefitCard"];
 export type BenefitClaim = Schemas["OwnClaimListItem"];
+
+/**
+ * Who authors the benefits on a page: a company for its own employees (Employer portal,
+ * X-Organization-ID), or a client for its companies' employees (Client portal, X-Client-ID).
+ */
+export type BenefitOwner = { kind: "organization"; id: string } | { kind: "client"; id: string };
+
+const ownerKey = (owner: BenefitOwner) => `${owner.kind}:${owner.id}`;
 
 /** Benefit columns the API sorts by (`ordering`). */
 export const BENEFIT_SORTS = ["first_published_at", "updated_at", "created_at"] as const;
@@ -28,14 +40,16 @@ export interface AdminBenefitFilters extends BenefitFilters {
 
 export const benefitKeys = {
   all: ["company-benefits"] as const,
-  // The selected employer organization's own benefits (portal).
-  own: (organizationId: string) => [...benefitKeys.all, "own", organizationId] as const,
-  ownList: (organizationId: string, filters: BenefitFilters, page: Page) =>
-    [...benefitKeys.own(organizationId), "list", filters, page] as const,
-  ownDetail: (organizationId: string, id: string) =>
-    [...benefitKeys.own(organizationId), "detail", id] as const,
-  ownVersions: (organizationId: string, id: string, page: Page) =>
-    [...benefitKeys.own(organizationId), "versions", id, page] as const,
+  // The selected company's or client's own benefits (portals).
+  own: (owner: BenefitOwner) => [...benefitKeys.all, "own", ownerKey(owner)] as const,
+  ownList: (owner: BenefitOwner, filters: BenefitFilters, page: Page) =>
+    [...benefitKeys.own(owner), "list", filters, page] as const,
+  ownDetail: (owner: BenefitOwner, id: string) => [...benefitKeys.own(owner), "detail", id] as const,
+  ownVersions: (owner: BenefitOwner, id: string, page: Page) =>
+    [...benefitKeys.own(owner), "versions", id, page] as const,
+  // Client benefits aimed at the selected company (Employer portal, read-only).
+  fromClient: (organizationId: string, filters: BenefitFilters, page: Page) =>
+    [...benefitKeys.all, "from-client", organizationId, filters, page] as const,
   // Aayulogic moderation.
   admin: () => [...benefitKeys.all, "admin"] as const,
   adminList: (filters: AdminBenefitFilters, page: Page) =>
@@ -53,58 +67,91 @@ export const benefitKeys = {
     [...benefitKeys.mineClaims(benefitId), ordering, page] as const,
 };
 
-// --- Employer portal (the selected organization) -----------------------------------------
+// --- Owner portals (the selected company or client) ---------------------------------------
 
-export function useOwnBenefits(organizationId: string, filters: BenefitFilters, page: Page) {
+function listQuery(filters: BenefitFilters, page: Page) {
+  return {
+    search: filters.search || undefined,
+    display_status: filters.status ?? undefined,
+    ordering: filters.ordering ? [filters.ordering] : undefined,
+    offset: page.offset,
+    limit: page.limit,
+  };
+}
+
+// Literal paths keep every call visible to the contract-coverage test.
+export function useOwnBenefits(owner: BenefitOwner, filters: BenefitFilters, page: Page) {
   return useQuery({
-    queryKey: benefitKeys.ownList(organizationId, filters, page),
+    queryKey: benefitKeys.ownList(owner, filters, page),
     queryFn: ({ signal }) =>
       unwrap(
-        api.GET("/employer/benefits", {
-          params: {
-            header: organizationHeader(organizationId),
-            query: {
-              search: filters.search || undefined,
-              display_status: filters.status ?? undefined,
-              ordering: filters.ordering ? [filters.ordering] : undefined,
-              offset: page.offset,
-              limit: page.limit,
-            },
-          },
-          signal,
-        }),
+        owner.kind === "client"
+          ? api.GET("/client/benefits", {
+              params: { header: clientHeader(owner.id), query: listQuery(filters, page) },
+              signal,
+            })
+          : api.GET("/employer/benefits", {
+              params: { header: organizationHeader(owner.id), query: listQuery(filters, page) },
+              signal,
+            }),
       ),
     placeholderData: keepPreviousData,
   });
 }
 
-export function useOwnBenefit(organizationId: string, benefitId: string) {
+export function useOwnBenefit(owner: BenefitOwner, benefitId: string) {
   return useQuery({
-    queryKey: benefitKeys.ownDetail(organizationId, benefitId),
-    queryFn: ({ signal }) =>
-      unwrap(
-        api.GET("/employer/benefits/{offer_id}", {
-          params: {
-            header: organizationHeader(organizationId),
-            path: { offer_id: pathId(benefitId) },
-          },
-          signal,
-        }),
-      ),
+    queryKey: benefitKeys.ownDetail(owner, benefitId),
+    queryFn: ({ signal }) => {
+      const path = { offer_id: pathId(benefitId) };
+      return unwrap(
+        owner.kind === "client"
+          ? api.GET("/client/benefits/{offer_id}", {
+              params: { header: clientHeader(owner.id), path },
+              signal,
+            })
+          : api.GET("/employer/benefits/{offer_id}", {
+              params: { header: organizationHeader(owner.id), path },
+              signal,
+            }),
+      );
+    },
   });
 }
 
-export function useOwnBenefitVersions(organizationId: string, benefitId: string, page: Page) {
+export function useOwnBenefitVersions(owner: BenefitOwner, benefitId: string, page: Page) {
   return useQuery({
-    queryKey: benefitKeys.ownVersions(organizationId, benefitId, page),
+    queryKey: benefitKeys.ownVersions(owner, benefitId, page),
+    queryFn: ({ signal }) => {
+      const path = { offer_id: pathId(benefitId) };
+      const query = { offset: page.offset, limit: page.limit };
+      return unwrap(
+        owner.kind === "client"
+          ? api.GET("/client/benefits/{offer_id}/versions", {
+              params: { header: clientHeader(owner.id), path, query },
+              signal,
+            })
+          : api.GET("/employer/benefits/{offer_id}/versions", {
+              params: { header: organizationHeader(owner.id), path, query },
+              signal,
+            }),
+      );
+    },
+    placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * Client benefits whose audience includes the selected company, published by its client
+ * (group). Company administrators read them here; only the client edits them.
+ */
+export function useBenefitsFromClient(organizationId: string, filters: BenefitFilters, page: Page) {
+  return useQuery({
+    queryKey: benefitKeys.fromClient(organizationId, filters, page),
     queryFn: ({ signal }) =>
       unwrap(
-        api.GET("/employer/benefits/{offer_id}/versions", {
-          params: {
-            header: organizationHeader(organizationId),
-            path: { offer_id: pathId(benefitId) },
-            query: { offset: page.offset, limit: page.limit },
-          },
+        api.GET("/employer/benefits/from-client", {
+          params: { header: organizationHeader(organizationId), query: listQuery(filters, page) },
           signal,
         }),
       ),

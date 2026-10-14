@@ -17,6 +17,8 @@ const NOT_CALLED: Readonly<Record<string, string>> = {
     "Grant rows carry every field, including the revocation; there is no grant detail view.",
   "GET /me/notifications/{notification_id}":
     "Inbox rows already carry every field of an item, and opening one goes to its target.",
+  "POST /integrations/realhrsoft/events":
+    "Server to server: only RealHRSoft's backend delivers signed directory events.",
 };
 
 const root = process.cwd();

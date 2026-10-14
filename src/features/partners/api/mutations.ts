@@ -27,6 +27,56 @@ function useInvalidatePartner(partnerId: string) {
     ]);
 }
 
+// --- Client administration (a RealHRSoft client and its companies) ----------------------
+
+function useInvalidateMembers(partnerId: string) {
+  const queryClient = useQueryClient();
+  return () => queryClient.invalidateQueries({ queryKey: partnerKeys.members(partnerId) });
+}
+
+/** Admits a user as a client member; it grants nothing until a client role is granted. */
+export function useAdmitClientMembership(partnerId: string) {
+  return useMutation({
+    mutationFn: (body: Schemas["ClientMemberInput"]) =>
+      unwrap(
+        api.POST("/admin/partners/{partner_id}/members", {
+          params: { path: { partner_id: pathId(partnerId) } },
+          body,
+        }),
+      ),
+    onSettled: useInvalidateMembers(partnerId),
+  });
+}
+
+export function useEndClientMembership(partnerId: string) {
+  return useMutation({
+    mutationFn: ({ membershipId, reason }: { membershipId: string; reason: string }) =>
+      unwrap(
+        api.POST("/admin/partners/{partner_id}/members/{membership_id}/end", {
+          params: {
+            path: { partner_id: pathId(partnerId), membership_id: pathId(membershipId) },
+          },
+          body: { reason },
+        }),
+      ),
+    onSettled: useInvalidateMembers(partnerId),
+  });
+}
+
+/** The client-level Employer opt-in, inherited by companies synchronized later. */
+export function useSetEmployerAutoEnable(partnerId: string) {
+  return useMutation({
+    mutationFn: (body: Schemas["EmployerAutoEnable"]) =>
+      unwrap(
+        api.POST("/admin/partners/{partner_id}/employer-auto-enable", {
+          params: { path: { partner_id: pathId(partnerId) } },
+          body,
+        }),
+      ),
+    onSettled: useInvalidatePartner(partnerId),
+  });
+}
+
 export function useUpdatePartner(partnerId: string) {
   return useMutation({
     mutationFn: (body: Schemas["AssistedUpdate"]) =>

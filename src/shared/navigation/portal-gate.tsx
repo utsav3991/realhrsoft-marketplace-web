@@ -1,8 +1,10 @@
 "use client";
 
+import { ShieldOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 
+import { EmptyState } from "@/design-system/components/empty-state";
 import { useSession } from "@/shared/auth";
 import { canAny, type PermissionCode } from "@/shared/authorization";
 import { ErrorState, ForbiddenState, LoadingState } from "@/shared/feedback/states";
@@ -40,10 +42,19 @@ export function PortalGate({
       </div>
     );
   }
-  if (!getPortal(portalId).canAccess(actor)) {
+  const portal = getPortal(portalId);
+  if (!portal.canAccess(actor)) {
     return (
       <div className="p-6">
-        <ForbiddenState />
+        {portal.denied ? (
+          <EmptyState
+            icon={ShieldOff}
+            title={portal.denied.title}
+            description={portal.denied.description}
+          />
+        ) : (
+          <ForbiddenState />
+        )}
       </div>
     );
   }
@@ -52,18 +63,25 @@ export function PortalGate({
 
 /**
  * Page-level guard inside a portal, for pages that need a specific permission. Portal pages
- * pass `inOrganization` to check grants in the selected organization instead of global ones.
+ * pass `inOrganization` to check grants in the selected organization instead of global ones,
+ * and Client portal pages `inClient` for grants in the selected client.
  */
 export function RequirePermission({
   anyOf,
   inOrganization = false,
+  inClient = false,
   children,
 }: {
   anyOf: readonly PermissionCode[];
   inOrganization?: boolean;
+  inClient?: boolean;
   children: ReactNode;
 }) {
   const { actor } = useSession();
-  const scope = inOrganization ? { organizationId: actor?.organization?.id ?? null } : {};
+  const scope = inClient
+    ? { clientId: actor?.client?.id ?? null }
+    : inOrganization
+      ? { organizationId: actor?.organization?.id ?? null }
+      : {};
   return canAny(actor, anyOf, scope) ? <>{children}</> : <ForbiddenState />;
 }

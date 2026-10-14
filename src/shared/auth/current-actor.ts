@@ -6,6 +6,14 @@ export interface Membership {
   name: string;
   employer: boolean;
   partner: boolean;
+  /** Set when the membership comes through a client role (every company of the client). */
+  viaClientId?: string | null;
+}
+
+/** A client (group) the user may select for the Client portal (X-Client-ID). */
+export interface ClientAccess {
+  clientId: string;
+  name: string;
 }
 
 export type Capacity = "employer" | "partner";
@@ -24,6 +32,9 @@ export interface CurrentActor {
   globalPermissions: ReadonlySet<string>;
   organization: { id: string; permissions: ReadonlySet<string> } | null;
   memberships: readonly Membership[];
+  /** The selected client and the client grants held there; kept apart like organizations. */
+  client: { id: string; permissions: ReadonlySet<string> } | null;
+  clients: readonly ClientAccess[];
 }
 
 export function toCurrentActor(response: Schemas["CurrentActor"]): CurrentActor {
@@ -44,12 +55,20 @@ export function toCurrentActor(response: Schemas["CurrentActor"]): CurrentActor 
       name: membership.name,
       employer: membership.employer,
       partner: membership.partner,
+      viaClientId: membership.via_client_id ?? null,
+    })),
+    client: response.client_id
+      ? { id: response.client_id, permissions: new Set(response.client_permissions ?? []) }
+      : null,
+    clients: (response.clients ?? []).map((client) => ({
+      clientId: client.client_id,
+      name: client.name,
     })),
   };
 }
 
-export const currentActorKey = (organizationId: string | null) =>
-  ["auth", "me", organizationId] as const;
+export const currentActorKey = (organizationId: string | null, clientId: string | null) =>
+  ["auth", "me", organizationId, clientId] as const;
 
 export async function fetchCurrentActor(): Promise<CurrentActor> {
   return toCurrentActor(await unwrap(api.GET("/auth/me")));

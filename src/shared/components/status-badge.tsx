@@ -309,18 +309,50 @@ export const STATUS_DEFINITIONS = {
     expired: { label: "Expired", intent: "outline", description: "Its window ended" },
     revoked: { label: "Revoked", intent: "danger", description: "Withdrawn by Aayulogic" },
   },
-  /** Interim employee eligibility: current until an administrator ends it. */
+  /** An employment episode synchronized from RealHRSoft. */
   employment: {
     current: {
       label: "Current",
       intent: "success",
-      description: "Can browse and claim marketplace offers",
+      description: "Can use offers and benefits for this company",
     },
     ended: {
       label: "Ended",
       intent: "neutral",
-      description: "No marketplace access; claim history is kept",
+      description: "Ended by RealHRSoft; claim history is kept",
     },
+  },
+  /** A received RealHRSoft sync event (inbox receipt). */
+  syncEvent: {
+    pending: { label: "Pending", intent: "info", description: "Received, not applied yet" },
+    applied: { label: "Applied", intent: "success", description: "Applied (see outcome)" },
+    waiting_dependency: {
+      label: "Waiting",
+      intent: "warning",
+      description: "Waits for a client or company it needs; retried automatically",
+    },
+    quarantined: {
+      label: "Quarantined",
+      intent: "danger",
+      description: "Breaks a rule; needs an operator to requeue it after the cause is fixed",
+    },
+    dead: {
+      label: "Dead",
+      intent: "danger",
+      description: "Failed every retry; needs an operator to requeue it",
+    },
+  },
+  /** A RealHRSoft reconciliation run. */
+  reconciliation: {
+    queued: { label: "Queued", intent: "neutral", description: "Waiting for a worker" },
+    running: { label: "Running", intent: "info", description: "Reading from RealHRSoft" },
+    completed: { label: "Completed", intent: "success", description: "Finished" },
+    failed: { label: "Failed", intent: "danger", description: "Stopped with an error" },
+  },
+  /** An emergency block on RealHRSoft employee access. */
+  accessDenial: {
+    active: { label: "Active", intent: "danger", description: "Requests are refused" },
+    ended: { label: "Ended", intent: "neutral", description: "Lifted or expired" },
   },
 } as const satisfies Record<string, Record<string, StatusDefinition>>;
 

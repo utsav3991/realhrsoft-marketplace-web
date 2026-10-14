@@ -75,6 +75,7 @@ const voucher: Schemas["VoucherSummary"] = {
 const requested: Schemas["OwnClaim"] = {
   id: CLAIM_ID,
   kind: "marketplace_offer",
+  employer: { id: "4a293c96-2952-43ac-bf39-bdfda7531c48", name: "Acme Nepal" },
   offer_id: OFFER_ID,
   partner: offer.partner.business_name,
   version_id: VERSION_ID,
@@ -145,6 +146,8 @@ function actor(overrides: Partial<CurrentActor> = {}): CurrentActor {
     globalPermissions: new Set(),
     organization: null,
     memberships: [],
+    client: null,
+    clients: [],
     ...overrides,
   };
 }

@@ -96,6 +96,7 @@ function offer(
     id: OFFER_ID,
     kind: "business_offer",
     provider_organization: { id: SELLER, name: "Fitness Hub Pvt. Ltd." },
+    provider_client: null,
     partner: asPartner
       ? {
           id: "0b0b5e3c-3c3f-4bd6-9a55-8f3b7f0a8f2e",
@@ -209,6 +210,8 @@ function actor(
       organization && membership
         ? [{ organizationId: organization, name: "Org", ...membership }]
         : [],
+    client: null,
+    clients: [],
   };
 }
 

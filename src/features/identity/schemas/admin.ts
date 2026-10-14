@@ -7,14 +7,19 @@ import { reasonSchema } from "@/shared/forms/reason";
 
 export const assignRoleSchema = z
   .object({
-    scope: z.enum(["global", "organization"]),
+    scope: z.enum(["global", "organization", "client"]),
     organizationId: z.string().trim(),
+    clientId: z.string().trim(),
     roleId: z.string().min(1, "Choose a role"),
     reason: reasonSchema,
   })
-  .refine((values) => values.scope === "global" || isUuid(values.organizationId), {
+  .refine((values) => values.scope !== "organization" || isUuid(values.organizationId), {
     path: ["organizationId"],
     message: "Enter the organization ID",
+  })
+  .refine((values) => values.scope !== "client" || isUuid(values.clientId), {
+    path: ["clientId"],
+    message: "Enter the client (partner) ID",
   });
 export type AssignRoleValues = z.infer<typeof assignRoleSchema>;
 
@@ -22,7 +27,7 @@ export const permissionGrantSchema = z.object({ code: z.string(), delegable: z.b
 export type PermissionGrantValue = z.infer<typeof permissionGrantSchema>;
 
 export const createRoleSchema = z.object({
-  scope: z.enum(["global", "organization"]),
+  scope: z.enum(["global", "organization", "client"]),
   code: z
     .string()
     .trim()

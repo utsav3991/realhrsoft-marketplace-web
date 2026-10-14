@@ -52,6 +52,26 @@ export const isPausable = (benefit: Benefit) => benefit.availability === "enable
 export const isResumable = (benefit: Benefit) => benefit.availability === "paused";
 export const isRetirable = (benefit: Benefit) => !isRetired(benefit);
 
+type BenefitPolicy = NonNullable<NonNullable<ReturnType<typeof benefitVersion>>["benefit_policy"]>;
+
+/**
+ * Who a benefit reaches: a company's own employees, or for a client benefit every company of
+ * the client (including companies added later) or the selected ones.
+ */
+export function audienceLabel(benefit: Benefit, policy: BenefitPolicy | null | undefined): string {
+  const owner = benefit.provider_organization?.name ?? benefit.provider_client?.name ?? "";
+  switch (policy?.audience_type) {
+    case "all_client_organizations":
+      return `Employees of every ${owner} company, including companies added later`;
+    case "selected_organizations": {
+      const names = policy.audience_organizations.map((o) => o.name);
+      return names.length ? `Employees of ${names.join(", ")}` : "No company selected";
+    }
+    default:
+      return `Own employees of ${owner}`;
+  }
+}
+
 export function usageLimit(max: number): string {
   return max === 1 ? "Once per employee" : `${max} times per employee`;
 }
@@ -126,7 +146,7 @@ export function BenefitContentCard({
             {policy ? (
               <Detail label="Usage limit">{usageLimit(policy.max_claims_per_beneficiary)}</Detail>
             ) : null}
-            <Detail label="Audience">Own employees of {benefit.provider_organization.name}</Detail>
+            <Detail label="Audience">{audienceLabel(benefit, policy)}</Detail>
             <Detail label="Version">{version.number}</Detail>
             <Detail label="Description" className="sm:col-span-2 lg:col-span-3">
               <RichText value={version.description} />

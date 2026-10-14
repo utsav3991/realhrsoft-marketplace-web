@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import type { SortOrdering } from "@/design-system/components/data-table";
-import { organizationHeader } from "@/features/offers/api/queries";
+import { clientHeader, organizationHeader } from "@/features/offers/api/queries";
 import { api, unwrap, type Page, type Schemas } from "@/shared/api";
 
 import type { ReportPeriod } from "./period";
@@ -13,6 +13,13 @@ export type EmployerReportRow = Schemas["EmployerReportRow"];
 export type Metrics = Schemas["Metrics"];
 export type BenefitReportSummary = Schemas["BenefitReportSummary"];
 export type BenefitReportRow = Schemas["BenefitReportRow"];
+export type BenefitCompanyRow = Schemas["BenefitCompanyRow"];
+
+/**
+ * Whose benefit usage a report reads: a company's own benefits (Employer portal) or a
+ * client's benefits across its companies (Client portal).
+ */
+export type BenefitReportOwner = { kind: "organization" | "client"; id: string };
 
 /** Report columns the API sorts by (`ordering`); without one, most claims come first. */
 export const OFFER_REPORT_SORTS = ["title", "views", "claims", "redemptions"] as const;
@@ -50,17 +57,20 @@ export const analyticsKeys = {
       ordering,
       page,
     ] as const,
-  employer: (organizationId: string) => [...analyticsKeys.all, "employer", organizationId] as const,
-  employerSummary: (organizationId: string, period: ReportPeriod, benefitId: string | null) =>
-    [...analyticsKeys.employer(organizationId), "summary", period, benefitId] as const,
-  employerBenefits: (
-    organizationId: string,
+  benefitOwner: (owner: BenefitReportOwner) =>
+    [...analyticsKeys.all, "benefits", owner.kind, owner.id] as const,
+  benefitSummary: (owner: BenefitReportOwner, period: ReportPeriod, benefitId: string | null) =>
+    [...analyticsKeys.benefitOwner(owner), "summary", period, benefitId] as const,
+  benefitCompanies: (owner: BenefitReportOwner, period: ReportPeriod, benefitId: string | null) =>
+    [...analyticsKeys.benefitOwner(owner), "companies", period, benefitId] as const,
+  benefitRows: (
+    owner: BenefitReportOwner,
     period: ReportPeriod,
     ordering: BenefitOrdering | null,
     page: Page,
   ) =>
     [
-      ...analyticsKeys.employer(organizationId),
+      ...analyticsKeys.benefitOwner(owner),
       "benefits",
       period.start,
       period.end,
@@ -156,50 +166,82 @@ export function usePartnerOfferReport(
   });
 }
 
-// --- Employer portal (the selected organization; counts, no employee identity) ----------
+// --- Employer and Client portals (counts, no employee identity) -------------------------
 
-export function useEmployerBenefitSummary(
-  organizationId: string,
+// Literal paths keep every call visible to the contract-coverage test.
+export function useBenefitUsageSummary(
+  owner: BenefitReportOwner,
   period: ReportPeriod,
   benefitId: string | null,
 ) {
   return useQuery({
     ...live,
-    queryKey: analyticsKeys.employerSummary(organizationId, period, benefitId),
-    queryFn: ({ signal }) =>
-      unwrap(
-        api.GET("/employer/analytics/benefits/summary", {
-          params: {
-            header: organizationHeader(organizationId),
-            query: { ...period, benefit_id: benefitId ?? undefined },
-          },
-          signal,
-        }),
-      ),
+    queryKey: analyticsKeys.benefitSummary(owner, period, benefitId),
+    queryFn: ({ signal }) => {
+      const query = { ...period, benefit_id: benefitId ?? undefined };
+      return unwrap(
+        owner.kind === "client"
+          ? api.GET("/client/analytics/benefits/summary", {
+              params: { header: clientHeader(owner.id), query },
+              signal,
+            })
+          : api.GET("/employer/analytics/benefits/summary", {
+              params: { header: organizationHeader(owner.id), query },
+              signal,
+            }),
+      );
+    },
   });
 }
 
-export function useEmployerBenefitReport(
-  organizationId: string,
+export function useBenefitUsageReport(
+  owner: BenefitReportOwner,
   period: ReportPeriod,
   ordering: BenefitOrdering | null,
   page: Page,
 ) {
   return useQuery({
     ...live,
-    queryKey: analyticsKeys.employerBenefits(organizationId, period, ordering, page),
+    queryKey: analyticsKeys.benefitRows(owner, period, ordering, page),
+    queryFn: ({ signal }) => {
+      const query = {
+        start: period.start,
+        end: period.end,
+        ordering: ordering ? [ordering] : undefined,
+        offset: page.offset,
+        limit: page.limit,
+      };
+      return unwrap(
+        owner.kind === "client"
+          ? api.GET("/client/analytics/benefits", {
+              params: { header: clientHeader(owner.id), query },
+              signal,
+            })
+          : api.GET("/employer/analytics/benefits", {
+              params: { header: organizationHeader(owner.id), query },
+              signal,
+            }),
+      );
+    },
+  });
+}
+
+/** A client's benefit usage per company (the company each use was made for). */
+export function useClientBenefitCompanies(
+  clientId: string,
+  period: ReportPeriod,
+  benefitId: string | null,
+) {
+  const owner: BenefitReportOwner = { kind: "client", id: clientId };
+  return useQuery({
+    ...live,
+    queryKey: analyticsKeys.benefitCompanies(owner, period, benefitId),
     queryFn: ({ signal }) =>
       unwrap(
-        api.GET("/employer/analytics/benefits", {
+        api.GET("/client/analytics/benefits/companies", {
           params: {
-            header: organizationHeader(organizationId),
-            query: {
-              start: period.start,
-              end: period.end,
-              ordering: ordering ? [ordering] : undefined,
-              offset: page.offset,
-              limit: page.limit,
-            },
+            header: clientHeader(clientId),
+            query: { ...period, benefit_id: benefitId ?? undefined },
           },
           signal,
         }),

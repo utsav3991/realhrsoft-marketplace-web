@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CurrentActor } from "@/shared/auth";
 
-import { IdentityPermission } from "./permission-codes";
+import { ClientBenefitPermission, IdentityPermission } from "./permission-codes";
 import { can, canAny } from "./permissions";
 
 const ORG_A = "00000000-0000-0000-0000-00000000000a";
@@ -17,9 +17,33 @@ function actor(overrides: Partial<CurrentActor> = {}): CurrentActor {
     globalPermissions: new Set(),
     organization: null,
     memberships: [],
+    client: null,
+    clients: [],
     ...overrides,
   };
 }
+
+describe("can (client scope)", () => {
+  const VIEW = ClientBenefitPermission.BENEFIT_VIEW;
+
+  it("accepts a client grant only in the selected client", () => {
+    const groupHr = actor({ client: { id: ORG_A, permissions: new Set([VIEW]) } });
+    expect(can(groupHr, VIEW, { clientId: ORG_A })).toBe(true);
+    expect(can(groupHr, VIEW, { clientId: ORG_B })).toBe(false);
+    expect(can(groupHr, VIEW, { clientId: null })).toBe(false);
+  });
+
+  it("never lets a client grant satisfy a global or organization check, nor the reverse", () => {
+    const groupHr = actor({
+      client: { id: ORG_A, permissions: new Set([VIEW]) },
+      organization: { id: ORG_A, permissions: new Set() },
+    });
+    expect(can(groupHr, VIEW)).toBe(false);
+    expect(can(groupHr, VIEW, { organizationId: ORG_A })).toBe(false);
+    const admin = actor({ globalPermissions: new Set([VIEW]) });
+    expect(can(admin, VIEW, { clientId: ORG_A })).toBe(false);
+  });
+});
 
 describe("can", () => {
   it("denies without an actor", () => {

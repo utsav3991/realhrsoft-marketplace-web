@@ -14,10 +14,15 @@ import {
 
 import {
   ApiError,
+  clearDeniedClients,
   clearDeniedOrganizations,
+  getActiveClientId,
   getActiveOrganizationId,
+  markClientDenied,
   markOrganizationDenied,
+  setActiveClientId,
   setActiveOrganizationId,
+  subscribeActiveClient,
   subscribeActiveOrganization,
 } from "@/shared/api";
 
@@ -47,6 +52,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     getActiveOrganizationId,
     noToken,
   );
+  const clientId = useSyncExternalStore(subscribeActiveClient, getActiveClientId, noToken);
   const [restored, setRestored] = useState(false);
 
   // A reload loses the in-memory access token; the refresh cookie restores it.
@@ -92,26 +98,32 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   const actorQuery = useQuery({
-    queryKey: currentActorKey(organizationId),
+    queryKey: currentActorKey(organizationId, clientId),
     queryFn: fetchCurrentActor,
     enabled: restored && token !== null,
     staleTime: 60_000,
   });
 
-  // The backend rejects an organization where this user is not a verified member holding a
-  // grant. Remember the refusal so the organization is not selected automatically again.
+  // The backend rejects an organization or client where this user is not a verified member
+  // holding a grant. Remember the refusal so it is not selected automatically again. With both
+  // selected the client is dropped first; a refusal that persists then drops the organization.
   const actorError = actorQuery.error;
   useEffect(() => {
-    if (organizationId && actorError instanceof ApiError && actorError.isForbidden) {
+    if (!(actorError instanceof ApiError && actorError.isForbidden)) return;
+    if (clientId) {
+      markClientDenied(clientId);
+      setActiveClientId(null);
+    } else if (organizationId) {
       markOrganizationDenied(organizationId);
       setActiveOrganizationId(null);
     }
-  }, [actorError, organizationId]);
+  }, [actorError, organizationId, clientId]);
 
   const handleLogin = useCallback(
     async (credentials: { email: string; password: string }) => {
       queryClient.clear();
       clearDeniedOrganizations();
+      clearDeniedClients();
       await login(credentials);
     },
     [queryClient],

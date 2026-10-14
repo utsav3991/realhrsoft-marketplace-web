@@ -83,7 +83,7 @@ export function PartnersDirectory() {
       header: "Organization",
       className: "hidden md:table-cell",
       cellClassName: "text-muted-foreground",
-      cell: (partner) => partner.organization_name,
+      cell: (partner) => partner.organization_name ?? "Client group",
     },
     {
       id: "status",

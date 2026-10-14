@@ -43,6 +43,7 @@ import {
   RegistrationCard,
   StatusCallout,
 } from "./partner-details";
+import { ClientAdministration } from "./client-administration";
 import { ProfileForm } from "./profile-form";
 import { SourceField } from "./source-field";
 
@@ -107,7 +108,9 @@ function PartnerWorkspace({ partner }: { partner: Partner }) {
       <PageHeader
         title={partner.business_name}
         description={
-          canViewOrganization ? (
+          !partner.organization_id ? (
+            "RealHRSoft client"
+          ) : canViewOrganization ? (
             <Link
               href={`/admin/organizations/${partner.organization_id}`}
               className="hover:underline"
@@ -167,6 +170,7 @@ function PartnerWorkspace({ partner }: { partner: Partner }) {
         />
       )}
       <RegistrationCard partner={partner} />
+      {partner.external_uuid ? <ClientAdministration partner={partner} /> : null}
       <RedemptionControl scope="partner" targetId={partner.id} />
       {canViewDecisions ? <Decisions partnerId={partner.id} /> : null}
       <DecisionDialogs partner={partner} decision={deciding} onClose={() => setDeciding(null)} />

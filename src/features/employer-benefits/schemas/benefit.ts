@@ -37,11 +37,24 @@ export const benefitSchema = z
           /^\d{1,4}$/.test(value) && Number(value) >= 1 && Number(value) <= MAX_CLAIMS_PER_EMPLOYEE,
         `Use a whole number from 1 to ${MAX_CLAIMS_PER_EMPLOYEE}`,
       ),
+    // A company's benefit is always own_organization; a client's is every company of the
+    // client (including later ones) or the selected companies.
+    audienceType: z.enum(["own_organization", "all_client_organizations", "selected_organizations"]),
+    audienceOrganizations: z
+      .array(z.object({ id: z.string(), name: z.string() }))
+      .max(200, "Choose at most 200 companies"),
     reason: z.string().trim().max(500, "Keep the note under 500 characters"),
   })
   .superRefine((values, ctx) => {
     if (values.validFrom && values.validUntil && values.validUntil <= values.validFrom) {
       ctx.addIssue({ code: "custom", path: ["validUntil"], message: "End after the start" });
+    }
+    if (values.audienceType === "selected_organizations" && values.audienceOrganizations.length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["audienceOrganizations"],
+        message: "Choose at least one company",
+      });
     }
   });
 export type BenefitValues = z.infer<typeof benefitSchema>;
@@ -58,7 +71,15 @@ export const EMPTY_BENEFIT: BenefitValues = {
   validFrom: "",
   validUntil: "",
   maxClaims: "1",
+  audienceType: "own_organization",
+  audienceOrganizations: [],
   reason: "",
+};
+
+/** A new client benefit starts for every company of the client, including later ones. */
+export const EMPTY_CLIENT_BENEFIT: BenefitValues = {
+  ...EMPTY_BENEFIT,
+  audienceType: "all_client_organizations",
 };
 
 /** Request body field → form field, for placing 422 errors. */
@@ -72,6 +93,8 @@ export const BENEFIT_FIELDS = {
   valid_from: "validFrom",
   valid_until: "validUntil",
   max_claims_per_beneficiary: "maxClaims",
+  audience_type: "audienceType",
+  audience_organization_ids: "audienceOrganizations",
   reason: "reason",
 } as const;
 
@@ -90,6 +113,18 @@ export function benefitBody(values: BenefitValues): BenefitContentBody {
     valid_until: values.validUntil ? fromDateTimeLocal(values.validUntil) : null,
     max_claims_per_beneficiary: Number(values.maxClaims),
     reason: values.reason,
+  };
+}
+
+export type ClientBenefitContentBody = Omit<Schemas["ClientBenefitContent"], "intent">;
+
+/** A client benefit also sends its audience: every company, or the selected ones. */
+export function clientBenefitBody(values: BenefitValues): ClientBenefitContentBody {
+  const selected = values.audienceType === "selected_organizations";
+  return {
+    ...benefitBody(values),
+    audience_type: selected ? "selected_organizations" : "all_client_organizations",
+    audience_organization_ids: selected ? values.audienceOrganizations.map((o) => o.id) : [],
   };
 }
 
@@ -112,6 +147,8 @@ export function benefitValues(benefit: Benefit): BenefitValues {
     validFrom: toDateTimeLocal(version.valid_from),
     validUntil: toDateTimeLocal(version.valid_until),
     maxClaims: String(policy.max_claims_per_beneficiary),
+    audienceType: policy.audience_type,
+    audienceOrganizations: policy.audience_organizations.map(({ id, name }) => ({ id, name })),
     reason: "",
   };
 }

@@ -44,7 +44,12 @@ function version(state: Schemas["OfferVersionStateEnum"]): Schemas["OfferVersion
     fulfillment_mode: "claim_as_use",
     benefit: { schema_version: 1, type: "descriptive", description: "Free check-up" },
     marketplace_policy: null,
-    benefit_policy: { usage_rules: "Book through HR three days ahead.", max_claims_per_beneficiary: 1 },
+    benefit_policy: {
+      usage_rules: "Book through HR three days ahead.",
+      max_claims_per_beneficiary: 1,
+      audience_type: "own_organization",
+      audience_organizations: [],
+    },
     business_policy: null,
     edit_count: 1,
     frozen_at: state === "draft" ? null : "2026-10-01T00:00:00Z",
@@ -61,6 +66,7 @@ function version(state: Schemas["OfferVersionStateEnum"]): Schemas["OfferVersion
 const benefit: Schemas["CompanyBenefit"] = {
   id: BENEFIT_ID,
   provider_organization: { id: ORG, name: "Acme Nepal" },
+  provider_client: null,
   availability: "enabled",
   version: 1,
   display_status: "draft",
@@ -109,6 +115,7 @@ function use(title = employeeBenefit.title): Schemas["OwnClaimListItem"] {
   return {
     id: "c1a2b3c4-d5e6-4f70-8192-a3b4c5d6e7f8",
     kind: "employer_benefit",
+    employer: { id: ORG, name: "Acme Nepal" },
     offer_id: BENEFIT_ID,
     partner: null,
     version_id: VERSION_ID,
@@ -150,6 +157,8 @@ function actor(overrides: Partial<CurrentActor>): CurrentActor {
     globalPermissions: new Set(),
     organization: null,
     memberships: [],
+    client: null,
+    clients: [],
     ...overrides,
   };
 }

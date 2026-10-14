@@ -27,6 +27,7 @@ export const partnerKeys = {
   list: (filters: PartnerFilters, page: Page) => [...partnerKeys.lists(), filters, page] as const,
   detail: (id: string) => [...partnerKeys.all, "detail", id] as const,
   decisions: (id: string) => [...partnerKeys.all, "decisions", id] as const,
+  members: (id: string) => [...partnerKeys.all, "members", id] as const,
   // The selected organization's own registration (portal).
   own: (organizationId: string) => [...partnerKeys.all, "own", organizationId] as const,
   ownDecisions: (organizationId: string) =>
@@ -113,6 +114,25 @@ export function useOwnPartnerDecisions(organizationId: string, page: Page) {
         api.GET("/partner/me/decisions", {
           params: {
             header: { "X-Organization-ID": organizationId },
+            query: { offset: page.offset, limit: page.limit },
+          },
+          signal,
+        }),
+      ),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** A client's memberships, current and ended, newest first (platform administration). */
+export function useClientMemberships(partnerId: string, page: Page, { enabled = true } = {}) {
+  return useQuery({
+    queryKey: [...partnerKeys.members(partnerId), page],
+    enabled,
+    queryFn: ({ signal }) =>
+      unwrap(
+        api.GET("/admin/partners/{partner_id}/members", {
+          params: {
+            path: { partner_id: pathId(partnerId) },
             query: { offset: page.offset, limit: page.limit },
           },
           signal,

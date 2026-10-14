@@ -67,20 +67,25 @@ export function useAssignRole(userId: string) {
     mutationFn: ({
       roleId,
       organizationId,
+      clientId,
       reason,
     }: {
       roleId: string;
       /** Organization roles only: the organization the grant is scoped to. */
       organizationId?: string | null;
+      /** Client roles only: the client (partner) the grant is scoped to. */
+      clientId?: string | null;
       reason: string;
     }) =>
       unwrap(
         api.POST("/admin/users/{user_id}/roles", {
           params: { path: { user_id: pathId(userId) } },
-          // Platform-wide grants omit the field entirely.
+          // Platform-wide grants omit both scope fields entirely.
           body: organizationId
             ? { role_id: roleId, organization_id: organizationId, reason }
-            : { role_id: roleId, reason },
+            : clientId
+              ? { role_id: roleId, client_id: clientId, reason }
+              : { role_id: roleId, reason },
         }),
       ),
     onSettled: () => invalidate(userId),

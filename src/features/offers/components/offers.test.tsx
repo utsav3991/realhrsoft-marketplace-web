@@ -109,6 +109,7 @@ const pending: Schemas["Offer"] = {
   id: OFFER_ID,
   kind: "marketplace_offer",
   provider_organization: { id: ORG, name: "Himalayan Coffee" },
+  provider_client: null,
   partner: {
     id: "0b0b5e3c-3c3f-4bd6-9a55-8f3b7f0a8f2e",
     organization_id: ORG,
@@ -193,6 +194,8 @@ function admin(permissions: PermissionCode[]): CurrentActor {
     globalPermissions: new Set(permissions),
     organization: null,
     memberships: [],
+    client: null,
+    clients: [],
   };
 }
 

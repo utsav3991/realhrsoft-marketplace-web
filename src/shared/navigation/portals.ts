@@ -2,6 +2,7 @@ import {
   BadgeCheck,
   ChartColumn,
   BriefcaseBusiness,
+  Flag,
   Building2,
   Gift,
   Handshake,
@@ -11,8 +12,10 @@ import {
   LayoutDashboard,
   LayoutTemplate,
   Megaphone,
+  Network,
   OctagonPause,
   ReceiptText,
+  RefreshCw,
   ScanLine,
   ShieldCheck,
   Stamp,
@@ -23,6 +26,7 @@ import {
   TicketCheck,
   Target,
   Users,
+  UserX,
   type LucideIcon,
 } from "lucide-react";
 
@@ -35,11 +39,16 @@ import {
   BusinessAdminPermission,
   BusinessOfferPermission,
   ClaimAdminPermission,
+  ClientAdministrationPermission,
+  ClientAnalyticsPermission,
+  ClientBenefitPermission,
   EmployerAnalyticsPermission,
   EmployerBenefitPermission,
   EmploymentAdminPermission,
+  FeatureFlagAdminPermission,
   GLOBAL_PERMISSIONS,
   IdentityPermission,
+  IntegrationAdminPermission,
   MarketingAdminPermission,
   OfferAdminPermission,
   OrganizationAdminPermission,
@@ -55,7 +64,13 @@ import {
   type PermissionCode,
 } from "@/shared/authorization";
 
-export type PortalId = "marketplace" | "partner" | "employer" | "business" | "admin";
+export type PortalId =
+  | "marketplace"
+  | "partner"
+  | "employer"
+  | "business"
+  | "client"
+  | "admin";
 
 export interface NavItem {
   href: string;
@@ -65,6 +80,8 @@ export interface NavItem {
   anyOf?: readonly PermissionCode[];
   /** Check `anyOf` in the selected organization (portal permissions) instead of globally. */
   inOrganization?: boolean;
+  /** Check `anyOf` in the selected client (Client portal permissions). */
+  inClient?: boolean;
 }
 
 /** A sidebar section. Unlabelled groups sit under the brand with no heading. */
@@ -82,8 +99,12 @@ export interface Portal {
   canAccess: (actor: CurrentActor) => boolean;
   /** Offered in the switcher and as a landing page. Defaults to `canAccess`. */
   listed?: (actor: CurrentActor) => boolean;
+  /** Shown instead of the generic forbidden view when `canAccess` refuses. */
+  denied?: { title: string; description: string };
   /** Organizations the portal acts for; its pages are scoped to one organization. */
   capacity?: OrganizationFilter;
+  /** The portal acts for one client (X-Client-ID) instead of an organization. */
+  clientScoped?: boolean;
   navigation: readonly NavGroup[];
 }
 
@@ -247,6 +268,29 @@ export const PORTALS: readonly Portal[] = [
         ],
       },
       {
+        label: "RealHRSoft",
+        items: [
+          {
+            href: "/admin/realhrsoft",
+            label: "Sync",
+            icon: RefreshCw,
+            anyOf: [IntegrationAdminPermission.SYNC_VIEW],
+          },
+          {
+            href: "/admin/employee-access",
+            label: "Employee access",
+            icon: UserX,
+            anyOf: [IntegrationAdminPermission.EMPLOYEE_ACCESS_DENY],
+          },
+          {
+            href: "/admin/feature-flags",
+            label: "Feature flags",
+            icon: Flag,
+            anyOf: [FeatureFlagAdminPermission.FLAG_VIEW],
+          },
+        ],
+      },
+      {
         label: "Insights",
         items: [
           {
@@ -377,6 +421,13 @@ export const PORTALS: readonly Portal[] = [
             anyOf: [EmployerBenefitPermission.BENEFIT_VIEW],
             inOrganization: true,
           },
+          {
+            href: "/employer/benefits/from-group",
+            label: "From your group",
+            icon: Network,
+            anyOf: [EmployerBenefitPermission.BENEFIT_VIEW],
+            inOrganization: true,
+          },
         ],
       },
       {
@@ -447,13 +498,70 @@ export const PORTALS: readonly Portal[] = [
     ],
   },
   {
+    id: "client",
+    label: "Client Portal",
+    icon: Network,
+    basePath: "/client",
+    // A RealHRSoft group (a Partner and all its companies), for members holding a client role.
+    canAccess: (actor) => actor.clients.length > 0,
+    clientScoped: true,
+    navigation: [
+      {
+        label: "Benefits",
+        items: [
+          {
+            href: "/client/benefits",
+            label: "Client benefits",
+            icon: Gift,
+            anyOf: [ClientBenefitPermission.BENEFIT_VIEW],
+            inClient: true,
+          },
+        ],
+      },
+      {
+        label: "Insights",
+        items: [
+          {
+            href: "/client/reports",
+            label: "Reports",
+            icon: ChartColumn,
+            anyOf: [ClientAnalyticsPermission.BENEFIT_REPORT_VIEW],
+            inClient: true,
+          },
+        ],
+      },
+      {
+        label: "Administration",
+        items: [
+          {
+            href: "/client/members",
+            label: "Members and roles",
+            icon: Users,
+            anyOf: [
+              ClientAdministrationPermission.MEMBER_MANAGE,
+              ClientAdministrationPermission.ROLE_MANAGE,
+            ],
+            inClient: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
     id: "marketplace",
     label: "Marketplace",
     icon: Store,
     basePath: "/marketplace",
-    // Open to every signed-in actor. Eligibility (an employee account with a current
-    // employment) is not a permission code; the API decides it and answers 403 otherwise.
-    canAccess: () => true,
+    // Employees are RealHRSoft identities, not Marketplace accounts: the employee API accepts
+    // only RealHRSoft employee tokens, and RealHRSoft renders the employee experience through
+    // its backend proxy. Nobody signing in here can use these pages, so the portal is closed.
+    // Its components stay as the reference for the employee contract.
+    canAccess: () => false,
+    denied: {
+      title: "The marketplace opens inside RealHRSoft",
+      description:
+        "Employees browse offers, claim benefits and show vouchers from RealHRSoft web and mobile. Accounts that sign in here manage partners, employers, clients and the platform.",
+    },
     navigation: [
       {
         items: [
@@ -487,12 +595,17 @@ export function accessiblePortals(actor: CurrentActor | null): Portal[] {
 
 /** Where a signed-in actor lands when no ?next= destination was requested. */
 export function defaultPortalPath(actor: CurrentActor | null): string {
+  // With no portal, the closed marketplace explains where employees go instead.
   return accessiblePortals(actor)[0]?.basePath ?? "/marketplace";
 }
 
 /** Whether a navigation item is offered to the actor. */
 export function showsNavItem(actor: CurrentActor | null, item: NavItem): boolean {
   if (!item.anyOf) return true;
-  const scope = item.inOrganization ? { organizationId: actor?.organization?.id ?? null } : {};
+  const scope = item.inClient
+    ? { clientId: actor?.client?.id ?? null }
+    : item.inOrganization
+      ? { organizationId: actor?.organization?.id ?? null }
+      : {};
   return canAny(actor, item.anyOf, scope);
 }

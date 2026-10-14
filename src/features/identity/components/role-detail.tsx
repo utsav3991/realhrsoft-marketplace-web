@@ -57,6 +57,20 @@ function BackToRoles() {
   );
 }
 
+
+type RoleScope = "global" | "organization" | "client";
+
+const SCOPE_LABEL: Record<RoleScope, string> = {
+  global: "Platform-wide",
+  organization: "Organization",
+  client: "Client (every company of one RealHRSoft group)",
+};
+
+/** The role's scope as a known value; anything unexpected reads as platform-wide. */
+function roleScope(scope: string): RoleScope {
+  return scope === "organization" || scope === "client" ? scope : "global";
+}
+
 export function RoleDetail({ roleId }: { roleId: string }) {
   const role = useRole(roleId);
 
@@ -132,7 +146,7 @@ function LoadedRole({ role }: { role: Role }) {
               </span>
             </Detail>
             <Detail label="Scope">
-              {role.scope === "organization" ? "Organization" : "Platform-wide"}
+              {SCOPE_LABEL[roleScope(role.scope)]}
             </Detail>
             <Detail label="Holders">{role.active_assignments}</Detail>
             <Detail label="Version">{role.version}</Detail>
@@ -307,7 +321,7 @@ function EditPermissions({ role, onDone }: { role: Role; onDone: () => void }) {
                     value={field.value}
                     onChange={field.onChange}
                     disabled={isSubmitting}
-                    scope={role.scope === "organization" ? "organization" : "global"}
+                    scope={roleScope(role.scope)}
                   />
                 )}
               />

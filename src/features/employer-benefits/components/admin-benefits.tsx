@@ -98,20 +98,32 @@ export function AdminBenefits() {
     {
       id: "employer",
       header: "Employer",
-      cell: (benefit) => (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              className="hover:underline"
-              onClick={() => setParam("organization_id", benefit.provider_organization.id)}
-            >
-              {benefit.provider_organization.name}
-            </button>
-          </TooltipTrigger>
-          <TooltipContent>Show only this employer</TooltipContent>
-        </Tooltip>
-      ),
+      cell: (benefit) => {
+        const employer = benefit.provider_organization;
+        if (!employer) {
+          // A client benefit: the group publishes it for its companies.
+          return (
+            <>
+              <p>{benefit.provider_client?.name}</p>
+              <p className="text-muted-foreground text-xs">Client benefit</p>
+            </>
+          );
+        }
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="hover:underline"
+                onClick={() => setParam("organization_id", employer.id)}
+              >
+                {employer.name}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Show only this employer</TooltipContent>
+          </Tooltip>
+        );
+      },
     },
     {
       id: "status",
@@ -266,12 +278,16 @@ function BenefitModeration({ benefit }: { benefit: Benefit }) {
       <PageHeader
         title={benefitVersion(benefit)?.title ?? "Benefit"}
         description={
-          canViewOrganization ? (
-            <Link href={`/admin/organizations/${employer.id}`} className="hover:underline">
-              {employer.name}
-            </Link>
+          employer ? (
+            canViewOrganization ? (
+              <Link href={`/admin/organizations/${employer.id}`} className="hover:underline">
+                {employer.name}
+              </Link>
+            ) : (
+              employer.name
+            )
           ) : (
-            employer.name
+            `Client benefit of ${benefit.provider_client?.name ?? "a client"}`
           )
         }
         actions={

@@ -5,6 +5,7 @@ import { getAccessToken } from "@/shared/auth/token-store";
 import { env } from "@/shared/config/env";
 
 import { normalizeApiError } from "./errors";
+import { getActiveClientId, isClientScoped } from "./client-context";
 import { getActiveOrganizationId, isOrganizationScoped } from "./organization-context";
 
 /** Transport DTOs from the backend's OpenAPI contract. Never hand-write these. */
@@ -35,6 +36,10 @@ function withContext(request: Request): Request {
   if (organizationId) request.headers.set("X-Organization-ID", organizationId);
   else request.headers.delete("X-Organization-ID");
 
+  const clientId = isClientScoped(apiPath(request)) ? getActiveClientId() : null;
+  if (clientId) request.headers.set("X-Client-ID", clientId);
+  else request.headers.delete("X-Client-ID");
+
   if (!request.headers.has("X-Request-ID")) {
     request.headers.set("X-Request-ID", crypto.randomUUID());
   }
@@ -50,8 +55,8 @@ async function send(request: Request): Promise<Response> {
 }
 
 /**
- * Attaches the bearer token, the organization scope (organization-scoped paths only) and a
- * correlation id. An expired access token
+ * Attaches the bearer token, the organization scope (organization-scoped paths only), the
+ * client scope (client-scoped paths only) and a correlation id. An expired access token
  * (401) is renewed once through the refresh cookie and the request replayed once.
  */
 export async function apiFetch(request: Request): Promise<Response> {

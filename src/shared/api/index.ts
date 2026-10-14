@@ -9,6 +9,15 @@ export {
   setActiveOrganizationId,
   subscribeActiveOrganization,
 } from "./organization-context";
-export { isPathToken, isUuid, pathId, pathToken } from "./identifiers";
+export {
+  clearDeniedClients,
+  getActiveClientId,
+  isClientDenied,
+  isClientScoped,
+  markClientDenied,
+  setActiveClientId,
+  subscribeActiveClient,
+} from "./client-context";
+export { isPathToken, isUuid, pathId, pathKey, pathToken } from "./identifiers";
 export { FIRST_PAGE, nextOffset, PAGE_SIZE, PAGE_SIZES, TABLE_PAGE_SIZE, type Page } from "./pagination";
 export { makeQueryClient } from "./query-client";

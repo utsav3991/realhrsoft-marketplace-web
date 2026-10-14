@@ -51,6 +51,12 @@ const SCOPES = [
     label: "Organization",
     description: "Employer or Partner portal work inside one organization.",
   },
+  {
+    value: "client",
+    label: "Client",
+    description:
+      "A RealHRSoft group: client permissions, plus organization permissions in every company of the client.",
+  },
 ] as const;
 
 export function CreateRoleForm() {
@@ -122,7 +128,7 @@ export function CreateRoleForm() {
                   <div
                     role="radiogroup"
                     aria-label="Role scope"
-                    className="grid gap-2 sm:grid-cols-2"
+                    className="grid gap-2 sm:grid-cols-3"
                   >
                     {SCOPES.map((option) => (
                       <button

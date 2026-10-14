@@ -489,6 +489,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/employee-access/denials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List employee access blocks
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires identity.employee_access.deny. An emergency, local block checked on every RealHRSoft employee request (403 ACCESS_BLOCKED): kind token blocks one leaked token by its jti (5 minutes unless expires_at is given: tokens live at most 60 seconds); kind employee blocks every token of one employee (value: their RealHRSoft UUID) until lifted or expires_at. Ask RealHRSoft to stop issuing tokens too; this never changes synchronized employment. Newest first. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_admin_employee_access_denials_list"];
+        put?: never;
+        /**
+         * Block an employee token or employee
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires identity.employee_access.deny. An emergency, local block checked on every RealHRSoft employee request (403 ACCESS_BLOCKED): kind token blocks one leaked token by its jti (5 minutes unless expires_at is given: tokens live at most 60 seconds); kind employee blocks every token of one employee (value: their RealHRSoft UUID) until lifted or expires_at. Ask RealHRSoft to stop issuing tokens too; this never changes synchronized employment. Applies to the next request. Audited.
+         */
+        post: operations["v1_admin_employee_access_denials_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/employee-access/denials/{denial_id}/lift": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Lift an employee access block
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires identity.employee_access.deny. An emergency, local block checked on every RealHRSoft employee request (403 ACCESS_BLOCKED): kind token blocks one leaked token by its jti (5 minutes unless expires_at is given: tokens live at most 60 seconds); kind employee blocks every token of one employee (value: their RealHRSoft UUID) until lifted or expires_at. Ask RealHRSoft to stop issuing tokens too; this never changes synchronized employment. Audited.
+         */
+        post: operations["v1_admin_employee_access_denials_lift_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/employments": {
         parameters: {
             query?: never;
@@ -498,15 +542,11 @@ export interface paths {
         };
         /**
          * List employments
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires employee_access.employment.view. Interim eligibility source until RealHRsoft sign-in exists: an employee (actor_type=employee) can browse and claim marketplace offers only while they have a current employment, and only offers whose audience covers that organization. Employment is not portal membership and grants no role. Filter by user_id, organization_id and is_current; search matches the employee's email (case-insensitive substring). Offset pagination: limit (default 20), offset (default 0). Newest start first.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires employee_access.employment.view. Employment comes only from RealHRSoft synchronization: one episode per company the employee currently works for, all under one client (Partner). Episodes end when RealHRSoft stops listing the company; a rehire opens a new one. Employment is not portal membership and grants no role. Filter by employee_id, organization_id, partner_id and is_current; search matches the employee's name or email (case-insensitive substring). Offset pagination: limit (default 20), offset (default 0). Newest start first.
          */
         get: operations["v1_admin_employments_list"];
         put?: never;
-        /**
-         * Start an employee's employment
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires employee_access.employment.create. Interim eligibility source until RealHRsoft sign-in exists: an employee (actor_type=employee) can browse and claim marketplace offers only while they have a current employment, and only offers whose audience covers that organization. Employment is not portal membership and grants no role. The user must be an active employee account (create one with actor_type=employee through user administration). An employee has at most one current employment: end the old one before recording a transfer (409 otherwise). State and audit commit together.
-         */
-        post: operations["v1_admin_employments_create"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -522,7 +562,7 @@ export interface paths {
         };
         /**
          * Read an employment
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires employee_access.employment.view. Read version before ending it.
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires employee_access.employment.view. Employment comes only from RealHRSoft synchronization: one episode per company the employee currently works for, all under one client (Partner). Episodes end when RealHRSoft stops listing the company; a rehire opens a new one. Employment is not portal membership and grants no role.
          */
         get: operations["v1_admin_employments_retrieve"];
         put?: never;
@@ -533,7 +573,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/employments/{employment_id}/end": {
+    "/admin/feature-flags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List feature flags
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires core.feature_flag.view. Known flags: realhrsoft.sync (accept, apply and reconcile RealHRSoft directory events; off returns 503 FEATURE_DISABLED to RealHRSoft, which retries, and pauses the sync workers), realhrsoft.employee_access (admit RealHRSoft employees; off returns 503 FEATURE_DISABLED to employee requests) and offers.client_benefit_authoring (clients create and change benefits; published ones stay visible). A flag never set counts as off.
+         */
+        get: operations["v1_admin_feature_flags_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/feature-flags/{key}": {
         parameters: {
             query?: never;
             header?: never;
@@ -543,10 +603,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * End an employee's employment
-         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires employee_access.employment.end. The employee immediately loses marketplace browsing and claiming. Their claims are kept: they can still read their claim history, and partners can still confirm their active claims until they expire. Stale expected_version or an already ended employment returns 409.
+         * Switch a feature flag
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires core.feature_flag.manage. Applies to the next request or worker tick; audited with the reason. Known flags: realhrsoft.sync (accept, apply and reconcile RealHRSoft directory events; off returns 503 FEATURE_DISABLED to RealHRSoft, which retries, and pauses the sync workers), realhrsoft.employee_access (admit RealHRSoft employees; off returns 503 FEATURE_DISABLED to employee requests) and offers.client_benefit_authoring (clients create and change benefits; published ones stay visible). A flag never set counts as off.
          */
-        post: operations["v1_admin_employments_end_create"];
+        post: operations["v1_admin_feature_flags_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1701,6 +1761,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/partners/{partner_id}/employer-auto-enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set the client's Employer opt-in
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires organizations.employer.manage. When on, every company RealHRSoft synchronizes for this client from now on gets Employer capacity at once, so client benefits for all companies, including future ones, reach their employees without per-company setup; include_existing also switches on its current active companies. Each company's capacity can still be switched off on its own. Stale expected_version or no change returns 409. Audited.
+         */
+        post: operations["v1_admin_partners_employer_auto_enable_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/partners/{partner_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a client's members
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires organizations.membership.manage and partners.partner.view. Every client membership, current and ended, newest first. A member can be granted client roles (POST /api/v1/admin/users/{user_id}/roles with client_id); a client role's organization permissions apply in every current and future company of the client. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_admin_partners_members_list"];
+        put?: never;
+        /**
+         * Admit a user as a client member
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires organizations.membership.manage. Membership alone grants nothing: grant a client role next. The user must be active; one current membership per user and client (409 otherwise). Audited with the reason.
+         */
+        post: operations["v1_admin_partners_members_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/partners/{partner_id}/members/{membership_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End a client membership
+         * @description Authenticate with the Bearer access token. Aayulogic administration: global permissions only; X-Organization-ID is ignored. Responses use Cache-Control: no-store. Requires organizations.membership.manage. Client roles granted under the membership stop applying at once (in the client and all its companies) and stay as history; a later membership needs new grants. 409 when already ended.
+         */
+        post: operations["v1_admin_partners_members_end_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/partners/{partner_id}/reject": {
         parameters: {
             query?: never;
@@ -2635,6 +2759,358 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/client/analytics/benefits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List usage of my client's benefits
+         * @description Authenticate with the Bearer access token and send X-Client-ID. Requires analytics.client_benefit_report.view in the selected client. Only this client's own client benefits (not its companies' own benefits), as counts: no employee identity. Benefit usage only, never combined with offer metrics: a claim is one use of a benefit by an employee, counted at claimed_at; employees counts distinct claimants. Counts are live and include benefits since suspended, retired or expired. Dates are local to time_zone (Asia/Kathmandu); start..end is inclusive, defaults to the last 30 days and spans at most 366 days. One row per client benefit used at least once in the period, across all companies. Order with ordering (claims, employees, title; prefix - for descending; default -claims). Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_client_analytics_benefits_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/analytics/benefits/companies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Usage of my client's benefits per company
+         * @description Authenticate with the Bearer access token and send X-Client-ID. Requires analytics.client_benefit_report.view in the selected client. Only this client's own client benefits (not its companies' own benefits), as counts: no employee identity. Benefit usage only, never combined with offer metrics: a claim is one use of a benefit by an employee, counted at claimed_at; employees counts distinct claimants. Counts are live and include benefits since suspended, retired or expired. Dates are local to time_zone (Asia/Kathmandu); start..end is inclusive, defaults to the last 30 days and spans at most 366 days. One row per company whose employees used the client's benefits in the period (the company each use was made for), most used first; employees are distinct per company. Pass benefit_id for one client benefit.
+         */
+        get: operations["v1_client_analytics_benefits_companies_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/analytics/benefits/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Summarize usage of my client's benefits over time
+         * @description Authenticate with the Bearer access token and send X-Client-ID. Requires analytics.client_benefit_report.view in the selected client. Only this client's own client benefits (not its companies' own benefits), as counts: no employee identity. Benefit usage only, never combined with offer metrics: a claim is one use of a benefit by an employee, counted at claimed_at; employees counts distinct claimants. Counts are live and include benefits since suspended, retired or expired. Dates are local to time_zone (Asia/Kathmandu); start..end is inclusive, defaults to the last 30 days and spans at most 366 days. Totals plus a series with one bucket per day, week or month. Pass benefit_id for a single client benefit (404 when it is not this client's).
+         */
+        get: operations["v1_client_analytics_benefits_summary_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/benefits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my client's benefits
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_benefit.view in the selected client. Filter by display_status and availability. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         */
+        get: operations["v1_client_benefits_list"];
+        put?: never;
+        /**
+         * Create a client benefit
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_benefit.create in the selected client, plus offers.client_benefit.publish for intent=publish. Creates the benefit with draft version 1; publish makes it available to the audience companies' current employees at once, and they are notified. A client benefit is for the employees of selected companies of the client (selected_organizations with audience_organization_ids) or of all of them, including companies RealHRSoft synchronizes later (all_client_organizations). A company's employees see it only while that company has Employer capacity and is active. Limits count per employee across every company. Company administrators of a targeted company cannot edit it. Company Benefits are employer-benefit offers: authored and published directly by their employer without review (Q03), visible only to the employer's own current employees, and each claim records one use (no voucher). Saving a live benefit publishes the change at once as a new version; earlier uses keep the terms they were made under. The organization's Employer capacity must be on.
+         */
+        post: operations["v1_client_benefits_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/benefits/{offer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read one of my client's benefits
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_benefit.view in the selected client. 404 for another client's benefit or a company's own benefit.
+         */
+        get: operations["v1_client_benefits_retrieve"];
+        /**
+         * Edit a client benefit
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_benefit.update in the selected client, plus offers.client_benefit.publish for intent=publish. An unpublished benefit's draft is replaced; a live benefit's change, audience included, is published at once as a new version. Past uses keep the company they were made for. 409 when retired. An unchanged save is a no-op. A client benefit is for the employees of selected companies of the client (selected_organizations with audience_organization_ids) or of all of them, including companies RealHRSoft synchronizes later (all_client_organizations). A company's employees see it only while that company has Employer capacity and is active. Limits count per employee across every company. Company administrators of a targeted company cannot edit it. Company Benefits are employer-benefit offers: authored and published directly by their employer without review (Q03), visible only to the employer's own current employees, and each claim records one use (no voucher). Saving a live benefit publishes the change at once as a new version; earlier uses keep the terms they were made under. The organization's Employer capacity must be on.
+         */
+        put: operations["v1_client_benefits_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/benefits/{offer_id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pause a client benefit
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_benefit.pause in the selected client. enabled -> paused: no employee can see or use it until resumed.
+         */
+        post: operations["v1_client_benefits_pause_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/benefits/{offer_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish a draft client benefit
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_benefit.publish in the selected client. Freezes the draft and makes it the live version for the audience.
+         */
+        post: operations["v1_client_benefits_publish_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/benefits/{offer_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resume a client benefit
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_benefit.pause in the selected client. paused -> enabled. An administrator suspension still applies.
+         */
+        post: operations["v1_client_benefits_resume_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/benefits/{offer_id}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retire a client benefit
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_benefit.retire in the selected client. Final: employees lose access; past uses are kept.
+         */
+        post: operations["v1_client_benefits_retire_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/benefits/{offer_id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unpublish a client benefit
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_benefit.publish in the selected client. Takes the live version offline and keeps a draft copy. Past uses are kept.
+         */
+        post: operations["v1_client_benefits_unpublish_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/benefits/{offer_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a client benefit's versions
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.client_benefit.view in the selected client. Newest first. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_client_benefits_versions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/companies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my client's companies
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires any client permission in the selected client. The client's active companies as synchronized from RealHRSoft, by name, with whether each has Employer capacity (only then do its employees receive benefits). Use it to pick a client benefit's selected companies (audience_organization_ids). Deactivated companies are left out. Not paginated.
+         */
+        get: operations["v1_client_companies_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my client's members
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires partners.client_member.manage or partners.client_role.manage in the selected client. The client's current members with the client roles each holds now, newest admission first. Ended memberships are not listed. Offset pagination: limit (default 20), offset (default 0).
+         */
+        get: operations["v1_client_members_list"];
+        put?: never;
+        /**
+         * Admit an existing account to my client
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires partners.client_member.manage in the selected client. Admits the active Marketplace account with this email as a member; no account is created and nothing is sent to the user. Membership alone grants nothing: grant a client role next (POST /api/v1/client/members/{membership_id}/roles). One current membership per user and client. Audited.
+         */
+        post: operations["v1_client_members_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/members/{membership_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End a member's membership of my client
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires partners.client_member.manage in the selected client, and every permission the member's client roles hold. The member stops acting for the client and its companies at once; their role grants stay as history and a later membership needs new grants. You cannot end your own membership, and the client's last holder of partners.client_role.manage cannot be removed (409). Audited.
+         */
+        post: operations["v1_client_members_end_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/members/{membership_id}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Grant a client role to a member
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires partners.client_role.manage in the selected client. The role's client permissions apply in the client and its organization permissions in every current and future company of the client, from now on. Platform administrators define the client roles; a client administrator grants and revokes them only when they hold every permission of the role themselves, never on their own membership, and the client always keeps one member holding partners.client_role.manage. Audited with the reason. Returns the member with its roles.
+         */
+        post: operations["v1_client_members_roles_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/members/{membership_id}/roles/{assignment_id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revoke a member's client role
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires partners.client_role.manage in the selected client. The role stops applying at once and stays as history. Platform administrators define the client roles; a client administrator grants and revokes them only when they hold every permission of the role themselves, never on their own membership, and the client always keeps one member holding partners.client_role.manage. Audited with the reason. Returns the member with its remaining roles.
+         */
+        post: operations["v1_client_members_roles_revoke_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/client/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the client roles I can grant
+         * @description Authenticate with the Bearer access token and send X-Client-ID naming the client (Partner) you act for. You must be a current verified member of it and hold the stated client permission through a client role; membership alone grants nothing. Responses use Cache-Control: no-store. Requires partners.client_role.manage in the selected client. Every active client role (defined by platform administrators for all clients) with its permission codes; grantable is true when you hold all of them. Not paginated.
+         */
+        get: operations["v1_client_roles_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/employer/analytics/benefits": {
         parameters: {
             query?: never;
@@ -2843,6 +3319,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/employer/benefits/from-client": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List client benefits for my organization
+         * @description Authenticate with the Bearer access token and send X-Organization-ID naming the organization you act for. You must be a current verified member of it and hold the stated organization permission through a role granted in it; membership alone grants nothing. Responses use Cache-Control: no-store. Requires offers.own_benefit.view in the selected organization. Read-only: benefits your client group published whose current audience includes your organization (selected, or all companies). Only the client's role holders edit them (/api/v1/client/benefits). Filter by display_status and availability. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         */
+        get: operations["v1_employer_benefits_from_client_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/realhrsoft/companies/{company_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a synchronized company
+         * @description Either RealHRSoft's backend with X-RealHRSoft-Signature (see the events endpoint), or an operator's Bearer access token holding the stated global permission. Responses use Cache-Control: no-store. Operators need identity.realhrsoft_sync.view. Looks a company up by its RealHRSoft UUID: its Marketplace UUID, client, lifecycle, Marketplace-owned Employer capacity and last applied revision. 404 until synchronized.
+         */
+        get: operations["v1_integrations_realhrsoft_companies_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/realhrsoft/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Deliver a RealHRSoft directory event
+         * @description RealHRSoft's backend only: send X-RealHRSoft-Signature, a compact RS256 JWS signed with RealHRSoft's employee-token key set for audience realhrsoft-marketplace-sync, with claims iss, aud, iat (within ±300 s), method, path (exactly as requested, including any prefix), body_sha256 (hex SHA-256 of the raw body; of the empty string for a GET) and, for events, event_id. Responses use Cache-Control: no-store. RealHRSoft pushes the complete snapshot of a client (partner), company or employee whenever it changes. The event is validated and durably stored, then applied in the background within seconds; 202 means received, not applied: follow sync-status for the outcome. A newer employee revision blocks that employee's business actions (409 AUTHORIZATION_SYNC_PENDING) from this moment until it is applied. Retries keep the event_id and body and get a fresh signature: the same event returns its first receipt (duplicate true, same status). Order does not matter: lower revisions are acknowledged as stale; a company or employee whose client or company has not arrived waits and is retried, and Marketplace asks RealHRSoft's snapshot API for the missing record when reconciliation is configured. A company never moves to another client (quarantined COMPANY_PARTNER_CONFLICT). Omitting a record never deletes it: send it with active false.
+         */
+        post: operations["v1_integrations_realhrsoft_events_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/realhrsoft/events/redrive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Requeue quarantined or dead sync events
+         * @description Operators only (Bearer token) with identity.realhrsoft_sync.redrive. Use after the cause is fixed (for example a missing client now delivered, or RealHRSoft corrected a conflicting revision); applied, pending and waiting events are left alone. Audited with the reason. Returns how many were requeued.
+         */
+        post: operations["v1_integrations_realhrsoft_events_redrive_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/realhrsoft/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Queue a RealHRSoft reconciliation
+         * @description Either RealHRSoft's backend with X-RealHRSoft-Signature (see the events endpoint), or an operator's Bearer access token holding the stated global permission. Responses use Cache-Control: no-store. Operators need identity.realhrsoft_sync.reconcile and a reason (audited). Queues a repair read of RealHRSoft's snapshot API, applied through the same revision-ordered rules as events: it never rolls back a newer applied revision and never deactivates a record merely because it is absent. A full run reads every client, then company, then employee; a targeted run reads one record and, when needed, what it depends on. An open run for the same target is returned instead of a second one (created false). A full run also happens daily. 409 when RealHRSoft's API is not configured.
+         */
+        post: operations["v1_integrations_realhrsoft_reconcile_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/realhrsoft/sync-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * RealHRSoft sync health
+         * @description Either RealHRSoft's backend with X-RealHRSoft-Signature (see the events endpoint), or an operator's Bearer access token holding the stated global permission. Responses use Cache-Control: no-store. Operators need identity.realhrsoft_sync.view. Receipt counts by status, the age of the oldest unapplied event (alert above 60 seconds or when any event is quarantined or dead), the newest problems with their safe error codes, and recent reconciliation runs. The primary feedback path for asynchronous failures; it never returns snapshot data.
+         */
+        get: operations["v1_integrations_realhrsoft_sync_status_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/marketplace/advertisements/{ad_id}/click": {
         parameters: {
             query?: never;
@@ -2854,7 +3450,7 @@ export interface paths {
         put?: never;
         /**
          * Follow a served advertisement
-         * @description Authenticate with the Bearer access token of any signed-in account: employees, employers, partners and marketplace staff all see advertisements. No permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Call when the viewer activates the advertisement, then navigate to the returned link. Rechecks every serving gate for you now: An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee with a current employment whose catalogue has the offer). Advertisements are never claimed or redeemed. The link is built from the reviewed destination, never from client input. Counts a click. Counted at most once per advertisement, slot, viewer and local day (Asia/Kathmandu), so retries are safe. 404 when the advertisement is no longer available to you (show a notice instead of navigating). 409 AD_CREATIVE_CHANGED when a newer revision of the advertisement was approved since the placement returned revision: reload the placement rather than showing or following the newer creative.
+         * @description Authenticate with the Bearer access token of any signed-in account (employers, partners and marketplace staff), or, for a RealHRSoft employee, with the RealHRSoft employee token sent by the RealHRSoft backend plus X-Company-ID for the company they act for. Everyone sees advertisements; no permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Call when the viewer activates the advertisement, then navigate to the returned link. Rechecks every serving gate for you now: An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee acting for a company they currently work for, whose catalogue has the offer). Advertisements are never claimed or redeemed. The link is built from the reviewed destination, never from client input. Counts a click. Counted at most once per advertisement, slot, viewer and local day (Asia/Kathmandu), so retries are safe. 404 when the advertisement is no longer available to you (show a notice instead of navigating). 409 AD_CREATIVE_CHANGED when a newer revision of the advertisement was approved since the placement returned revision: reload the placement rather than showing or following the newer creative.
          */
         post: operations["v1_marketplace_advertisements_click_create"];
         delete?: never;
@@ -2872,7 +3468,7 @@ export interface paths {
         };
         /**
          * Download a served advertisement's image
-         * @description Authenticate with the Bearer access token of any signed-in account: employees, employers, partners and marketplace staff all see advertisements. No permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Streams the approved image of an image_banner advertisement inline (nosniff, no-store). Fetch it with the bearer token (e.g. as a blob). An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee with a current employment whose catalogue has the offer). Advertisements are never claimed or redeemed. 404 when the advertisement is not available to you in the slot now or has no image. 409 AD_CREATIVE_CHANGED when a newer revision of the advertisement was approved since the placement returned revision: reload the placement rather than showing or following the newer creative. Does not count an event. An image is immutable for a revision, so clients may cache it by revision.
+         * @description Authenticate with the Bearer access token of any signed-in account (employers, partners and marketplace staff), or, for a RealHRSoft employee, with the RealHRSoft employee token sent by the RealHRSoft backend plus X-Company-ID for the company they act for. Everyone sees advertisements; no permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Streams the approved image of an image_banner advertisement inline (nosniff, no-store). Fetch it with the bearer token (e.g. as a blob). An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee acting for a company they currently work for, whose catalogue has the offer). Advertisements are never claimed or redeemed. 404 when the advertisement is not available to you in the slot now or has no image. 409 AD_CREATIVE_CHANGED when a newer revision of the advertisement was approved since the placement returned revision: reload the placement rather than showing or following the newer creative. Does not count an event. An image is immutable for a revision, so clients may cache it by revision.
          */
         get: operations["v1_marketplace_advertisements_image_retrieve"];
         put?: never;
@@ -2892,7 +3488,7 @@ export interface paths {
         };
         /**
          * Get a served advertisement's own page
-         * @description Authenticate with the Bearer access token of any signed-in account: employees, employers, partners and marketplace staff all see advertisements. No permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. For an advertisement whose destination is ad_page: the click endpoint returns /marketplace/ads/{ad_id}?slot=&revision=, and that page loads its content here with the same slot and revision. Rechecks every serving gate for you now, as a click does: An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee with a current employment whose catalogue has the offer). Advertisements are never claimed or redeemed. The onward action is resolved for you and is null when the page has none or its offer is not available to you. Render title and body as plain text. The creative's image, when has_image is true, comes from the image endpoint with the same slot and revision. Does not count an event. 404 when the advertisement is not available to you in the slot now or has no page. 409 AD_CREATIVE_CHANGED when a newer revision of the advertisement was approved since the placement returned revision: reload the placement rather than showing or following the newer creative.
+         * @description Authenticate with the Bearer access token of any signed-in account (employers, partners and marketplace staff), or, for a RealHRSoft employee, with the RealHRSoft employee token sent by the RealHRSoft backend plus X-Company-ID for the company they act for. Everyone sees advertisements; no permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. For an advertisement whose destination is ad_page: the click endpoint returns /marketplace/ads/{ad_id}?slot=&revision=, and that page loads its content here with the same slot and revision. Rechecks every serving gate for you now, as a click does: An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee acting for a company they currently work for, whose catalogue has the offer). Advertisements are never claimed or redeemed. The onward action is resolved for you and is null when the page has none or its offer is not available to you. Render title and body as plain text. The creative's image, when has_image is true, comes from the image endpoint with the same slot and revision. Does not count an event. 404 when the advertisement is not available to you in the slot now or has no page. 409 AD_CREATIVE_CHANGED when a newer revision of the advertisement was approved since the placement returned revision: reload the placement rather than showing or following the newer creative.
          */
         get: operations["v1_marketplace_advertisements_page_retrieve"];
         put?: never;
@@ -2914,7 +3510,7 @@ export interface paths {
         put?: never;
         /**
          * Report a served advertisement as rendered
-         * @description Authenticate with the Bearer access token of any signed-in account: employees, employers, partners and marketplace staff all see advertisements. No permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Send once the advertisement's creative is visible on screen. Counts a rendered impression only for an advertisement served to you in this slot today or yesterday, and only for the revision served or its current approved revision; otherwise 404. Counted at most once per advertisement, slot, viewer and local day (Asia/Kathmandu), so retries are safe. Responds 204 with no body.
+         * @description Authenticate with the Bearer access token of any signed-in account (employers, partners and marketplace staff), or, for a RealHRSoft employee, with the RealHRSoft employee token sent by the RealHRSoft backend plus X-Company-ID for the company they act for. Everyone sees advertisements; no permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Send once the advertisement's creative is visible on screen. Counts a rendered impression only for an advertisement served to you in this slot today or yesterday, and only for the revision served or its current approved revision; otherwise 404. Counted at most once per advertisement, slot, viewer and local day (Asia/Kathmandu), so retries are safe. Responds 204 with no body.
          */
         post: operations["v1_marketplace_advertisements_rendered_create"];
         delete?: never;
@@ -2932,13 +3528,13 @@ export interface paths {
         };
         /**
          * List my company benefit uses
-         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Your own history, still readable after your employment ends. Filter by status and offer_id. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         * @description RealHRSoft employees only, through the RealHRSoft backend: send the RS256 employee token it signs per request (Authorization: Bearer) and X-Company-ID, the RealHRSoft UUID of the company you act for. Catalogue, claim and view requests need a current employment in that company under your active Partner, and the token's authorization_revision must equal the one Marketplace applied: 409 AUTHORIZATION_SYNC_PENDING (retry shortly), 409 AUTHORIZATION_CONTEXT_CHANGED (sign a new token), 409 IDENTITY_NOT_SYNCED, 403 EMPLOYEE_NOT_AUTHORIZED. Your own history (claims, vouchers) needs only an active identity and no X-Company-ID. No permission code is needed; native Marketplace tokens are refused. Responses use Cache-Control: no-store. Your own history, still readable after your employment ends. Filter by status and offer_id. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
          */
         get: operations["v1_marketplace_benefit_claims_list"];
         put?: never;
         /**
          * Claim (company benefit uses)
-         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Uses one of your current employer's live benefits (claim-as-use, Q15): the claim is accepted at once and records one use; there is no voucher, confirmation or expiry. Each use counts toward max_claims_per_beneficiary across every version (409 CLAIM_LIMIT_REACHED at the limit). 201 for a new use, 200 replaying the same Idempotency-Key: a retried request never counts twice. Another employer's benefit is 404.
+         * @description RealHRSoft employees only, through the RealHRSoft backend: send the RS256 employee token it signs per request (Authorization: Bearer) and X-Company-ID, the RealHRSoft UUID of the company you act for. Catalogue, claim and view requests need a current employment in that company under your active Partner, and the token's authorization_revision must equal the one Marketplace applied: 409 AUTHORIZATION_SYNC_PENDING (retry shortly), 409 AUTHORIZATION_CONTEXT_CHANGED (sign a new token), 409 IDENTITY_NOT_SYNCED, 403 EMPLOYEE_NOT_AUTHORIZED. Your own history (claims, vouchers) needs only an active identity and no X-Company-ID. No permission code is needed; native Marketplace tokens are refused. Responses use Cache-Control: no-store. Uses one of your current employer's live benefits (claim-as-use, Q15): the claim is accepted at once and records one use; there is no voucher, confirmation or expiry. Each use counts toward max_claims_per_beneficiary across every version (409 CLAIM_LIMIT_REACHED at the limit). 201 for a new use, 200 replaying the same Idempotency-Key: a retried request never counts twice. Another employer's benefit is 404.
          */
         post: operations["v1_marketplace_benefit_claims_create"];
         delete?: never;
@@ -2956,7 +3552,7 @@ export interface paths {
         };
         /**
          * Read one of my company benefit uses
-         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. 404 for another employee's claim.
+         * @description RealHRSoft employees only, through the RealHRSoft backend: send the RS256 employee token it signs per request (Authorization: Bearer) and X-Company-ID, the RealHRSoft UUID of the company you act for. Catalogue, claim and view requests need a current employment in that company under your active Partner, and the token's authorization_revision must equal the one Marketplace applied: 409 AUTHORIZATION_SYNC_PENDING (retry shortly), 409 AUTHORIZATION_CONTEXT_CHANGED (sign a new token), 409 IDENTITY_NOT_SYNCED, 403 EMPLOYEE_NOT_AUTHORIZED. Your own history (claims, vouchers) needs only an active identity and no X-Company-ID. No permission code is needed; native Marketplace tokens are refused. Responses use Cache-Control: no-store. 404 for another employee's claim.
          */
         get: operations["v1_marketplace_benefit_claims_retrieve"];
         put?: never;
@@ -2976,13 +3572,13 @@ export interface paths {
         };
         /**
          * List my offer claims
-         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Your own history, still readable after your employment ends. Filter by status and offer_id. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
+         * @description RealHRSoft employees only, through the RealHRSoft backend: send the RS256 employee token it signs per request (Authorization: Bearer) and X-Company-ID, the RealHRSoft UUID of the company you act for. Catalogue, claim and view requests need a current employment in that company under your active Partner, and the token's authorization_revision must equal the one Marketplace applied: 409 AUTHORIZATION_SYNC_PENDING (retry shortly), 409 AUTHORIZATION_CONTEXT_CHANGED (sign a new token), 409 IDENTITY_NOT_SYNCED, 403 EMPLOYEE_NOT_AUTHORIZED. Your own history (claims, vouchers) needs only an active identity and no X-Company-ID. No permission code is needed; native Marketplace tokens are refused. Responses use Cache-Control: no-store. Your own history, still readable after your employment ends. Filter by status and offer_id. Offset pagination: limit (default 20), offset (default 0). Newest first unless ordering is given.
          */
         get: operations["v1_marketplace_claims_list"];
         put?: never;
         /**
          * Claim (offer claims)
-         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Claims a marketplace offer for yourself; the beneficiary is always you. auto_accept offers are accepted at once and a voucher is issued in the same transaction (status accepted, voucher set). partner_approval_required offers create a request (status requested) the partner must accept before decision_deadline; no voucher until then. One lifetime request per offer (Q09): rejected, expired and cancelled requests count. 201 for a new claim, 200 replaying the same Idempotency-Key. The voucher's QR is fetched from /marketplace/vouchers/{id}/credential, never embedded here. Claim, decision, counter, voucher, audit and events commit together.
+         * @description RealHRSoft employees only, through the RealHRSoft backend: send the RS256 employee token it signs per request (Authorization: Bearer) and X-Company-ID, the RealHRSoft UUID of the company you act for. Catalogue, claim and view requests need a current employment in that company under your active Partner, and the token's authorization_revision must equal the one Marketplace applied: 409 AUTHORIZATION_SYNC_PENDING (retry shortly), 409 AUTHORIZATION_CONTEXT_CHANGED (sign a new token), 409 IDENTITY_NOT_SYNCED, 403 EMPLOYEE_NOT_AUTHORIZED. Your own history (claims, vouchers) needs only an active identity and no X-Company-ID. No permission code is needed; native Marketplace tokens are refused. Responses use Cache-Control: no-store. Claims a marketplace offer for yourself; the beneficiary is always you. auto_accept offers are accepted at once and a voucher is issued in the same transaction (status accepted, voucher set). partner_approval_required offers create a request (status requested) the partner must accept before decision_deadline; no voucher until then. One lifetime request per offer (Q09): rejected, expired and cancelled requests count. 201 for a new claim, 200 replaying the same Idempotency-Key. The voucher's QR is fetched from /marketplace/vouchers/{id}/credential, never embedded here. Claim, decision, counter, voucher, audit and events commit together.
          */
         post: operations["v1_marketplace_claims_create"];
         delete?: never;
@@ -3000,7 +3596,7 @@ export interface paths {
         };
         /**
          * Read one of my offer claims
-         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. 404 for another employee's claim.
+         * @description RealHRSoft employees only, through the RealHRSoft backend: send the RS256 employee token it signs per request (Authorization: Bearer) and X-Company-ID, the RealHRSoft UUID of the company you act for. Catalogue, claim and view requests need a current employment in that company under your active Partner, and the token's authorization_revision must equal the one Marketplace applied: 409 AUTHORIZATION_SYNC_PENDING (retry shortly), 409 AUTHORIZATION_CONTEXT_CHANGED (sign a new token), 409 IDENTITY_NOT_SYNCED, 403 EMPLOYEE_NOT_AUTHORIZED. Your own history (claims, vouchers) needs only an active identity and no X-Company-ID. No permission code is needed; native Marketplace tokens are refused. Responses use Cache-Control: no-store. 404 for another employee's claim.
          */
         get: operations["v1_marketplace_claims_retrieve"];
         put?: never;
@@ -3022,7 +3618,7 @@ export interface paths {
         put?: never;
         /**
          * Cancel my pending offer request
-         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Only a requested claim before its decision_deadline (409 otherwise). It becomes cancelled; you cannot request the offer again (one lifetime request). A retry with the same key replays the result.
+         * @description RealHRSoft employees only, through the RealHRSoft backend: send the RS256 employee token it signs per request (Authorization: Bearer) and X-Company-ID, the RealHRSoft UUID of the company you act for. Catalogue, claim and view requests need a current employment in that company under your active Partner, and the token's authorization_revision must equal the one Marketplace applied: 409 AUTHORIZATION_SYNC_PENDING (retry shortly), 409 AUTHORIZATION_CONTEXT_CHANGED (sign a new token), 409 IDENTITY_NOT_SYNCED, 403 EMPLOYEE_NOT_AUTHORIZED. Your own history (claims, vouchers) needs only an active identity and no X-Company-ID. No permission code is needed; native Marketplace tokens are refused. Responses use Cache-Control: no-store. Only a requested claim before its decision_deadline (409 otherwise). It becomes cancelled; you cannot request the offer again (one lifetime request). A retry with the same key replays the result.
          */
         post: operations["v1_marketplace_claims_cancel_create"];
         delete?: never;
@@ -3040,7 +3636,7 @@ export interface paths {
         };
         /**
          * List my employer's company benefits
-         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Live benefits of your current employer only: published, enabled, not suspended, inside their window, and the employer's Employer capacity on. Another employer's benefits are never listed. Offset pagination: limit (default 20), offset (default 0). Newest published first.
+         * @description RealHRSoft employees only, through the RealHRSoft backend: send the RS256 employee token it signs per request (Authorization: Bearer) and X-Company-ID, the RealHRSoft UUID of the company you act for. Catalogue, claim and view requests need a current employment in that company under your active Partner, and the token's authorization_revision must equal the one Marketplace applied: 409 AUTHORIZATION_SYNC_PENDING (retry shortly), 409 AUTHORIZATION_CONTEXT_CHANGED (sign a new token), 409 IDENTITY_NOT_SYNCED, 403 EMPLOYEE_NOT_AUTHORIZED. Your own history (claims, vouchers) needs only an active identity and no X-Company-ID. No permission code is needed; native Marketplace tokens are refused. Responses use Cache-Control: no-store. Live benefits of your current employer only: published, enabled, not suspended, inside their window, and the employer's Employer capacity on. Another employer's benefits are never listed. Offset pagination: limit (default 20), offset (default 0). Newest published first.
          */
         get: operations["v1_marketplace_company_benefits_list"];
         put?: never;
@@ -3060,7 +3656,7 @@ export interface paths {
         };
         /**
          * Read one of my employer's company benefits
-         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. 404 when it does not exist, is not live, or belongs to another employer.
+         * @description RealHRSoft employees only, through the RealHRSoft backend: send the RS256 employee token it signs per request (Authorization: Bearer) and X-Company-ID, the RealHRSoft UUID of the company you act for. Catalogue, claim and view requests need a current employment in that company under your active Partner, and the token's authorization_revision must equal the one Marketplace applied: 409 AUTHORIZATION_SYNC_PENDING (retry shortly), 409 AUTHORIZATION_CONTEXT_CHANGED (sign a new token), 409 IDENTITY_NOT_SYNCED, 403 EMPLOYEE_NOT_AUTHORIZED. Your own history (claims, vouchers) needs only an active identity and no X-Company-ID. No permission code is needed; native Marketplace tokens are refused. Responses use Cache-Control: no-store. 404 when it does not exist, is not live, or belongs to another employer.
          */
         get: operations["v1_marketplace_company_benefits_retrieve"];
         put?: never;
@@ -3080,7 +3676,7 @@ export interface paths {
         };
         /**
          * List categories of the employee catalogue
-         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Categories that have at least one offer you can see now, for category shortcuts and the category_id filter; not paginated. Ordered by sort_order then name.
+         * @description RealHRSoft employees only, through the RealHRSoft backend: send the RS256 employee token it signs per request (Authorization: Bearer) and X-Company-ID, the RealHRSoft UUID of the company you act for. Catalogue, claim and view requests need a current employment in that company under your active Partner, and the token's authorization_revision must equal the one Marketplace applied: 409 AUTHORIZATION_SYNC_PENDING (retry shortly), 409 AUTHORIZATION_CONTEXT_CHANGED (sign a new token), 409 IDENTITY_NOT_SYNCED, 403 EMPLOYEE_NOT_AUTHORIZED. Your own history (claims, vouchers) needs only an active identity and no X-Company-ID. No permission code is needed; native Marketplace tokens are refused. Responses use Cache-Control: no-store. Categories that have at least one offer you can see now, for category shortcuts and the category_id filter; not paginated. Ordered by sort_order then name.
          */
         get: operations["v1_marketplace_offer_categories_list"];
         put?: never;
@@ -3100,7 +3696,7 @@ export interface paths {
         };
         /**
          * Browse the employee offer catalogue
-         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Lists only offers you can claim now: a live version, enabled, not suspended, partner verified, inside the validity window, and targeted at all eligible users or at your employer. Promo codes, links and instructions are never included; they come with an issued voucher. Send version_id when claiming. Filter by category_id and is_featured; search matches the title or partner business name (case-insensitive substring). Featured offers first, then newest published. Offset pagination: limit (default 20), offset (default 0).
+         * @description RealHRSoft employees only, through the RealHRSoft backend: send the RS256 employee token it signs per request (Authorization: Bearer) and X-Company-ID, the RealHRSoft UUID of the company you act for. Catalogue, claim and view requests need a current employment in that company under your active Partner, and the token's authorization_revision must equal the one Marketplace applied: 409 AUTHORIZATION_SYNC_PENDING (retry shortly), 409 AUTHORIZATION_CONTEXT_CHANGED (sign a new token), 409 IDENTITY_NOT_SYNCED, 403 EMPLOYEE_NOT_AUTHORIZED. Your own history (claims, vouchers) needs only an active identity and no X-Company-ID. No permission code is needed; native Marketplace tokens are refused. Responses use Cache-Control: no-store. Lists only offers you can claim now: a live version, enabled, not suspended, partner verified, inside the validity window, and targeted at all eligible users or at your employer. Promo codes, links and instructions are never included; they come with an issued voucher. Send version_id when claiming. Filter by category_id and is_featured; search matches the title or partner business name (case-insensitive substring). Featured offers first, then newest published. Offset pagination: limit (default 20), offset (default 0).
          */
         get: operations["v1_marketplace_offers_list"];
         put?: never;
@@ -3120,7 +3716,7 @@ export interface paths {
         };
         /**
          * Read an offer from the employee catalogue
-         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Lists only offers you can claim now: a live version, enabled, not suspended, partner verified, inside the validity window, and targeted at all eligible users or at your employer. Promo codes, links and instructions are never included; they come with an issued voucher. Send version_id when claiming. 404 when the offer does not exist or is not visible to you now. A successful read counts one offer view for partner analytics, at most once per employee, offer and local day.
+         * @description RealHRSoft employees only, through the RealHRSoft backend: send the RS256 employee token it signs per request (Authorization: Bearer) and X-Company-ID, the RealHRSoft UUID of the company you act for. Catalogue, claim and view requests need a current employment in that company under your active Partner, and the token's authorization_revision must equal the one Marketplace applied: 409 AUTHORIZATION_SYNC_PENDING (retry shortly), 409 AUTHORIZATION_CONTEXT_CHANGED (sign a new token), 409 IDENTITY_NOT_SYNCED, 403 EMPLOYEE_NOT_AUTHORIZED. Your own history (claims, vouchers) needs only an active identity and no X-Company-ID. No permission code is needed; native Marketplace tokens are refused. Responses use Cache-Control: no-store. Lists only offers you can claim now: a live version, enabled, not suspended, partner verified, inside the validity window, and targeted at all eligible users or at your employer. Promo codes, links and instructions are never included; they come with an issued voucher. Send version_id when claiming. 404 when the offer does not exist or is not visible to you now. A successful read counts one offer view for partner analytics, at most once per employee, offer and local day.
          */
         get: operations["v1_marketplace_offers_retrieve"];
         put?: never;
@@ -3140,7 +3736,7 @@ export interface paths {
         };
         /**
          * Get the advertisements to show in a placement slot
-         * @description Authenticate with the Bearer access token of any signed-in account: employees, employers, partners and marketplace staff all see advertisements. No permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Call when rendering a surface, once per slot on the page (e.g. app.home.top on every portal home, marketplace.home.top). Returns up to the slot's max_ads advertisements picked at random among those eligible for you (Q26); the list is empty when none is. An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee with a current employment whose catalogue has the offer). Advertisements are never claimed or redeemed. Each returned advertisement counts one served impression. Counted at most once per advertisement, slot, viewer and local day (Asia/Kathmandu), so retries are safe. Render it with a Sponsored label, fetch the image when has_image is true, report rendered once it is on screen and call click when it is followed. 404 when the slot key is unknown or deactivated.
+         * @description Authenticate with the Bearer access token of any signed-in account (employers, partners and marketplace staff), or, for a RealHRSoft employee, with the RealHRSoft employee token sent by the RealHRSoft backend plus X-Company-ID for the company they act for. Everyone sees advertisements; no permission code is needed. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Call when rendering a surface, once per slot on the page (e.g. app.home.top on every portal home, marketplace.home.top). Returns up to the slot's max_ads advertisements picked at random among those eligible for you (Q26); the list is empty when none is. An advertisement is served only when every gate holds now: an approved current revision targeting the slot, the advertisement active and not suspended, its campaign active and inside its schedule (campaign window; placement flights when the campaign has any), the owner a verified partner with an active advertising grant, the creative still fitting the slot, and a destination visible to you (an offer destination is shown only to an employee acting for a company they currently work for, whose catalogue has the offer). Advertisements are never claimed or redeemed. Each returned advertisement counts one served impression. Counted at most once per advertisement, slot, viewer and local day (Asia/Kathmandu), so retries are safe. Render it with a Sponsored label, fetch the image when has_image is true, report rendered once it is on screen and call click when it is followed. 404 when the slot key is unknown or deactivated.
          */
         get: operations["v1_marketplace_placements_retrieve"];
         put?: never;
@@ -3160,7 +3756,7 @@ export interface paths {
         };
         /**
          * List my vouchers
-         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Your vouchers from accepted marketplace claims, newest first; still readable after your employment ends. Filter by status and offer_id. Offset pagination: limit (default 20), offset (default 0).
+         * @description RealHRSoft employees only, through the RealHRSoft backend: send the RS256 employee token it signs per request (Authorization: Bearer) and X-Company-ID, the RealHRSoft UUID of the company you act for. Catalogue, claim and view requests need a current employment in that company under your active Partner, and the token's authorization_revision must equal the one Marketplace applied: 409 AUTHORIZATION_SYNC_PENDING (retry shortly), 409 AUTHORIZATION_CONTEXT_CHANGED (sign a new token), 409 IDENTITY_NOT_SYNCED, 403 EMPLOYEE_NOT_AUTHORIZED. Your own history (claims, vouchers) needs only an active identity and no X-Company-ID. No permission code is needed; native Marketplace tokens are refused. Responses use Cache-Control: no-store. Your vouchers from accepted marketplace claims, newest first; still readable after your employment ends. Filter by status and offer_id. Offset pagination: limit (default 20), offset (default 0).
          */
         get: operations["v1_marketplace_vouchers_list"];
         put?: never;
@@ -3180,7 +3776,7 @@ export interface paths {
         };
         /**
          * Read one of my vouchers
-         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Refresh this after showing the QR to see status used and the receipt. 404 for another person's voucher.
+         * @description RealHRSoft employees only, through the RealHRSoft backend: send the RS256 employee token it signs per request (Authorization: Bearer) and X-Company-ID, the RealHRSoft UUID of the company you act for. Catalogue, claim and view requests need a current employment in that company under your active Partner, and the token's authorization_revision must equal the one Marketplace applied: 409 AUTHORIZATION_SYNC_PENDING (retry shortly), 409 AUTHORIZATION_CONTEXT_CHANGED (sign a new token), 409 IDENTITY_NOT_SYNCED, 403 EMPLOYEE_NOT_AUTHORIZED. Your own history (claims, vouchers) needs only an active identity and no X-Company-ID. No permission code is needed; native Marketplace tokens are refused. Responses use Cache-Control: no-store. Refresh this after showing the QR to see status used and the receipt. 404 for another person's voucher.
          */
         get: operations["v1_marketplace_vouchers_retrieve"];
         put?: never;
@@ -3202,7 +3798,7 @@ export interface paths {
         put?: never;
         /**
          * Show my voucher's QR
-         * @description Authenticate with the Bearer access token of an employee account (actor_type=employee) that has a current employment; others get 403. No permission code is needed: every result is scoped to you and your employer. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Issues a fresh QR for the partner's cashier to scan and replaces any earlier one at once (only the newest QR scans; a scan the cashier already made stays confirmable). Only an available voucher that no emergency block covers (409 otherwise). The QR is a bearer secret for 5 minutes (capped by valid_until): whoever shows it can use it, so do not share screenshots. It is returned once and never stored; if lost, request another. Do not auto-refresh aggressively: throttled per user (429). The 10-character reference on the voucher is the typed fallback when scanning fails.
+         * @description RealHRSoft employees only, through the RealHRSoft backend: send the RS256 employee token it signs per request (Authorization: Bearer) and X-Company-ID, the RealHRSoft UUID of the company you act for. Catalogue, claim and view requests need a current employment in that company under your active Partner, and the token's authorization_revision must equal the one Marketplace applied: 409 AUTHORIZATION_SYNC_PENDING (retry shortly), 409 AUTHORIZATION_CONTEXT_CHANGED (sign a new token), 409 IDENTITY_NOT_SYNCED, 403 EMPLOYEE_NOT_AUTHORIZED. Your own history (claims, vouchers) needs only an active identity and no X-Company-ID. No permission code is needed; native Marketplace tokens are refused. Responses use Cache-Control: no-store. Issues a fresh QR for the partner's cashier to scan and replaces any earlier one at once (only the newest QR scans; a scan the cashier already made stays confirmable). Only an available voucher that no emergency block covers (409 otherwise). The QR is a bearer secret for 5 minutes (capped by valid_until): whoever shows it can use it, so do not share screenshots. It is returned once and never stored; if lost, request another. Do not auto-refresh aggressively: throttled per user (429). The 10-character reference on the voucher is the typed fallback when scanning fails.
          */
         post: operations["v1_marketplace_vouchers_credential_create"];
         delete?: never;
@@ -3220,7 +3816,7 @@ export interface paths {
         };
         /**
          * Read my notification preferences
-         * @description Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Whether notification emails reach your account email. Email is on until you turn it off here or through an email's unsubscribe link. In-app notifications are always on. Only some notifications are also emailed (currently: a new Company Benefit from your employer).
+         * @description Authenticate with the Bearer access token of any account (partner, employer or administrator), or, for a RealHRSoft employee, the RealHRSoft employee token sent by the RealHRSoft backend (no X-Company-ID needed; a disabled employee gets 403). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Whether notification emails reach your account email. Email is on until you turn it off here or through an email's unsubscribe link. In-app notifications are always on. Only some notifications are also emailed (currently: a new Company Benefit from your employer).
          */
         get: operations["v1_me_notification_preferences_retrieve"];
         put?: never;
@@ -3230,7 +3826,7 @@ export interface paths {
         head?: never;
         /**
          * Turn my notification emails on or off
-         * @description Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Idempotent. Turning email off stops every notification email not yet sent, and they stay unsent even if you turn email back on. Turning it on applies to new notifications only and invalidates the unsubscribe links in emails you already received. Your inbox is never changed. Audited.
+         * @description Authenticate with the Bearer access token of any account (partner, employer or administrator), or, for a RealHRSoft employee, the RealHRSoft employee token sent by the RealHRSoft backend (no X-Company-ID needed; a disabled employee gets 403). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Idempotent. Turning email off stops every notification email not yet sent, and they stay unsent even if you turn email back on. Turning it on applies to new notifications only and invalidates the unsubscribe links in emails you already received. Your inbox is never changed. Audited.
          */
         patch: operations["v1_me_notification_preferences_partial_update"];
         trace?: never;
@@ -3244,7 +3840,7 @@ export interface paths {
         };
         /**
          * List my notifications
-         * @description Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Your inbox, newest first (by created_at, then id). Items are created in the background shortly after the business event commits, so a new one can take a few seconds to appear. In-app notifications cannot be turned off by users. Filter with unread=true|false and category. Offset pagination: limit (default 20), offset (default 0). Poll the unread count rather than this list to refresh a badge.
+         * @description Authenticate with the Bearer access token of any account (partner, employer or administrator), or, for a RealHRSoft employee, the RealHRSoft employee token sent by the RealHRSoft backend (no X-Company-ID needed; a disabled employee gets 403). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Your inbox, newest first (by created_at, then id). Items are created in the background shortly after the business event commits, so a new one can take a few seconds to appear. In-app notifications cannot be turned off by users. Filter with unread=true|false and category. Offset pagination: limit (default 20), offset (default 0). Poll the unread count rather than this list to refresh a badge.
          */
         get: operations["v1_me_notifications_list"];
         put?: never;
@@ -3264,7 +3860,7 @@ export interface paths {
         };
         /**
          * Read one of my notifications
-         * @description Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Reading it does not mark it read; call read for that. 404 for another account's item. To act on it, open target_type/target_id, which shows that resource's current state.
+         * @description Authenticate with the Bearer access token of any account (partner, employer or administrator), or, for a RealHRSoft employee, the RealHRSoft employee token sent by the RealHRSoft backend (no X-Company-ID needed; a disabled employee gets 403). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Reading it does not mark it read; call read for that. 404 for another account's item. To act on it, open target_type/target_id, which shows that resource's current state.
          */
         get: operations["v1_me_notifications_retrieve"];
         put?: never;
@@ -3286,7 +3882,7 @@ export interface paths {
         put?: never;
         /**
          * Mark one of my notifications read
-         * @description Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Idempotent: marking an already-read item again keeps its first read_at. Returns the item. 404 for another account's item.
+         * @description Authenticate with the Bearer access token of any account (partner, employer or administrator), or, for a RealHRSoft employee, the RealHRSoft employee token sent by the RealHRSoft backend (no X-Company-ID needed; a disabled employee gets 403). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Idempotent: marking an already-read item again keeps its first read_at. Returns the item. 404 for another account's item.
          */
         post: operations["v1_me_notifications_read_create"];
         delete?: never;
@@ -3306,7 +3902,7 @@ export interface paths {
         put?: never;
         /**
          * Mark my notifications read
-         * @description Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Marks the item up_to_id and every older unread item read. Send the id of the newest item you displayed, so items that arrived since stay unread. Idempotent; already-read items keep their read_at. 404 if up_to_id is not in your inbox.
+         * @description Authenticate with the Bearer access token of any account (partner, employer or administrator), or, for a RealHRSoft employee, the RealHRSoft employee token sent by the RealHRSoft backend (no X-Company-ID needed; a disabled employee gets 403). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. Marks the item up_to_id and every older unread item read. Send the id of the newest item you displayed, so items that arrived since stay unread. Idempotent; already-read items keep their read_at. 404 if up_to_id is not in your inbox.
          */
         post: operations["v1_me_notifications_read_all_create"];
         delete?: never;
@@ -3324,7 +3920,7 @@ export interface paths {
         };
         /**
          * Count my unread notifications
-         * @description Authenticate with the Bearer access token of any account (employee, partner or administrator). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. For the bell badge. Cheap to poll: while the app is visible, about every 30 seconds and on focus is enough.
+         * @description Authenticate with the Bearer access token of any account (partner, employer or administrator), or, for a RealHRSoft employee, the RealHRSoft employee token sent by the RealHRSoft backend (no X-Company-ID needed; a disabled employee gets 403). No permission code is needed: you only ever see and change your own items. X-Organization-ID is ignored. Responses use Cache-Control: no-store. For the bell badge. Cheap to poll: while the app is visible, about every 30 seconds and on focus is enough.
          */
         get: operations["v1_me_notifications_unread_count_retrieve"];
         put?: never;
@@ -4325,12 +4921,57 @@ export interface components {
          * @enum {string}
          */
         AcceptanceModeEnum: "auto_accept" | "partner_approval_required";
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        AccessDenial: {
+            /**
+             * Format: uuid
+             * @description Block UUID.
+             */
+            id: string;
+            kind: components["schemas"]["AccessDenialKindEnum"];
+            value: string;
+            reason: string;
+            denied_by: string;
+            /** Format: date-time */
+            expires_at?: string | null;
+            /** @description True while not lifted and not expired. */
+            readonly active: boolean;
+            /** Format: date-time */
+            lifted_at?: string | null;
+            lifted_by?: string;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        AccessDenialInput: {
+            /**
+             * @description token (one jti) or employee.
+             *
+             *     * `token` - One employee token (jti)
+             *     * `employee` - Every token of one RealHRSoft employee
+             */
+            kind: components["schemas"]["AccessDenialKindEnum"];
+            /** @description The token's jti, or the employee's RealHRSoft UUID. */
+            value: string;
+            /**
+             * Format: date-time
+             * @description Optional end (ISO 8601, future). Employee blocks default to until lifted; token blocks to 5 minutes.
+             */
+            expires_at?: string | null;
+            /** @description Required audited reason, 1-500 characters. */
+            reason: string;
+        };
         /**
-         * @description * `marketplace_staff` - marketplace_staff
-         *     * `employee` - employee
+         * @description * `token` - One employee token (jti)
+         *     * `employee` - Every token of one RealHRSoft employee
          * @enum {string}
          */
-        ActorTypeEnum: "marketplace_staff" | "employee";
+        AccessDenialKindEnum: "token" | "employee";
+        /**
+         * @description * `marketplace_staff` - marketplace_staff
+         * @enum {string}
+         */
+        ActorTypeEnum: "marketplace_staff";
         /** @description Reject body/query keys the serializer does not declare as writable (422). */
         AdCreate: {
             /** @description Required internal label, 1-150 characters. */
@@ -5211,6 +5852,13 @@ export interface components {
          * @enum {string}
          */
         AdvertisingGrantBasisEnum: "paid" | "complimentary" | "waived";
+        /**
+         * @description * `partner` - partner
+         *     * `company` - company
+         *     * `employee` - employee
+         * @enum {string}
+         */
+        AggregateTypeEnum: "partner" | "company" | "employee";
         /** @description Reject body/query keys the serializer does not declare as writable (422). */
         AssetUpload: {
             /**
@@ -5224,6 +5872,11 @@ export interface components {
             role_id: string;
             /** Format: uuid */
             organization_id?: string | null;
+            /**
+             * Format: uuid
+             * @description Client (Partner) UUID for a client role; it then applies in every current and future company of that client. Never with organization_id.
+             */
+            client_id?: string | null;
             reason: string;
         };
         /** @description Self-service registration. PUT semantics: omitted optional fields are cleared. */
@@ -5322,6 +5975,30 @@ export interface components {
         BaseResponse: {
             message: string;
         };
+        /**
+         * @description * `own_organization` - The publishing company's employees
+         *     * `selected_organizations` - Selected companies
+         *     * `all_client_organizations` - All the client's companies
+         * @enum {string}
+         */
+        BenefitAudienceEnum: "own_organization" | "selected_organizations" | "all_client_organizations";
+        /**
+         * @description A Serializer that takes an additional `fields` argument that
+         *     controls which fields should be displayed.
+         */
+        BenefitCompanyRow: {
+            /**
+             * Format: uuid
+             * @description The company the uses were made for.
+             */
+            organization_id: string;
+            /** @description Company name. */
+            name: string;
+            /** @description Benefit uses made in the period, counted at used_at. */
+            claims: number;
+            /** @description Distinct employees who claimed in the period. An employee who claimed several times counts once. */
+            employees: number;
+        };
         /** @description A version's common terms. PUT semantics: omitted optional fields are cleared. */
         BenefitContent: {
             /** @description Required, 1-150 chars. */
@@ -5388,8 +6065,18 @@ export interface components {
         BenefitPolicy: {
             /** @description How employees use the benefit. */
             usage_rules: string;
-            /** @description Lifetime uses per employee across every version of the benefit. Lowering it blocks further uses; past uses are kept. */
+            /** @description Lifetime uses per employee across every version of the benefit (and across companies). Lowering it blocks further uses; past uses are kept. */
             max_claims_per_beneficiary: number;
+            /**
+             * @description own_organization: the publishing company's employees. A client benefit: selected_organizations (audience_organizations) or all_client_organizations (every company of the client, including ones added later). A company's employees see it only while it has Employer capacity and is active.
+             *
+             *     * `own_organization` - The publishing company's employees
+             *     * `selected_organizations` - Selected companies
+             *     * `all_client_organizations` - All the client's companies
+             */
+            audience_type: components["schemas"]["BenefitAudienceEnum"];
+            /** @description The selected companies; empty otherwise. */
+            audience_organizations: components["schemas"]["OrganizationRef"][];
         };
         /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
         BenefitReportRow: {
@@ -6190,15 +6877,12 @@ export interface components {
             readonly benefit_usage: components["schemas"]["BenefitUsage"] | null;
             /**
              * Format: uuid
-             * @description Administrators only: the claimant.
+             * @description Administrators only: the claimant's employee identity UUID.
              */
             beneficiary_id: string;
-            /**
-             * Format: email
-             * @description Administrators only: the claimant.
-             */
+            /** @description Administrators only: the claimant's email from RealHRSoft, or empty. */
             beneficiary_email: string;
-            /** @description Administrators only: the claimant's employer when claiming. */
+            /** @description The company the claim was made for (not shown to partners). */
             employer: components["schemas"]["OrganizationRef"];
         };
         /** @description Reject body/query keys the serializer does not declare as writable (422). */
@@ -6244,6 +6928,265 @@ export interface components {
         ClaimDecisionSourceEnum: "policy" | "partner" | "admin" | "beneficiary" | "system";
         /** @enum {string} */
         ClaimStatusEnum: "requested" | "accepted" | "rejected" | "expired" | "cancelled";
+        ClientAccess: {
+            /**
+             * Format: uuid
+             * @description Client (Partner) UUID.
+             */
+            client_id: string;
+            /** @description The client group's name. */
+            name: string;
+        };
+        /**
+         * @description * `selected_organizations` - selected_organizations
+         *     * `all_client_organizations` - all_client_organizations
+         * @enum {string}
+         */
+        ClientBenefitAudienceEnum: "selected_organizations" | "all_client_organizations";
+        /** @description A version's common terms. PUT semantics: omitted optional fields are cleared. */
+        ClientBenefitContent: {
+            /** @description Required, 1-150 chars. */
+            title: string;
+            /** @description Required card headline, e.g. '20% off all drinks'. */
+            headline: string;
+            /** @description Required full description, up to 4000 chars. */
+            description: string;
+            /**
+             * @description Terms and conditions, up to 4000 chars.
+             * @default
+             */
+            terms: string;
+            /**
+             * Format: date-time
+             * @description Required ISO 8601 start with timezone; claimable from then.
+             */
+            valid_from: string;
+            /** @description Required benefit value, e.g. {"type": "percentage", "percent": "20"} or {"type": "descriptive", "description": "Free annual check-up"}. */
+            benefit: components["schemas"]["BenefitValueInput"];
+            /**
+             * @description Optional audit note, up to 500 characters.
+             * @default
+             */
+            reason: string;
+            /**
+             * Format: date-time
+             * @description Optional ISO 8601 end with timezone; null for open-ended.
+             */
+            valid_until?: string | null;
+            /**
+             * @description How employees use the benefit, up to 4000 chars.
+             * @default
+             */
+            usage_rules: string;
+            /** @description Required lifetime uses per employee, 1-1000. */
+            max_claims_per_beneficiary: number;
+            /**
+             * @description save (default) keeps an unpublished benefit as a draft; publish makes it available to the audience companies' employees now. Saving a live benefit always publishes the change.
+             *
+             *     * `save` - save
+             *     * `publish` - publish
+             * @default save
+             */
+            intent: components["schemas"]["BenefitIntentEnum"];
+            /**
+             * @description Required. selected_organizations: only audience_organization_ids. all_client_organizations: every company of the client, including companies synchronized later.
+             *
+             *     * `selected_organizations` - selected_organizations
+             *     * `all_client_organizations` - all_client_organizations
+             */
+            audience_type: components["schemas"]["ClientBenefitAudienceEnum"];
+            /** @description Marketplace UUIDs of the client's companies, 1-200, for selected_organizations; empty otherwise. */
+            audience_organization_ids?: string[];
+        };
+        /** @description A version's common terms. PUT semantics: omitted optional fields are cleared. */
+        ClientBenefitUpdate: {
+            /** @description Required, 1-150 chars. */
+            title: string;
+            /** @description Required card headline, e.g. '20% off all drinks'. */
+            headline: string;
+            /** @description Required full description, up to 4000 chars. */
+            description: string;
+            /**
+             * @description Terms and conditions, up to 4000 chars.
+             * @default
+             */
+            terms: string;
+            /**
+             * Format: date-time
+             * @description Required ISO 8601 start with timezone; claimable from then.
+             */
+            valid_from: string;
+            /** @description Required benefit value, e.g. {"type": "percentage", "percent": "20"} or {"type": "descriptive", "description": "Free annual check-up"}. */
+            benefit: components["schemas"]["BenefitValueInput"];
+            /**
+             * @description Optional audit note, up to 500 characters.
+             * @default
+             */
+            reason: string;
+            /**
+             * Format: date-time
+             * @description Optional ISO 8601 end with timezone; null for open-ended.
+             */
+            valid_until?: string | null;
+            /**
+             * @description How employees use the benefit, up to 4000 chars.
+             * @default
+             */
+            usage_rules: string;
+            /** @description Required lifetime uses per employee, 1-1000. */
+            max_claims_per_beneficiary: number;
+            /**
+             * @description save (default) keeps an unpublished benefit as a draft; publish makes it available to the audience companies' employees now. Saving a live benefit always publishes the change.
+             *
+             *     * `save` - save
+             *     * `publish` - publish
+             * @default save
+             */
+            intent: components["schemas"]["BenefitIntentEnum"];
+            /**
+             * @description Required. selected_organizations: only audience_organization_ids. all_client_organizations: every company of the client, including companies synchronized later.
+             *
+             *     * `selected_organizations` - selected_organizations
+             *     * `all_client_organizations` - all_client_organizations
+             */
+            audience_type: components["schemas"]["ClientBenefitAudienceEnum"];
+            /** @description Marketplace UUIDs of the client's companies, 1-200, for selected_organizations; empty otherwise. */
+            audience_organization_ids?: string[];
+            /** @description Required current version; stale versions return 409. */
+            expected_version: number;
+        };
+        /** @description Shared reference to an organization inside other apps' payloads. */
+        ClientCompany: {
+            /**
+             * Format: uuid
+             * @description Organization UUID.
+             */
+            id: string;
+            /** @description Organization name. */
+            name: string;
+            /** @description True while the company has Employer capacity: only then do its employees receive benefits. */
+            employer: boolean;
+        };
+        /** @description A current member with the client roles it holds now. */
+        ClientMember: {
+            /**
+             * Format: uuid
+             * @description Membership UUID.
+             */
+            id: string;
+            /**
+             * Format: uuid
+             * @description Member's user UUID.
+             */
+            user_id: string;
+            /** Format: email */
+            user_email: string;
+            /** @description True until ended; only a current membership carries client roles. */
+            readonly is_current: boolean;
+            /** Format: date-time */
+            verified_at: string;
+            verified_by: string;
+            /** Format: date-time */
+            ended_at?: string | null;
+            ended_by?: string | null;
+            /** @description Active client roles granted under this membership, oldest first. */
+            readonly roles: components["schemas"]["ClientMemberRole"][];
+        };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        ClientMemberAdmit: {
+            /**
+             * Format: email
+             * @description Required: the email of an existing, active Marketplace account. Matched case-insensitively; no account is created.
+             */
+            email: string;
+            /** @description Required audited reason, 1-500 characters. */
+            reason: string;
+        };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        ClientMemberInput: {
+            /**
+             * Format: uuid
+             * @description Required: an active user to admit as a member of the client.
+             */
+            user_id: string;
+            /** @description Required audited reason, 1-500 characters. */
+            reason: string;
+        };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        ClientMemberRole: {
+            /**
+             * Format: uuid
+             * @description Role assignment UUID; revoke with it.
+             */
+            assignment_id: string;
+            /**
+             * Format: uuid
+             * @description Role UUID.
+             */
+            role_id: string;
+            role_code: string;
+            role_name: string;
+            /** Format: date-time */
+            granted_at: string;
+        };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        ClientMembership: {
+            /**
+             * Format: uuid
+             * @description Membership UUID.
+             */
+            id: string;
+            /**
+             * Format: uuid
+             * @description Member's user UUID.
+             */
+            user_id: string;
+            /** Format: email */
+            user_email: string;
+            /** @description True until ended; only a current membership carries client roles. */
+            readonly is_current: boolean;
+            /** Format: date-time */
+            verified_at: string;
+            verified_by: string;
+            /** Format: date-time */
+            ended_at?: string | null;
+            ended_by?: string | null;
+        };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        ClientRef: {
+            /**
+             * Format: uuid
+             * @description Client (Partner) UUID.
+             */
+            id: string;
+            /** @description The client group's name. */
+            name: string;
+        };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        ClientRole: {
+            /**
+             * Format: uuid
+             * @description Role UUID.
+             */
+            id: string;
+            code: string;
+            display_name: string;
+            description?: string;
+            /** @description Permission codes the role holds (client and organization codes; organization codes apply in every company of the client). */
+            readonly permissions: string[];
+            /** @description True when you hold every permission of the role, so you may grant or revoke it. */
+            readonly grantable: boolean;
+        };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        ClientRoleGrant: {
+            /**
+             * Format: uuid
+             * @description Required: an active client role (GET /api/v1/client/roles) whose permissions you hold yourself.
+             */
+            role_id: string;
+            /** @description Required audited reason, 1-500 characters. */
+            reason: string;
+        };
         /** @description Reject body/query keys the serializer does not declare as writable (422). */
         CloseEnquiryInput: {
             /**
@@ -6259,8 +7202,10 @@ export interface components {
              * @description Immutable offer UUID.
              */
             id: string;
-            /** @description The organization that owns the offer. */
-            provider_organization: components["schemas"]["OrganizationRef"];
+            /** @description The company that owns the offer; null for a client benefit. */
+            provider_organization: components["schemas"]["OrganizationRef"] | null;
+            /** @description The client that owns a client benefit (for its companies); null otherwise. */
+            provider_client: components["schemas"]["ClientRef"] | null;
             /**
              * @description Owner control: enabled, paused or retired (final).
              *
@@ -6338,8 +7283,10 @@ export interface components {
              * @description Immutable offer UUID.
              */
             id: string;
-            /** @description The organization that owns the offer. */
-            provider_organization: components["schemas"]["OrganizationRef"];
+            /** @description The company that owns the offer; null for a client benefit. */
+            provider_organization: components["schemas"]["OrganizationRef"] | null;
+            /** @description The client that owns a client benefit (for its companies); null otherwise. */
+            provider_client: components["schemas"]["ClientRef"] | null;
             /**
              * @description Owner control: enabled, paused or retired (final).
              *
@@ -6374,6 +7321,38 @@ export interface components {
             updated_by: string;
             /** Format: date-time */
             readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        CompanyMapping: {
+            /**
+             * Format: uuid
+             * @description RealHRSoft company UUID.
+             */
+            external_uuid: string;
+            /**
+             * Format: uuid
+             * @description Marketplace company UUID.
+             */
+            id: string;
+            name: string;
+            /**
+             * Format: uuid
+             * @description RealHRSoft client UUID.
+             */
+            client_external_uuid: string;
+            /**
+             * Format: uuid
+             * @description Marketplace Partner (client) UUID.
+             */
+            client_id: string;
+            /** @description False once RealHRSoft deactivated it. */
+            active: boolean;
+            /** @description Marketplace-owned Employer capacity (benefits); never set by RealHRSoft data. */
+            employer: boolean;
+            /** @description Last applied revision. */
+            source_revision: number;
             /** Format: date-time */
             readonly updated_at: string;
         };
@@ -6413,9 +7392,10 @@ export interface components {
         /**
          * @description * `global` - global
          *     * `organization` - organization
+         *     * `client` - client
          * @enum {string}
          */
-        CreateRoleRequestScopeEnum: "global" | "organization";
+        CreateRoleRequestScopeEnum: "global" | "organization" | "client";
         CreateUserRequest: {
             /** Format: email */
             email: string;
@@ -6423,10 +7403,9 @@ export interface components {
             last_name: string;
             contact?: string | null;
             /**
-             * @description marketplace_staff (default) or employee. An employee account can use the employee marketplace once an administrator starts its employment (POST /api/v1/admin/employments). Descriptive only: grants no permission.
+             * @description marketplace_staff, the only account type created here. RealHRSoft employees have no Marketplace account. Descriptive only: grants no permission.
              *
              *     * `marketplace_staff` - marketplace_staff
-             *     * `employee` - employee
              * @default marketplace_staff
              */
             actor_type: components["schemas"]["ActorTypeEnum"];
@@ -6494,6 +7473,14 @@ export interface components {
             organization_permissions: string[];
             authentication_source: string;
             memberships: components["schemas"]["Membership"][];
+            /**
+             * Format: uuid
+             * @description The client selected by X-Client-ID, if any.
+             */
+            client_id: string | null;
+            client_permissions: string[];
+            /** @description Clients you hold a client role in (X-Client-ID values). */
+            clients: components["schemas"]["ClientAccess"][];
         };
         /**
          * @description A Serializer that takes an additional `fields` argument that
@@ -6583,6 +7570,20 @@ export interface components {
             /** @description partner_approval_required only: decision window in hours (1-720, default 72), capped by valid_until. */
             approval_ttl_hours?: number | null;
         };
+        /** @description Body of a versioned state-change action with an optional audit note. */
+        EmployerAutoEnable: {
+            /** @description Required current version; stale versions return 409. */
+            expected_version: number;
+            /** @description Required audited reason, 1-500 characters. */
+            reason: string;
+            /** @description true: companies synchronized from now on get Employer capacity at once; false: they need it switched on one by one. */
+            enabled: boolean;
+            /**
+             * @description With enabled true: also give Employer capacity to the client's current active companies that lack it.
+             * @default false
+             */
+            include_existing: boolean;
+        };
         EmployerCapacity: {
             /** @description Required. true turns the Employer capacity on, false turns it off. */
             enabled: boolean;
@@ -6615,46 +7616,52 @@ export interface components {
             id: string;
             /**
              * Format: uuid
-             * @description Employee's public user UUID.
+             * @description Marketplace UUID of the employee identity (not a user account).
              */
-            user_id: string;
-            /**
-             * Format: email
-             * @description Employee's login email.
-             */
-            user_email: string;
+            employee_id: string;
+            /** @description RealHRSoft employee UUID. */
+            employee_external_id: string;
+            /** @description Name synchronized from RealHRSoft. */
+            employee_name: string;
+            /** @description Email synchronized from RealHRSoft; empty when none was sent. */
+            employee_email: string;
             /**
              * Format: uuid
-             * @description Employing organization's UUID.
+             * @description Employing company's Marketplace UUID.
              */
             organization_id: string;
-            /** @description Employing organization's display name. */
+            /** @description Employing company's display name. */
             organization_name: string;
             /**
-             * @description Where the record came from; manual (entered by an administrator) until RealHRsoft sign-in supplies it.
+             * Format: uuid
+             * @description The company's client (Partner) UUID.
+             */
+            partner_id: string;
+            /**
+             * @description realhrsoft: synchronized from RealHRSoft.
              *
-             *     * `manual` - Manual (administrator)
+             *     * `realhrsoft` - RealHRSoft synchronization
              */
             source: components["schemas"]["EmploymentSourceEnum"];
-            /** @description True until ended; only a current employment gives marketplace access. */
+            /** @description True until RealHRSoft no longer lists the company; only a current employment gives business access for that company. */
             is_current: boolean;
             /**
              * Format: date-time
-             * @description When the record was started.
+             * @description When the episode began.
              */
             started_at: string;
-            /** @description Public UUID of the administrator who started it. */
+            /** @description system:realhrsoft_sync. */
             started_by: string;
             /**
              * Format: date-time
              * @description When it ended, or null while current.
              */
             ended_at: string | null;
-            /** @description Administrator who ended it, or null. */
+            /** @description system:realhrsoft_sync once ended, or null. */
             ended_by: string | null;
-            /** @description Audited reason for ending, or null. */
+            /** @description The source revision that ended it, or null. */
             end_reason: string | null;
-            /** @description Concurrency token; send as expected_version when ending. */
+            /** @description Increases when the episode ends. */
             version: number;
             /** Format: date-time */
             readonly created_at: string;
@@ -6662,10 +7669,10 @@ export interface components {
             readonly updated_at: string;
         };
         /**
-         * @description * `manual` - Manual (administrator)
+         * @description * `realhrsoft` - RealHRSoft synchronization
          * @enum {string}
          */
-        EmploymentSourceEnum: "manual";
+        EmploymentSourceEnum: "realhrsoft";
         EndMembership: {
             /** @description Required termination reason, 1-500 characters after trimming. */
             reason: string;
@@ -6716,6 +7723,58 @@ export interface components {
          * @enum {string}
          */
         EnquiryStatusEnum: "open" | "closed";
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        EventEnvelope: {
+            /**
+             * Format: uuid
+             * @description Required. Unique per event, kept on every retry of it; it must equal the signature's event_id claim.
+             */
+            event_id: string;
+            /** @description Required payload shape version: 1. */
+            schema_version: number;
+            /**
+             * @description partner.snapshot, company.snapshot or employee.snapshot.
+             *
+             *     * `company.snapshot` - company.snapshot
+             *     * `employee.snapshot` - employee.snapshot
+             *     * `partner.snapshot` - partner.snapshot
+             */
+            event_type: components["schemas"]["EventTypeEnum"];
+            /**
+             * @description partner, company or employee; must match event_type.
+             *
+             *     * `partner` - partner
+             *     * `company` - company
+             *     * `employee` - employee
+             */
+            aggregate_type: components["schemas"]["AggregateTypeEnum"];
+            /**
+             * Format: uuid
+             * @description RealHRSoft UUID of the client, company or employee.
+             */
+            aggregate_uuid: string;
+            /**
+             * Format: int64
+             * @description Monotonically increasing per aggregate: a lower one than already applied is acknowledged as stale; the same one with different data is quarantined.
+             */
+            aggregate_revision: number;
+            /**
+             * Format: date-time
+             * @description When the change happened at RealHRSoft (ISO 8601, UTC).
+             */
+            occurred_at: string;
+            /** @description The complete snapshot of the aggregate at this revision (schema v1). partner: organization, first_name, middle_name?, last_name, email, country? (ISO alpha-2), contact? (E.164), active? (default true). company: client_uuid, name, active?. employee: active, display_name, email?, partner_uuid (null without an active Partner), company_uuids (the complete current set, at most 100). Unknown members are ignored. */
+            data: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * @description * `company.snapshot` - company.snapshot
+         *     * `employee.snapshot` - employee.snapshot
+         *     * `partner.snapshot` - partner.snapshot
+         * @enum {string}
+         */
+        EventTypeEnum: "company.snapshot" | "employee.snapshot" | "partner.snapshot";
         /** @description Body of a versioned state-change action with an optional audit note. */
         ExpectedVersion: {
             /** @description Required current version; stale versions return 409. */
@@ -6730,6 +7789,24 @@ export interface components {
         ExpectedVersionReason: {
             /** @description Required current version; stale versions return 409. */
             expected_version: number;
+            /** @description Required audited reason, 1-500 characters. */
+            reason: string;
+        };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        FeatureFlag: {
+            key: string;
+            enabled?: boolean;
+            /** @description What the flag gates. */
+            readonly description: string;
+            changed_by?: string;
+            reason?: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        FeatureFlagInput: {
+            /** @description true switches the feature on. */
+            enabled: boolean;
             /** @description Required audited reason, 1-500 characters. */
             reason: string;
         };
@@ -6809,8 +7886,16 @@ export interface components {
             role_id: string;
             role_code: string;
             role_display_name: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Set for an organization grant.
+             */
             organization_id: string | null;
+            /**
+             * Format: uuid
+             * @description Set for a client grant: the client (Partner) UUID; it applies in every company of that client.
+             */
+            client_id: string | null;
             /** Format: date-time */
             granted_at: string;
             granted_by: string | null;
@@ -6854,9 +7939,10 @@ export interface components {
         /**
          * @description * `self_service` - Self-service
          *     * `assisted` - Assisted by Aayulogic
+         *     * `realhrsoft_sync` - RealHRSoft synchronization
          * @enum {string}
          */
-        IntakePathEnum: "self_service" | "assisted";
+        IntakePathEnum: "self_service" | "assisted" | "realhrsoft_sync";
         /**
          * @description * `day` - day
          *     * `week` - week
@@ -6864,6 +7950,11 @@ export interface components {
          * @enum {string}
          */
         IntervalEnum: "day" | "week" | "month";
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        Lift: {
+            /** @description Required audited reason, 1-500 characters. */
+            reason: string;
+        };
         LoginRequest: {
             email: string;
             password: string;
@@ -7027,6 +8118,11 @@ export interface components {
             employer: boolean;
             /** @description True when the organization has a partner registration in any status (pending, verified or rejected); read GET /api/v1/partner/me for the verification status. */
             partner: boolean;
+            /**
+             * Format: uuid
+             * @description Set when access comes from a client role (the client's UUID) rather than a membership of this organization.
+             */
+            via_client_id: string | null;
         };
         MembershipPage: {
             /** @description Total current and ended memberships for this organization. */
@@ -7109,15 +8205,18 @@ export interface components {
              *     * `business_offer` - Business (B2B) offer
              */
             kind: components["schemas"]["OfferKindEnum"];
-            /** @description The organization that owns the offer. */
-            provider_organization: components["schemas"]["OrganizationRef"];
+            /** @description The company that owns the offer; null for a client benefit. */
+            provider_organization: components["schemas"]["OrganizationRef"] | null;
+            /** @description The client that owns a client benefit (for its companies); null otherwise. */
+            provider_client: components["schemas"]["ClientRef"] | null;
             /** @description The partner capacity the offer was posted in: every marketplace offer, and a business offer posted as a partner. Null for a benefit and for a business offer posted as an employer. */
             partner: components["schemas"]["OfferPartner"] | null;
             /**
-             * @description partner_portal, employer_portal or admin_on_behalf.
+             * @description partner_portal, employer_portal, client_portal or admin_on_behalf.
              *
              *     * `partner_portal` - Partner portal
              *     * `employer_portal` - Employer portal
+             *     * `client_portal` - Client portal
              *     * `admin_on_behalf` - Administrator on behalf
              */
             posted_via: components["schemas"]["OfferPostedViaEnum"];
@@ -7408,10 +8507,11 @@ export interface components {
         /**
          * @description * `partner_portal` - Partner portal
          *     * `employer_portal` - Employer portal
+         *     * `client_portal` - Client portal
          *     * `admin_on_behalf` - Administrator on behalf
          * @enum {string}
          */
-        OfferPostedViaEnum: "partner_portal" | "employer_portal" | "admin_on_behalf";
+        OfferPostedViaEnum: "partner_portal" | "employer_portal" | "client_portal" | "admin_on_behalf";
         /**
          * @description A Serializer that takes an additional `fields` argument that
          *     controls which fields should be displayed.
@@ -7730,6 +8830,8 @@ export interface components {
             readonly voucher: components["schemas"]["VoucherSummary"] | null;
             /** @description Employer benefit: the recorded use, else null. */
             readonly benefit_usage: components["schemas"]["BenefitUsage"] | null;
+            /** @description The company the claim was made for (not shown to partners). */
+            employer: components["schemas"]["OrganizationRef"];
         };
         /** @description A claim with its accepted terms and fulfilment. Narrowed per audience. */
         OwnClaimListItem: {
@@ -7781,6 +8883,8 @@ export interface components {
             readonly voucher: components["schemas"]["VoucherSummary"] | null;
             /** @description Employer benefit: the recorded use, else null. */
             readonly benefit_usage: components["schemas"]["BenefitUsage"] | null;
+            /** @description The company the claim was made for (not shown to partners). */
+            employer: components["schemas"]["OrganizationRef"];
         };
         /** @description A voucher with its offer context. Narrowed per audience. */
         OwnVoucher: {
@@ -7893,6 +8997,21 @@ export interface components {
          * @enum {string}
          */
         OwnerCapacityEnum: "partner";
+        PaginatedAccessDenialList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["AccessDenial"][];
+        };
         PaginatedAdDecisionList: {
             /** @example 123 */
             count: number;
@@ -8057,6 +9176,36 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Claim"][];
+        };
+        PaginatedClientMemberList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["ClientMember"][];
+        };
+        PaginatedClientMembershipList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=400&limit=100
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?offset=200&limit=100
+             */
+            previous?: string | null;
+            results: components["schemas"]["ClientMembership"][];
         };
         PaginatedCompanyBenefitCardList: {
             /** @example 123 */
@@ -8412,11 +9561,21 @@ export interface components {
             id: string;
             /**
              * Format: uuid
-             * @description Owning organization's public UUID.
+             * @description The merchant's home organization (partner offers and redemption); null for a client synchronized from RealHRSoft that is not a merchant.
              */
-            organization_id: string;
-            /** @description Owning organization's display name. */
-            organization_name: string;
+            organization_id?: string | null;
+            /** @description Home organization's display name, or null. */
+            organization_name?: string | null;
+            /**
+             * Format: uuid
+             * @description RealHRSoft client UUID when synchronized; its name, contact and lifecycle then come from RealHRSoft.
+             */
+            external_uuid: string | null;
+            /** @description False once RealHRSoft deactivated the client. */
+            active: boolean;
+            /** @description Client-level Employer opt-in: companies synchronized later get Employer capacity at once. */
+            readonly employer_auto_enabled: boolean;
+            country?: string;
             business_name: string;
             category?: string;
             description?: string;
@@ -8438,6 +9597,7 @@ export interface components {
              *
              *     * `self_service` - Self-service
              *     * `assisted` - Assisted by Aayulogic
+             *     * `realhrsoft_sync` - RealHRSoft synchronization
              */
             intake_path: components["schemas"]["IntakePathEnum"];
             /**
@@ -8992,9 +10152,60 @@ export interface components {
             /** @description Required, 1-500 characters; audited. */
             reason: string;
         };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        ReasonOnly: {
+            /** @description Required audited reason, 1-500 characters. */
+            reason: string;
+        };
         ReasonRequest: {
             reason: string;
         };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        Receipt: {
+            /**
+             * Format: uuid
+             * @description Receipt UUID.
+             */
+            receipt_id: string;
+            /** Format: uuid */
+            event_id: string;
+            event_type: string;
+            aggregate_type: string;
+            /** Format: uuid */
+            aggregate_uuid: string;
+            /** Format: int64 */
+            aggregate_revision: number;
+            /**
+             * @description pending: received, not applied yet. applied: done (see outcome). waiting_dependency: a referenced client or company has not arrived; retried. quarantined: breaks a rule or conflicts with an applied revision; never retried as is. dead: retries exhausted.
+             *
+             *     * `pending` - Pending
+             *     * `applied` - Applied
+             *     * `waiting_dependency` - Waiting for a dependency
+             *     * `quarantined` - Quarantined
+             *     * `dead` - Dead (retries exhausted)
+             */
+            status: components["schemas"]["ReceiptStatusEnum"];
+            /** @description When applied: applied, unchanged (same revision and data) or stale (an older revision); empty otherwise. */
+            outcome: string;
+            /** @description Why it is not applied, e.g. SYNC_DEPENDENCY_MISSING, COMPANY_PARTNER_CONFLICT, SOURCE_REVISION_CONFLICT, INVALID_SNAPSHOT. */
+            error_code: string;
+            /** @description Short safe explanation. */
+            error_detail: string;
+            attempts?: number;
+            /** Format: date-time */
+            received_at: string;
+            /** Format: date-time */
+            applied_at?: string | null;
+        };
+        /**
+         * @description * `pending` - Pending
+         *     * `applied` - Applied
+         *     * `waiting_dependency` - Waiting for a dependency
+         *     * `quarantined` - Quarantined
+         *     * `dead` - Dead (retries exhausted)
+         * @enum {string}
+         */
+        ReceiptStatusEnum: "pending" | "applied" | "waiting_dependency" | "quarantined" | "dead";
         /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
         ReceiptSummary: {
             /**
@@ -9018,6 +10229,69 @@ export interface components {
              */
             readonly reversed_at: string | null;
         };
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        Reconcile: {
+            /**
+             * @description full: every client, then company, then employee. partner, company or employee: one record (and what it depends on).
+             *
+             *     * `full` - Every client, company and employee
+             *     * `partner` - One client
+             *     * `company` - One company
+             *     * `employee` - One employee
+             */
+            scope: components["schemas"]["ReconciliationScopeEnum"];
+            /**
+             * Format: uuid
+             * @description RealHRSoft UUID of the record; required unless scope is full.
+             */
+            target?: string | null;
+            /** @description Audited reason, 1-500 characters; required from operators, omitted by RealHRSoft. */
+            reason?: string;
+        };
+        /** @description Use this serializer for Public serializers, where the data is limited and read only.  # noqa: E501 */
+        ReconciliationRun: {
+            /**
+             * Format: uuid
+             * @description Run UUID.
+             */
+            id: string;
+            scope: components["schemas"]["ReconciliationScopeEnum"];
+            /** @default  */
+            target: string;
+            /** @default queued */
+            status: components["schemas"]["ReconciliationRunStatusEnum"];
+            /** @description Full runs: partner, company or employee being read; empty before the first page. */
+            stage: string;
+            /** @description Snapshots read so far by outcome: applied, unchanged, stale, failed. */
+            counts: {
+                [key: string]: number;
+            };
+            attempts?: number;
+            error_detail?: string;
+            requested_by: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            started_at?: string | null;
+            /** Format: date-time */
+            finished_at?: string | null;
+        };
+        /**
+         * @description * `queued` - Queued
+         *     * `running` - Running
+         *     * `completed` - Completed
+         *     * `failed` - Failed
+         * @enum {string}
+         */
+        ReconciliationRunStatusEnum: "queued" | "running" | "completed" | "failed";
+        /**
+         * @description * `full` - Every client, company and employee
+         *     * `partner` - One client
+         *     * `company` - One company
+         *     * `employee` - One employee
+         * @enum {string}
+         */
+        ReconciliationScopeEnum: "full" | "partner" | "company" | "employee";
         /** @description A receipt: one confirmed use of one voucher. Narrowed per audience. */
         Redemption: {
             /**
@@ -9065,13 +10339,10 @@ export interface components {
             reversed_by: string | null;
             /**
              * Format: uuid
-             * @description Administrators only.
+             * @description Administrators only: the owner's employee identity UUID.
              */
             beneficiary_id: string;
-            /**
-             * Format: email
-             * @description Administrators only.
-             */
+            /** @description Administrators only: the owner's email from RealHRSoft, or empty. */
             beneficiary_email: string;
         };
         /**
@@ -9087,6 +10358,13 @@ export interface components {
          * @enum {string}
          */
         RedemptionSourceEnum: "partner_scan" | "partner_manual" | "admin_assisted";
+        /** @description Reject body/query keys the serializer does not declare as writable (422). */
+        Redrive: {
+            /** @description event_id of each quarantined or dead event to requeue (1-100). */
+            event_ids: string[];
+            /** @description Required audited reason, 1-500 characters. */
+            reason: string;
+        };
         /** @description Reject body/query keys the serializer does not declare as writable (422). */
         RejectInput: {
             /** @description Required, 1-500 characters; shown to the claimant, so keep it safe and free of internal details. */
@@ -9442,21 +10720,6 @@ export interface components {
          * @enum {string}
          */
         SourceEnum: "partner_organization" | "external" | "realhrsoft";
-        /** @description Reject body/query keys the serializer does not declare as writable (422). */
-        StartEmployment: {
-            /**
-             * Format: uuid
-             * @description Required public UUID of an active user with actor_type=employee.
-             */
-            user_id: string;
-            /**
-             * Format: uuid
-             * @description Required UUID of the employing organization.
-             */
-            organization_id: string;
-            /** @description Required audited reason, 1-500 characters. */
-            reason: string;
-        };
         /**
          * @description * `pending` - Pending
          *     * `verified` - Verified
@@ -9464,6 +10727,28 @@ export interface components {
          * @enum {string}
          */
         StatusEnum: "pending" | "verified" | "rejected";
+        /**
+         * @description A Serializer that takes an additional `fields` argument that
+         *     controls which fields should be displayed.
+         */
+        SyncStatus: {
+            /** @description Receipts by status. */
+            counts: {
+                [key: string]: number;
+            };
+            /** @description Age of the oldest pending or waiting event; 0 when none. */
+            oldest_unapplied_seconds: number;
+            /** @description True when an event is unapplied for more than 60 seconds, or any is quarantined or dead. */
+            alert: boolean;
+            /** Format: date-time */
+            last_applied_at: string | null;
+            /** @description Up to 20 newest waiting, quarantined or dead events; no payloads. */
+            problems: components["schemas"]["Receipt"][];
+            /** @description Whether RealHRSoft's snapshot API is configured. */
+            reconciliation_configured: boolean;
+            /** @description The 10 newest reconciliation runs. */
+            reconciliations: components["schemas"]["ReconciliationRun"][];
+        };
         TokenResponse: {
             access_token: string;
             /** @default bearer */
@@ -9648,13 +10933,10 @@ export interface components {
             revocation_reason: string | null;
             /**
              * Format: uuid
-             * @description Administrators only: the owner.
+             * @description Administrators only: the owner's employee identity UUID.
              */
             beneficiary_id: string;
-            /**
-             * Format: email
-             * @description Administrators only: the owner.
-             */
+            /** @description Administrators only: the owner's email from RealHRSoft, or empty. */
             beneficiary_email: string;
         };
         /** @enum {string} */
@@ -10122,9 +11404,10 @@ export interface operations {
                  *
                  *     * `partner_portal` - Partner portal
                  *     * `employer_portal` - Employer portal
+                 *     * `client_portal` - Client portal
                  *     * `admin_on_behalf` - Administrator on behalf
                  */
-                posted_via?: "admin_on_behalf" | "employer_portal" | "partner_portal";
+                posted_via?: "admin_on_behalf" | "client_portal" | "employer_portal" | "partner_portal";
                 /** @description A search term. */
                 search?: string;
                 /** @description Live version is also listed for the audience's employees. */
@@ -10524,9 +11807,10 @@ export interface operations {
                  *
                  *     * `partner_portal` - Partner portal
                  *     * `employer_portal` - Employer portal
+                 *     * `client_portal` - Client portal
                  *     * `admin_on_behalf` - Administrator on behalf
                  */
-                posted_via?: "admin_on_behalf" | "employer_portal" | "partner_portal";
+                posted_via?: "admin_on_behalf" | "client_portal" | "employer_portal" | "partner_portal";
                 /** @description A search term. */
                 search?: string;
                 /** @description Live version is also listed for the audience's employees. */
@@ -11296,9 +12580,10 @@ export interface operations {
                  *
                  *     * `partner_portal` - Partner portal
                  *     * `employer_portal` - Employer portal
+                 *     * `client_portal` - Client portal
                  *     * `admin_on_behalf` - Administrator on behalf
                  */
-                posted_via?: "admin_on_behalf" | "employer_portal" | "partner_portal";
+                posted_via?: "admin_on_behalf" | "client_portal" | "employer_portal" | "partner_portal";
                 /** @description A search term. */
                 search?: string;
                 /** @description Live version is also listed for the audience's employees. */
@@ -11860,9 +13145,186 @@ export interface operations {
             };
         };
     };
+    v1_admin_employee_access_denials_list: {
+        parameters: {
+            query?: {
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAccessDenialList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_employee_access_denials_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccessDenialInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["AccessDenialInput"];
+                "multipart/form-data": components["schemas"]["AccessDenialInput"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessDenial"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Block not found (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An active block exists for the value, or already lifted (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid kind, value or expires_at (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_employee_access_denials_lift_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                denial_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Lift"];
+                "application/x-www-form-urlencoded": components["schemas"]["Lift"];
+                "multipart/form-data": components["schemas"]["Lift"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessDenial"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Block not found (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An active block exists for the value, or already lifted (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid kind, value or expires_at (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     v1_admin_employments_list: {
         parameters: {
             query?: {
+                /** @description Only this employee's employments. */
+                employee_id?: string;
                 /** @description true: only current employments; false: only ended ones. */
                 is_current?: boolean;
                 /** @description Number of results to return per page. */
@@ -11870,10 +13332,10 @@ export interface operations {
                 /** @description The initial index from which to return the results. */
                 offset?: number;
                 /**
-                 * @description Sort by user_email, organization_name, started_at, ended_at; prefix - for descending. Omit for the default order.
+                 * @description Sort by employee_name, organization_name, started_at, ended_at; prefix - for descending. Omit for the default order.
                  *
-                 *     * `user_email` - User email
-                 *     * `-user_email` - User email (descending)
+                 *     * `employee_name` - Employee name
+                 *     * `-employee_name` - Employee name (descending)
                  *     * `organization_name` - Organization name
                  *     * `-organization_name` - Organization name (descending)
                  *     * `started_at` - Started at
@@ -11881,13 +13343,13 @@ export interface operations {
                  *     * `ended_at` - Ended at
                  *     * `-ended_at` - Ended at (descending)
                  */
-                ordering?: ("-ended_at" | "-organization_name" | "-started_at" | "-user_email" | "ended_at" | "organization_name" | "started_at" | "user_email")[];
-                /** @description Only this organization's employees. */
+                ordering?: ("-employee_name" | "-ended_at" | "-organization_name" | "-started_at" | "employee_name" | "ended_at" | "organization_name" | "started_at")[];
+                /** @description Only this company's employees. */
                 organization_id?: string;
+                /** @description Only this client's employees. */
+                partner_id?: string;
                 /** @description A search term. */
                 search?: string;
-                /** @description Only this employee's employments. */
-                user_id?: string;
             };
             header?: never;
             path?: never;
@@ -11921,86 +13383,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Invalid, missing or unknown fields; the user is not an employee account (VALIDATION_ERROR). */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    v1_admin_employments_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StartEmployment"];
-                "application/x-www-form-urlencoded": components["schemas"]["StartEmployment"];
-                "multipart/form-data": components["schemas"]["StartEmployment"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Employment"];
-                };
-            };
-            /** @description Malformed JSON (BAD_REQUEST). */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Required permission missing or revoked (FORBIDDEN). */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Employment, user or organization not found (NOT_FOUND). */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description The employee already has a current employment, the user is disabled, the employment already ended, or expected_version is stale (CONFLICT). */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Invalid, missing or unknown fields; the user is not an employee account (VALIDATION_ERROR). */
+            /** @description Invalid or unknown query parameters (VALIDATION_ERROR). */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -12048,7 +13431,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Employment, user or organization not found (NOT_FOUND). */
+            /** @description Employment not found (NOT_FOUND). */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -12059,38 +13442,21 @@ export interface operations {
             };
         };
     };
-    v1_admin_employments_end_create: {
+    v1_admin_feature_flags_list: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                employment_id: string;
-            };
+            path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExpectedVersionReason"];
-                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersionReason"];
-                "multipart/form-data": components["schemas"]["ExpectedVersionReason"];
-            };
-        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Employment"];
-                };
-            };
-            /** @description Malformed JSON (BAD_REQUEST). */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
+                    "application/json": components["schemas"]["FeatureFlag"][];
                 };
             };
             /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
@@ -12111,7 +13477,52 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Employment, user or organization not found (NOT_FOUND). */
+        };
+    };
+    v1_admin_feature_flags_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeatureFlagInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["FeatureFlagInput"];
+                "multipart/form-data": components["schemas"]["FeatureFlagInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureFlag"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unknown flag key (NOT_FOUND). */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -12120,16 +13531,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description The employee already has a current employment, the user is disabled, the employment already ended, or expected_version is stale (CONFLICT). */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Invalid, missing or unknown fields; the user is not an employee account (VALIDATION_ERROR). */
+            /** @description Invalid or unknown fields (VALIDATION_ERROR). */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -17144,8 +18546,9 @@ export interface operations {
                 /**
                  * @description * `self_service` - Self-service
                  *     * `assisted` - Assisted by Aayulogic
+                 *     * `realhrsoft_sync` - RealHRSoft synchronization
                  */
-                intake_path?: "assisted" | "self_service";
+                intake_path?: "assisted" | "realhrsoft_sync" | "self_service";
                 /** @description Number of results to return per page. */
                 limit?: number;
                 /** @description The initial index from which to return the results. */
@@ -17433,8 +18836,9 @@ export interface operations {
                 /**
                  * @description * `self_service` - Self-service
                  *     * `assisted` - Assisted by Aayulogic
+                 *     * `realhrsoft_sync` - RealHRSoft synchronization
                  */
-                intake_path?: "assisted" | "self_service";
+                intake_path?: "assisted" | "realhrsoft_sync" | "self_service";
                 /** @description Number of results to return per page. */
                 limit?: number;
                 /** @description The initial index from which to return the results. */
@@ -17501,6 +18905,334 @@ export interface operations {
             };
             /** @description Partner or organization not found (NOT_FOUND). */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_partners_employer_auto_enable_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployerAutoEnable"];
+                "application/x-www-form-urlencoded": components["schemas"]["EmployerAutoEnable"];
+                "multipart/form-data": components["schemas"]["EmployerAutoEnable"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Partner"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, or the organization scope was denied (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Partner or organization not found (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version, the organization is already a partner, or the current status does not allow the operation (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_partners_members_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description * `self_service` - Self-service
+                 *     * `assisted` - Assisted by Aayulogic
+                 *     * `realhrsoft_sync` - RealHRSoft synchronization
+                 */
+                intake_path?: "assisted" | "realhrsoft_sync" | "self_service";
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by business_name, organization_name, submitted_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `business_name` - Business name
+                 *     * `-business_name` - Business name (descending)
+                 *     * `organization_name` - Organization name
+                 *     * `-organization_name` - Organization name (descending)
+                 *     * `submitted_at` - Submitted at
+                 *     * `-submitted_at` - Submitted at (descending)
+                 */
+                ordering?: ("-business_name" | "-organization_name" | "-submitted_at" | "business_name" | "organization_name" | "submitted_at")[];
+                /** @description A search term. */
+                search?: string;
+                /**
+                 * @description * `partner_organization` - Partner organization
+                 *     * `external` - External partner
+                 *     * `realhrsoft` - RealHRsoft partner
+                 */
+                source?: "external" | "partner_organization" | "realhrsoft";
+                /**
+                 * @description * `pending` - Pending
+                 *     * `verified` - Verified
+                 *     * `rejected` - Rejected
+                 */
+                status?: "pending" | "rejected" | "verified";
+            };
+            header?: never;
+            path: {
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedClientMembershipList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, or the organization scope was denied (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Partner or organization not found (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_partners_members_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientMemberInput"];
+                "application/x-www-form-urlencoded": components["schemas"]["ClientMemberInput"];
+                "multipart/form-data": components["schemas"]["ClientMemberInput"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientMembership"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, or the organization scope was denied (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Partner or organization not found (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version, the organization is already a partner, or the current status does not allow the operation (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_admin_partners_members_end_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                membership_id: string;
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonOnly"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReasonOnly"];
+                "multipart/form-data": components["schemas"]["ReasonOnly"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientMembership"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, or the organization scope was denied (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Partner or organization not found (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version, the organization is already a partner, or the current status does not allow the operation (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -18540,7 +20272,7 @@ export interface operations {
     v1_admin_vouchers_list: {
         parameters: {
             query?: {
-                /** @description One owner (user UUID). */
+                /** @description One owner (employee identity UUID). */
                 beneficiary_id?: string;
                 /** @description Number of results to return per page. */
                 limit?: number;
@@ -18876,6 +20608,8 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID"?: string;
                 "X-Organization-ID"?: string;
             };
             path?: never;
@@ -19462,9 +21196,10 @@ export interface operations {
                  *
                  *     * `partner_portal` - Partner portal
                  *     * `employer_portal` - Employer portal
+                 *     * `client_portal` - Client portal
                  *     * `admin_on_behalf` - Administrator on behalf
                  */
-                posted_via?: "admin_on_behalf" | "employer_portal" | "partner_portal";
+                posted_via?: "admin_on_behalf" | "client_portal" | "employer_portal" | "partner_portal";
                 /** @description A search term. */
                 search?: string;
                 /** @description Live version is also listed for the audience's employees. */
@@ -19791,9 +21526,10 @@ export interface operations {
                  *
                  *     * `partner_portal` - Partner portal
                  *     * `employer_portal` - Employer portal
+                 *     * `client_portal` - Client portal
                  *     * `admin_on_behalf` - Administrator on behalf
                  */
-                posted_via?: "admin_on_behalf" | "employer_portal" | "partner_portal";
+                posted_via?: "admin_on_behalf" | "client_portal" | "employer_portal" | "partner_portal";
                 /** @description A search term. */
                 search?: string;
                 /** @description Live version is also listed for the audience's employees. */
@@ -20415,9 +22151,10 @@ export interface operations {
                  *
                  *     * `partner_portal` - Partner portal
                  *     * `employer_portal` - Employer portal
+                 *     * `client_portal` - Client portal
                  *     * `admin_on_behalf` - Administrator on behalf
                  */
-                posted_via?: "admin_on_behalf" | "employer_portal" | "partner_portal";
+                posted_via?: "admin_on_behalf" | "client_portal" | "employer_portal" | "partner_portal";
                 /** @description A search term. */
                 search?: string;
                 /** @description Live version is also listed for the audience's employees. */
@@ -20688,6 +22425,1542 @@ export interface operations {
                 };
             };
             /** @description Invalid, missing or unknown fields or X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_analytics_benefits_list: {
+        parameters: {
+            query?: {
+                /** @description Last local date (inclusive). Default: today. At most 366 days after start. */
+                end?: string;
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by claims, employees or title; prefix - for descending. Default: most claims first.
+                 *
+                 *     * `claims` - Claims
+                 *     * `-claims` - Claims (descending)
+                 *     * `employees` - Employees
+                 *     * `-employees` - Employees (descending)
+                 *     * `title` - Title
+                 *     * `-title` - Title (descending)
+                 */
+                ordering?: ("-claims" | "-employees" | "-title" | "claims" | "employees" | "title")[];
+                /** @description First local date (YYYY-MM-DD, inclusive). Default: 29 days before end. */
+                start?: string;
+            };
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBenefitReportRowList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The required permission is missing or revoked, or the organization scope was denied (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid query parameter: a malformed date or UUID, an unknown interval or ordering, start after end, a period over 366 days, or a missing or non-UUID X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_analytics_benefits_companies_list: {
+        parameters: {
+            query?: {
+                /** @description Only this benefit; 404 when it is not your organization's. */
+                benefit_id?: string;
+                /** @description Last local date (inclusive). Default: today. At most 366 days after start. */
+                end?: string;
+                /**
+                 * @description Series bucket size. Weeks start on Monday (ISO).
+                 *
+                 *     * `day` - day
+                 *     * `week` - week
+                 *     * `month` - month
+                 */
+                interval?: "day" | "week" | "month";
+                /** @description First local date (YYYY-MM-DD, inclusive). Default: 29 days before end. */
+                start?: string;
+            };
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BenefitCompanyRow"][];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The required permission is missing or revoked, or the organization scope was denied (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description offer_id is not an offer in your scope (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid query parameter: a malformed date or UUID, an unknown interval or ordering, start after end, a period over 366 days, or a missing or non-UUID X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_analytics_benefits_summary_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Only this benefit; 404 when it is not your organization's. */
+                benefit_id?: string;
+                /** @description Last local date (inclusive). Default: today. At most 366 days after start. */
+                end?: string;
+                /**
+                 * @description Series bucket size. Weeks start on Monday (ISO).
+                 *
+                 *     * `day` - day
+                 *     * `week` - week
+                 *     * `month` - month
+                 */
+                interval?: "day" | "week" | "month";
+                /** @description First local date (YYYY-MM-DD, inclusive). Default: 29 days before end. */
+                start?: string;
+            };
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BenefitReportSummary"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The required permission is missing or revoked, or the organization scope was denied (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description offer_id is not an offer in your scope (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid query parameter: a malformed date or UUID, an unknown interval or ordering, start after end, a period over 366 days, or a missing or non-UUID X-Organization-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_benefits_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description enabled, paused or retired.
+                 *
+                 *     * `enabled` - Enabled
+                 *     * `paused` - Paused
+                 *     * `retired` - Retired
+                 */
+                availability?: "enabled" | "paused" | "retired";
+                /**
+                 * @description The display_status badge, evaluated now.
+                 *
+                 *     * `draft` - draft
+                 *     * `in_review` - in_review
+                 *     * `changes_requested` - changes_requested
+                 *     * `rejected` - rejected
+                 *     * `retracted` - retracted
+                 *     * `scheduled` - scheduled
+                 *     * `active` - active
+                 *     * `expired` - expired
+                 *     * `paused` - paused
+                 *     * `suspended` - suspended
+                 *     * `retired` - retired
+                 */
+                display_status?: "active" | "changes_requested" | "draft" | "expired" | "in_review" | "paused" | "rejected" | "retired" | "retracted" | "scheduled" | "suspended";
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by first_published_at, created_at, updated_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `first_published_at` - First published at
+                 *     * `-first_published_at` - First published at (descending)
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `updated_at` - Updated at
+                 *     * `-updated_at` - Updated at (descending)
+                 */
+                ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
+                /** @description Administrators: only this employer's benefits. */
+                organization_id?: string;
+                /** @description A search term. */
+                search?: string;
+            };
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedCompanyBenefitListItemList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_benefits_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientBenefitContent"];
+                "application/x-www-form-urlencoded": components["schemas"]["ClientBenefitContent"];
+                "multipart/form-data": components["schemas"]["ClientBenefitContent"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyBenefit"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_benefits_retrieve: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyBenefit"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_benefits_update: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientBenefitUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["ClientBenefitUpdate"];
+                "multipart/form-data": components["schemas"]["ClientBenefitUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyBenefit"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_benefits_pause_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyBenefit"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_benefits_publish_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyBenefit"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_benefits_resume_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyBenefit"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_benefits_retire_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyBenefit"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_benefits_unpublish_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedVersion"];
+                "application/x-www-form-urlencoded": components["schemas"]["ExpectedVersion"];
+                "multipart/form-data": components["schemas"]["ExpectedVersion"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyBenefit"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Stale expected_version or version_id; the partner is not verified; the offer's state does not allow the operation (e.g. editing while in review, retired, not suspended); the category is retired or the validity has ended when submitting or publishing; nothing to submit; or a category name/slug is taken (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_benefits_versions_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description enabled, paused or retired.
+                 *
+                 *     * `enabled` - Enabled
+                 *     * `paused` - Paused
+                 *     * `retired` - Retired
+                 */
+                availability?: "enabled" | "paused" | "retired";
+                /**
+                 * @description The display_status badge, evaluated now.
+                 *
+                 *     * `draft` - draft
+                 *     * `in_review` - in_review
+                 *     * `changes_requested` - changes_requested
+                 *     * `rejected` - rejected
+                 *     * `retracted` - retracted
+                 *     * `scheduled` - scheduled
+                 *     * `active` - active
+                 *     * `expired` - expired
+                 *     * `paused` - paused
+                 *     * `suspended` - suspended
+                 *     * `retired` - retired
+                 */
+                display_status?: "active" | "changes_requested" | "draft" | "expired" | "in_review" | "paused" | "rejected" | "retired" | "retracted" | "scheduled" | "suspended";
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by first_published_at, created_at, updated_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `first_published_at` - First published at
+                 *     * `-first_published_at` - First published at (descending)
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `updated_at` - Updated at
+                 *     * `-updated_at` - Updated at (descending)
+                 */
+                ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
+                /** @description Administrators: only this employer's benefits. */
+                organization_id?: string;
+                /** @description A search term. */
+                search?: string;
+            };
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                offer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedOfferVersionList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Offer, category, partner or organization not found, or the offer belongs to another organization or is of the other kind (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_companies_list: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientCompany"][];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No current membership of the selected client, a missing client permission, a role or member holding permissions you do not hold, or a change to your own membership or roles (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Client-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_members_list: {
+        parameters: {
+            query?: {
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+            };
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedClientMemberList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No current membership of the selected client, a missing client permission, a role or member holding permissions you do not hold, or a change to your own membership or roles (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Client-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_members_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientMemberAdmit"];
+                "application/x-www-form-urlencoded": components["schemas"]["ClientMemberAdmit"];
+                "multipart/form-data": components["schemas"]["ClientMemberAdmit"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientMember"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No current membership of the selected client, a missing client permission, a role or member holding permissions you do not hold, or a change to your own membership or roles (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No account uses the email, or the membership, role or role assignment is not in this client (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Already a current member, membership already ended, role already held or already revoked, a retired role, a disabled user, or removing the client's last role administrator (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Client-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_members_end_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                membership_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonOnly"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReasonOnly"];
+                "multipart/form-data": components["schemas"]["ReasonOnly"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientMember"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No current membership of the selected client, a missing client permission, a role or member holding permissions you do not hold, or a change to your own membership or roles (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No account uses the email, or the membership, role or role assignment is not in this client (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Already a current member, membership already ended, role already held or already revoked, a retired role, a disabled user, or removing the client's last role administrator (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Client-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_members_roles_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                membership_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientRoleGrant"];
+                "application/x-www-form-urlencoded": components["schemas"]["ClientRoleGrant"];
+                "multipart/form-data": components["schemas"]["ClientRoleGrant"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientMember"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No current membership of the selected client, a missing client permission, a role or member holding permissions you do not hold, or a change to your own membership or roles (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No account uses the email, or the membership, role or role assignment is not in this client (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Already a current member, membership already ended, role already held or already revoked, a retired role, a disabled user, or removing the client's last role administrator (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Client-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_members_roles_revoke_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path: {
+                assignment_id: string;
+                membership_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonOnly"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReasonOnly"];
+                "multipart/form-data": components["schemas"]["ReasonOnly"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientMember"];
+                };
+            };
+            /** @description Malformed JSON (BAD_REQUEST). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No current membership of the selected client, a missing client permission, a role or member holding permissions you do not hold, or a change to your own membership or roles (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No account uses the email, or the membership, role or role assignment is not in this client (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Already a current member, membership already ended, role already held or already revoked, a retired role, a disabled user, or removing the client's last role administrator (CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Client-ID (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_client_roles_list: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The client (Partner) UUID you act for; you must hold a client role in it under a current client membership. It names a scope and grants nothing. */
+                "X-Client-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientRole"][];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No current membership of the selected client, a missing client permission, a role or member holding permissions you do not hold, or a change to your own membership or roles (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, or a missing or invalid X-Client-ID (VALIDATION_ERROR). */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -21662,6 +24935,369 @@ export interface operations {
             };
         };
     };
+    v1_employer_benefits_from_client_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description enabled, paused or retired.
+                 *
+                 *     * `enabled` - Enabled
+                 *     * `paused` - Paused
+                 *     * `retired` - Retired
+                 */
+                availability?: "enabled" | "paused" | "retired";
+                /**
+                 * @description The display_status badge, evaluated now.
+                 *
+                 *     * `draft` - draft
+                 *     * `in_review` - in_review
+                 *     * `changes_requested` - changes_requested
+                 *     * `rejected` - rejected
+                 *     * `retracted` - retracted
+                 *     * `scheduled` - scheduled
+                 *     * `active` - active
+                 *     * `expired` - expired
+                 *     * `paused` - paused
+                 *     * `suspended` - suspended
+                 *     * `retired` - retired
+                 */
+                display_status?: "active" | "changes_requested" | "draft" | "expired" | "in_review" | "paused" | "rejected" | "retired" | "retracted" | "scheduled" | "suspended";
+                /** @description Number of results to return per page. */
+                limit?: number;
+                /** @description The initial index from which to return the results. */
+                offset?: number;
+                /**
+                 * @description Sort by first_published_at, created_at, updated_at; prefix - for descending. Omit for the default order.
+                 *
+                 *     * `first_published_at` - First published at
+                 *     * `-first_published_at` - First published at (descending)
+                 *     * `created_at` - Created at
+                 *     * `-created_at` - Created at (descending)
+                 *     * `updated_at` - Updated at
+                 *     * `-updated_at` - Updated at (descending)
+                 */
+                ordering?: ("-created_at" | "-first_published_at" | "-updated_at" | "created_at" | "first_published_at" | "updated_at")[];
+                /** @description Administrators: only this employer's benefits. */
+                organization_id?: string;
+                /** @description A search term. */
+                search?: string;
+            };
+            header: {
+                "X-Organization-ID": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedCompanyBenefitListItemList"];
+                };
+            };
+            /** @description Missing, expired or invalid authentication (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Required permission missing or revoked, the organization scope was denied, the Employer capacity is off (benefits), or the action is not available to your side, e.g. a portal user publishing a marketplace offer (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid, missing or unknown fields, query parameters or X-Organization-ID, or terms that break a rule: a missing method field, an inactive category, valid_until not after valid_from, an invalid benefit value, or the other kind's fields (VALIDATION_ERROR). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_integrations_realhrsoft_companies_retrieve: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description RealHRSoft's signed delivery (compact JWS). Required for RealHRSoft; operators send their Bearer token instead. */
+                "X-RealHRSoft-Signature"?: string;
+            };
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyMapping"];
+                };
+            };
+            /** @description Missing, invalid, expired or mismatched signature or token (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not RealHRSoft and missing the permission (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Company not synchronized (NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_integrations_realhrsoft_events_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description RealHRSoft's signed delivery (compact JWS). Required for RealHRSoft; operators send their Bearer token instead. */
+                "X-RealHRSoft-Signature"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventEnvelope"];
+                "application/x-www-form-urlencoded": components["schemas"]["EventEnvelope"];
+                "multipart/form-data": components["schemas"]["EventEnvelope"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Receipt"];
+                };
+            };
+            /** @description Missing, invalid, expired or mismatched signature or token (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not RealHRSoft and missing the permission (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description EVENT_ID_CONFLICT: the event_id was received with a different body or destination. CONFLICT: reconciliation is not configured. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid envelope or snapshot data (VALIDATION_ERROR, with field locations); nothing is stored. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_integrations_realhrsoft_events_redrive_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Redrive"];
+                "application/x-www-form-urlencoded": components["schemas"]["Redrive"];
+                "multipart/form-data": components["schemas"]["Redrive"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Redrive"];
+                };
+            };
+            /** @description Missing, invalid, expired or mismatched signature or token (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not RealHRSoft and missing the permission (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid envelope or snapshot data (VALIDATION_ERROR, with field locations); nothing is stored. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_integrations_realhrsoft_reconcile_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description RealHRSoft's signed delivery (compact JWS). Required for RealHRSoft; operators send their Bearer token instead. */
+                "X-RealHRSoft-Signature"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Reconcile"];
+                "application/x-www-form-urlencoded": components["schemas"]["Reconcile"];
+                "multipart/form-data": components["schemas"]["Reconcile"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReconciliationRun"];
+                };
+            };
+            /** @description Missing, invalid, expired or mismatched signature or token (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not RealHRSoft and missing the permission (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description EVENT_ID_CONFLICT: the event_id was received with a different body or destination. CONFLICT: reconciliation is not configured. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Invalid envelope or snapshot data (VALIDATION_ERROR, with field locations); nothing is stored. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    v1_integrations_realhrsoft_sync_status_retrieve: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description RealHRSoft's signed delivery (compact JWS). Required for RealHRSoft; operators send their Bearer token instead. */
+                "X-RealHRSoft-Signature"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncStatus"];
+                };
+            };
+            /** @description Missing, invalid, expired or mismatched signature or token (AUTHENTICATION_FAILED). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not RealHRSoft and missing the permission (FORBIDDEN). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     v1_marketplace_advertisements_click_create: {
         parameters: {
             query?: never;
@@ -21953,7 +25589,10 @@ export interface operations {
                  */
                 status?: "accepted" | "cancelled" | "expired" | "rejected" | "requested";
             };
-            header?: never;
+            header?: {
+                /** @description RealHRSoft employees: the RealHRSoft UUID of the company you act for. Required for the catalogue, Company Benefits, claiming and offer views (403 EMPLOYEE_NOT_AUTHORIZED without a current employment there); ignored when reading your own history. A non-UUID value is 422. */
+                "X-Company-ID"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -22002,6 +25641,8 @@ export interface operations {
             header: {
                 /** @description Required client-generated UUID, stored before sending and reused on every retry of the same attempt. A retry replays the original result (200); a new key is a new attempt. Never generate a new key after an unknown outcome. */
                 "Idempotency-Key": string;
+                /** @description RealHRSoft employees: the RealHRSoft UUID of the company you act for. Required for the catalogue, Company Benefits, claiming and offer views (403 EMPLOYEE_NOT_AUTHORIZED without a current employment there); ignored when reading your own history. A non-UUID value is 422. */
+                "X-Company-ID"?: string;
             };
             path?: never;
             cookie?: never;
@@ -22089,7 +25730,10 @@ export interface operations {
     v1_marketplace_benefit_claims_retrieve: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description RealHRSoft employees: the RealHRSoft UUID of the company you act for. Required for the catalogue, Company Benefits, claiming and offer views (403 EMPLOYEE_NOT_AUTHORIZED without a current employment there); ignored when reading your own history. A non-UUID value is 422. */
+                "X-Company-ID"?: string;
+            };
             path: {
                 claim_id: string;
             };
@@ -22165,7 +25809,10 @@ export interface operations {
                  */
                 status?: "accepted" | "cancelled" | "expired" | "rejected" | "requested";
             };
-            header?: never;
+            header?: {
+                /** @description RealHRSoft employees: the RealHRSoft UUID of the company you act for. Required for the catalogue, Company Benefits, claiming and offer views (403 EMPLOYEE_NOT_AUTHORIZED without a current employment there); ignored when reading your own history. A non-UUID value is 422. */
+                "X-Company-ID"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -22214,6 +25861,8 @@ export interface operations {
             header: {
                 /** @description Required client-generated UUID, stored before sending and reused on every retry of the same attempt. A retry replays the original result (200); a new key is a new attempt. Never generate a new key after an unknown outcome. */
                 "Idempotency-Key": string;
+                /** @description RealHRSoft employees: the RealHRSoft UUID of the company you act for. Required for the catalogue, Company Benefits, claiming and offer views (403 EMPLOYEE_NOT_AUTHORIZED without a current employment there); ignored when reading your own history. A non-UUID value is 422. */
+                "X-Company-ID"?: string;
             };
             path?: never;
             cookie?: never;
@@ -22301,7 +25950,10 @@ export interface operations {
     v1_marketplace_claims_retrieve: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description RealHRSoft employees: the RealHRSoft UUID of the company you act for. Required for the catalogue, Company Benefits, claiming and offer views (403 EMPLOYEE_NOT_AUTHORIZED without a current employment there); ignored when reading your own history. A non-UUID value is 422. */
+                "X-Company-ID"?: string;
+            };
             path: {
                 claim_id: string;
             };
@@ -22352,6 +26004,8 @@ export interface operations {
             header: {
                 /** @description Required client-generated UUID for this decision; a retry replays it. */
                 "Idempotency-Key": string;
+                /** @description RealHRSoft employees: the RealHRSoft UUID of the company you act for. Required for the catalogue, Company Benefits, claiming and offer views (403 EMPLOYEE_NOT_AUTHORIZED without a current employment there); ignored when reading your own history. A non-UUID value is 422. */
+                "X-Company-ID"?: string;
             };
             path: {
                 claim_id: string;
@@ -22423,7 +26077,10 @@ export interface operations {
                 /** @description The initial index from which to return the results. */
                 offset?: number;
             };
-            header?: never;
+            header?: {
+                /** @description RealHRSoft employees: the RealHRSoft UUID of the company you act for. Required for the catalogue, Company Benefits, claiming and offer views (403 EMPLOYEE_NOT_AUTHORIZED without a current employment there); ignored when reading your own history. A non-UUID value is 422. */
+                "X-Company-ID"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -22460,7 +26117,10 @@ export interface operations {
     v1_marketplace_company_benefits_retrieve: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description RealHRSoft employees: the RealHRSoft UUID of the company you act for. Required for the catalogue, Company Benefits, claiming and offer views (403 EMPLOYEE_NOT_AUTHORIZED without a current employment there); ignored when reading your own history. A non-UUID value is 422. */
+                "X-Company-ID"?: string;
+            };
             path: {
                 offer_id: string;
             };
@@ -22508,7 +26168,10 @@ export interface operations {
     v1_marketplace_offer_categories_list: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description RealHRSoft employees: the RealHRSoft UUID of the company you act for. Required for the catalogue, Company Benefits, claiming and offer views (403 EMPLOYEE_NOT_AUTHORIZED without a current employment there); ignored when reading your own history. A non-UUID value is 422. */
+                "X-Company-ID"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -22555,7 +26218,10 @@ export interface operations {
                 /** @description Case-insensitive substring of the title or partner business name. */
                 search?: string;
             };
-            header?: never;
+            header?: {
+                /** @description RealHRSoft employees: the RealHRSoft UUID of the company you act for. Required for the catalogue, Company Benefits, claiming and offer views (403 EMPLOYEE_NOT_AUTHORIZED without a current employment there); ignored when reading your own history. A non-UUID value is 422. */
+                "X-Company-ID"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -22601,7 +26267,10 @@ export interface operations {
     v1_marketplace_offers_retrieve: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description RealHRSoft employees: the RealHRSoft UUID of the company you act for. Required for the catalogue, Company Benefits, claiming and offer views (403 EMPLOYEE_NOT_AUTHORIZED without a current employment there); ignored when reading your own history. A non-UUID value is 422. */
+                "X-Company-ID"?: string;
+            };
             path: {
                 offer_id: string;
             };
@@ -22945,8 +26614,9 @@ export interface operations {
                  *     * `claim` - Claim
                  *     * `benefit` - Benefit
                  *     * `offer` - Offer
+                 *     * `system` - System
                  */
-                category?: "benefit" | "claim" | "offer" | "redemption" | "voucher";
+                category?: "benefit" | "claim" | "offer" | "redemption" | "system" | "voucher";
                 /** @description Number of results to return per page. */
                 limit?: number;
                 /** @description The initial index from which to return the results. */

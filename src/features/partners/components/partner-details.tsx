@@ -25,6 +25,7 @@ import type { IntakePath, Partner, PartnerDecision, PartnerSource } from "../api
 export const INTAKE_LABEL: Record<IntakePath, string> = {
   self_service: "Self-service",
   assisted: "Assisted by Aayulogic",
+  realhrsoft_sync: "Synchronized from RealHRSoft",
 };
 
 /** What kind of business the partner is; set by Aayulogic, independent of the intake path. */
@@ -100,7 +101,7 @@ export function RegistrationCard({ partner }: { partner: Partner }) {
           <Detail label="Intake">{INTAKE_LABEL[partner.intake_path]}</Detail>
           <Detail label="Partner type">{SOURCE_LABEL[partner.source]}</Detail>
           <Detail label="Submitted for review">{formatDateTime(partner.submitted_at)}</Detail>
-          <Detail label="Organization">{partner.organization_name}</Detail>
+          <Detail label="Organization">{partner.organization_name ?? "None (a client group)"}</Detail>
           <Detail label="Version">{partner.version}</Detail>
           <Detail label="Last updated">{formatDateTime(partner.updated_at)}</Detail>
         </DetailList>

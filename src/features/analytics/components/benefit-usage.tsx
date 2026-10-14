@@ -13,9 +13,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/design-system/primitives/card";
+import { DataTable } from "@/design-system/components/data-table";
 import { isUuid } from "@/shared/api";
-import { useSelectedOrganizationId } from "@/shared/auth";
+import { useSession } from "@/shared/auth";
 import { StatusBadge } from "@/shared/components/status-badge";
+import { ErrorState } from "@/shared/feedback/states";
 import { usePageParam } from "@/shared/hooks/use-page-param";
 import { useSortParam } from "@/shared/hooks/use-sort-param";
 import { resultRows } from "@/shared/components/query-data-table";
@@ -23,8 +25,11 @@ import { resultRows } from "@/shared/components/query-data-table";
 import type { ReportPeriod } from "../api/period";
 import {
   BENEFIT_REPORT_SORTS,
-  useEmployerBenefitReport,
-  useEmployerBenefitSummary,
+  useBenefitUsageReport,
+  useBenefitUsageSummary,
+  useClientBenefitCompanies,
+  type BenefitCompanyRow,
+  type BenefitReportOwner,
   type BenefitReportRow,
 } from "../api/queries";
 import {
@@ -54,29 +59,33 @@ export const BENEFIT_METRICS: readonly MetricDefinition<BenefitMetric>[] = [
 ];
 
 /**
- * H03: how often the selected employer's employees used its Company Benefits
- * (analytics.benefit_report.view). Counts only: no employee identity, no exports.
+ * H03: how often employees used the selected company's own benefits
+ * (analytics.benefit_report.view), or with `scope="client"` the selected client's benefits
+ * across its companies (analytics.client_benefit_report.view), with a per-company table.
+ * Counts only: no employee identity, no exports.
  */
-export function BenefitUsage() {
+export function BenefitUsage({ scope = "organization" }: { scope?: BenefitReportOwner["kind"] }) {
   const { period } = usePeriod();
+  const { actor } = useSession();
+  const id = scope === "client" ? actor?.client?.id : actor?.organization?.id;
+  if (!id) throw new Error("BenefitUsage needs a selected organization or client");
   return (
     <div className="space-y-6">
       <PeriodControls />
-      {period ? <BenefitReport period={period} /> : null}
+      {period ? <BenefitReport period={period} owner={{ kind: scope, id }} /> : null}
     </div>
   );
 }
 
-function BenefitReport({ period }: { period: ReportPeriod }) {
-  const organizationId = useSelectedOrganizationId();
+function BenefitReport({ period, owner }: { period: ReportPeriod; owner: BenefitReportOwner }) {
   const searchParams = useSearchParams();
   const setParams = useSetParams();
   const rawBenefit = searchParams.get("benefit_id");
   const benefitId = rawBenefit && isUuid(rawBenefit) ? rawBenefit : null;
   const sort = useSortParam(BENEFIT_REPORT_SORTS);
   const paging = usePageParam();
-  const summary = useEmployerBenefitSummary(organizationId, period, benefitId);
-  const benefits = useEmployerBenefitReport(organizationId, period, sort.value, paging);
+  const summary = useBenefitUsageSummary(owner, period, benefitId);
+  const benefits = useBenefitUsageReport(owner, period, sort.value, paging);
   const selected = resultRows(benefits).find((row) => row.benefit_id === benefitId);
 
   return (
@@ -161,6 +170,58 @@ function BenefitReport({ period }: { period: ReportPeriod }) {
           />
         </CardContent>
       </Card>
+
+      {owner.kind === "client" ? (
+        <CompanyUsage clientId={owner.id} period={period} benefitId={benefitId} />
+      ) : null}
     </div>
+  );
+}
+
+/** Usage per company of a client's benefits: where each use was made for. */
+function CompanyUsage({
+  clientId,
+  period,
+  benefitId,
+}: {
+  clientId: string;
+  period: ReportPeriod;
+  benefitId: string | null;
+}) {
+  const companies = useClientBenefitCompanies(clientId, period, benefitId);
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>By company</CardTitle>
+        <CardDescription>
+          Companies whose employees used {benefitId ? "this benefit" : "your benefits"} in the
+          period, most used first. Employees are counted once per company.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <DataTable<BenefitCompanyRow>
+          aria-label="Usage by company"
+          rows={companies.data ?? []}
+          loading={companies.isPending}
+          error={
+            companies.isError ? (
+              <ErrorState error={companies.error} onRetry={() => void companies.refetch()} />
+            ) : undefined
+          }
+          rowKey={(row) => row.organization_id}
+          empty={
+            <EmptyState
+              icon={ChartColumn}
+              title="No company used them in this period"
+              className="py-8"
+            />
+          }
+          columns={[
+            { id: "company", header: "Company", cellClassName: "font-medium", cell: (row) => row.name },
+            ...metricColumns(BENEFIT_METRICS),
+          ]}
+        />
+      </CardContent>
+    </Card>
   );
 }

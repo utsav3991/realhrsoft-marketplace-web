@@ -131,6 +131,8 @@ function admin(permissions: PermissionCode[]): CurrentActor {
     globalPermissions: new Set(permissions),
     organization: null,
     memberships: [],
+    client: null,
+    clients: [],
   };
 }
 

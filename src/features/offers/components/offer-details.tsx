@@ -44,8 +44,20 @@ import {
 export const POSTED_VIA_LABEL: Record<PostedVia, string> = {
   partner_portal: "Partner portal",
   employer_portal: "Employer portal",
+  client_portal: "Client portal",
   admin_on_behalf: "Aayulogic on behalf",
 };
+
+/**
+ * Who provides an offer: its organization, or for a client benefit the client (group). Every
+ * offer has exactly one of the two.
+ */
+export function providerName(offer: {
+  provider_organization: { name: string } | null;
+  provider_client: { name: string } | null;
+}): string {
+  return offer.provider_organization?.name ?? offer.provider_client?.name ?? "—";
+}
 
 export const AVAILABILITY_LABEL: Record<Availability, string> = {
   enabled: "Enabled",
@@ -319,7 +331,7 @@ export function PublicationCard({ offer, partner }: { offer: Offer; partner?: Re
           </Detail>
           <Detail label="Availability">{AVAILABILITY_LABEL[offer.availability]}</Detail>
           {business ? (
-            <Detail label="Provider">{offer.provider_organization.name}</Detail>
+            <Detail label="Provider">{providerName(offer)}</Detail>
           ) : null}
           {partner ? <Detail label="Partner">{partner}</Detail> : null}
           <Detail label="Posted via">{POSTED_VIA_LABEL[offer.posted_via]}</Detail>

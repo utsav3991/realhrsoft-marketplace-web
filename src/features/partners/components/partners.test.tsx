@@ -37,6 +37,9 @@ const pending: Schemas["Partner"] = {
   id: PARTNER_ID,
   organization_id: ORG,
   organization_name: "Himalayan Coffee Pvt. Ltd.",
+  external_uuid: null,
+  active: true,
+  employer_auto_enabled: false,
   business_name: "Himalayan Coffee House",
   category: "Restaurant",
   description: "",
@@ -90,6 +93,8 @@ function admin(permissions: PermissionCode[]): CurrentActor {
     globalPermissions: new Set(permissions),
     organization: null,
     memberships: [],
+    client: null,
+    clients: [],
   };
 }
 

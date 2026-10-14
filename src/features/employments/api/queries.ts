@@ -7,7 +7,7 @@ export type Employment = Schemas["Employment"];
 
 /** Employment columns the API sorts by (`ordering`). */
 export const EMPLOYMENT_SORTS = [
-  "user_email",
+  "employee_name",
   "organization_name",
   "started_at",
   "ended_at",
@@ -17,7 +17,7 @@ export type EmploymentOrdering = SortOrdering<(typeof EMPLOYMENT_SORTS)[number]>
 export interface EmploymentFilters {
   search: string;
   isCurrent: boolean | null;
-  userId: string | null;
+  employeeId: string | null;
   organizationId: string | null;
   ordering: EmploymentOrdering | null;
 }
@@ -30,7 +30,10 @@ export const employmentKeys = {
   detail: (id: string) => [...employmentKeys.all, "detail", id] as const,
 };
 
-/** Newest start first unless sorted; search matches the employee's email. */
+/**
+ * Employment episodes synchronized from RealHRSoft, newest start first unless sorted; search
+ * matches the employee's name or email. Read-only: RealHRSoft owns employment.
+ */
 export function useEmployments(filters: EmploymentFilters, page: Page, { enabled = true } = {}) {
   return useQuery({
     queryKey: employmentKeys.list(filters, page),
@@ -42,7 +45,7 @@ export function useEmployments(filters: EmploymentFilters, page: Page, { enabled
             query: {
               search: filters.search || undefined,
               is_current: filters.isCurrent ?? undefined,
-              user_id: filters.userId ?? undefined,
+              employee_id: filters.employeeId ?? undefined,
               organization_id: filters.organizationId ?? undefined,
               ordering: filters.ordering ? [filters.ordering] : undefined,
               offset: page.offset,

@@ -1,31 +1,39 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { organizationHeader } from "@/features/offers/api/queries";
+import { clientHeader, organizationHeader } from "@/features/offers/api/queries";
 import { api, pathId, unwrap, type Schemas } from "@/shared/api";
 
-import { benefitKeys } from "./queries";
+import { benefitBody, clientBenefitBody, type BenefitValues } from "../schemas/benefit";
+import { benefitKeys, type BenefitOwner } from "./queries";
 
-// --- Employer portal (the selected organization) -----------------------------------------
+// --- Owner portals (the selected company or client) ---------------------------------------
 
-function useInvalidateOwnBenefits(organizationId: string) {
+function useInvalidateOwnBenefits(owner: BenefitOwner) {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: benefitKeys.own(organizationId) });
+  return () => queryClient.invalidateQueries({ queryKey: benefitKeys.own(owner) });
 }
 
+type Intent = NonNullable<Schemas["BenefitContent"]["intent"]>;
+
 /**
- * Creates a benefit owned by the selected organization, saved as a draft or published at once
- * (intent). Its employees are the only audience.
+ * Creates a benefit, saved as a draft or published at once (intent). A company's goes to its
+ * own employees; a client's to the audience companies chosen in the form.
  */
-export function useCreateOwnBenefit(organizationId: string) {
+export function useCreateOwnBenefit(owner: BenefitOwner) {
   return useMutation({
-    mutationFn: (body: Schemas["BenefitContent"]) =>
+    mutationFn: ({ values, intent }: { values: BenefitValues; intent: Intent }) =>
       unwrap(
-        api.POST("/employer/benefits", {
-          params: { header: organizationHeader(organizationId) },
-          body,
-        }),
+        owner.kind === "client"
+          ? api.POST("/client/benefits", {
+              params: { header: clientHeader(owner.id) },
+              body: { ...clientBenefitBody(values), intent },
+            })
+          : api.POST("/employer/benefits", {
+              params: { header: organizationHeader(owner.id) },
+              body: { ...benefitBody(values), intent },
+            }),
       ),
-    onSuccess: useInvalidateOwnBenefits(organizationId),
+    onSuccess: useInvalidateOwnBenefits(owner),
   });
 }
 
@@ -33,26 +41,58 @@ export function useCreateOwnBenefit(organizationId: string) {
  * Saves the terms: an unpublished benefit's draft, or a live benefit's new version, which is
  * published at once. Refetch on failure too: a 409 means the loaded version is stale.
  */
-export function useUpdateOwnBenefit(organizationId: string, benefitId: string) {
+export function useUpdateOwnBenefit(owner: BenefitOwner, benefitId: string) {
   return useMutation({
-    mutationFn: (body: Schemas["BenefitUpdate"]) =>
-      unwrap(
-        api.PUT("/employer/benefits/{offer_id}", {
-          params: {
-            header: organizationHeader(organizationId),
-            path: { offer_id: pathId(benefitId) },
-          },
-          body,
-        }),
-      ),
-    onSettled: useInvalidateOwnBenefits(organizationId),
+    mutationFn: ({
+      values,
+      intent,
+      expectedVersion,
+    }: {
+      values: BenefitValues;
+      intent: Intent;
+      expectedVersion: number;
+    }) => {
+      const path = { offer_id: pathId(benefitId) };
+      return unwrap(
+        owner.kind === "client"
+          ? api.PUT("/client/benefits/{offer_id}", {
+              params: { header: clientHeader(owner.id), path },
+              body: { ...clientBenefitBody(values), intent, expected_version: expectedVersion },
+            })
+          : api.PUT("/employer/benefits/{offer_id}", {
+              params: { header: organizationHeader(owner.id), path },
+              body: { ...benefitBody(values), intent, expected_version: expectedVersion },
+            }),
+      );
+    },
+    onSettled: useInvalidateOwnBenefits(owner),
   });
 }
 
 export type OwnBenefitAction = "publish" | "unpublish" | "pause" | "resume" | "retire";
 
-// Literal paths keep every call visible to the contract-coverage test.
-function postOwnBenefitAction(
+function postClientBenefitAction(
+  action: OwnBenefitAction,
+  clientId: string,
+  benefitId: string,
+  body: Schemas["ExpectedVersion"],
+) {
+  const params = { header: clientHeader(clientId), path: { offer_id: pathId(benefitId) } };
+  switch (action) {
+    case "publish":
+      return api.POST("/client/benefits/{offer_id}/publish", { params, body });
+    case "unpublish":
+      return api.POST("/client/benefits/{offer_id}/unpublish", { params, body });
+    case "pause":
+      return api.POST("/client/benefits/{offer_id}/pause", { params, body });
+    case "resume":
+      return api.POST("/client/benefits/{offer_id}/resume", { params, body });
+    case "retire":
+      return api.POST("/client/benefits/{offer_id}/retire", { params, body });
+  }
+}
+
+function postOrganizationBenefitAction(
   action: OwnBenefitAction,
   organizationId: string,
   benefitId: string,
@@ -76,11 +116,15 @@ function postOwnBenefitAction(
   }
 }
 
-export function useOwnBenefitAction(organizationId: string, benefitId: string) {
+export function useOwnBenefitAction(owner: BenefitOwner, benefitId: string) {
   return useMutation({
     mutationFn: ({ action, ...body }: Schemas["ExpectedVersion"] & { action: OwnBenefitAction }) =>
-      unwrap(postOwnBenefitAction(action, organizationId, benefitId, body)),
-    onSettled: useInvalidateOwnBenefits(organizationId),
+      unwrap(
+        owner.kind === "client"
+          ? postClientBenefitAction(action, owner.id, benefitId, body)
+          : postOrganizationBenefitAction(action, owner.id, benefitId, body),
+      ),
+    onSettled: useInvalidateOwnBenefits(owner),
   });
 }
 

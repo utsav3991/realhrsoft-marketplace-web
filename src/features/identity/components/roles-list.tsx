@@ -27,6 +27,7 @@ const COLUMNS: DataTableColumns<Schemas["Role"]> = [
           </Link>
           {role.is_system ? <Badge intent="info">System</Badge> : null}
           {role.scope === "organization" ? <Badge intent="outline">Organization</Badge> : null}
+          {role.scope === "client" ? <Badge intent="outline">Client</Badge> : null}
         </span>
         <span className="text-muted-foreground font-mono text-xs">{role.code}</span>
       </div>

@@ -117,6 +117,8 @@ function actor(overrides: Partial<CurrentActor> = {}): CurrentActor {
     globalPermissions: new Set(),
     organization: null,
     memberships: [],
+    client: null,
+    clients: [],
     ...overrides,
   };
 }
